@@ -1,0 +1,13 @@
+{
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "python.formatting.provider": "black",
+  "python.linting.enabled": true,
+  "editor.formatOnPaste": false,
+  "todo-tree.tree.scanMode": "workspace",
+  "python.testing.pytestArgs": ["tests"],
+  "python.testing.unittestEnabled": false,
+  "python.testing.nosetestsEnabled": false,
+  "python.testing.pytestEnabled": true,
+  "jupyter.notebookFileRoot": "${workspaceFolder}"
+}
