@@ -59,40 +59,8 @@ class Market:
             return True
         return False
 
-    def __post_init__(self):
-        self.total_available_funds = self.initial_starting_funds
-        self.total_borrowed_funds = 0.0  # start with no funds borrowed
-
-        available_prices = self.env.prices
-        # self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_names
-        # self.borrow_token_name = DEBT_TOKEN_PREFIX + self.asset_names
-
-        assert (
-            self.asset_names in self.initiator.funds_available
-            and self.initiator.funds_available[self.asset_names]
-            >= self.initial_starting_funds
-        ), "insufficient funds"
-
-        # deduct funds from user balance
-        self.initiator.funds_available[self.asset_names] -= self.initial_starting_funds
-
-        self.user_i_tokens = {self.initiator.name: self.initial_starting_funds}
-
-        self.user_b_tokens = {self.initiator.name: 0.0}
-
-        # add interest-bearing token into initiator's wallet
-        self.initiator.funds_available[
-            self.interest_token_name
-        ] = self.initial_starting_funds
-        self.initiator.funds_available[self.borrow_token_name] = 0
-
-        # if reward token is a new token, then initiate price with 0
-        reward_token_name = self.reward_token_name
-        if reward_token_name not in available_prices:
-            available_prices[self.reward_token_name] = 0
-
-    def __repr__(self):
-        return f"(available funds = {self.total_available_funds}, borrowed funds = {self.total_borrowed_funds})"
+    # def __repr__(self):
+    #     return f"(available funds = {self.total_available_funds}, borrowed funds = {self.total_borrowed_funds})"
 
     @property
     def utilization_ratio(self) -> float:
@@ -100,14 +68,34 @@ class Market:
             self.total_available_funds + self.total_borrowed_funds
         )
 
+    def borrow_lend_rates(
+        util_rate: float,
+        rb_factor: float = 25,
+        rs_factor: float = 50,
+    ) -> tuple[float, float]:
+        """
+        calculate borrow and supply rates based on utilization ratio
+        with an arbitrarily-set shape
+        """
+
+        assert (
+            0 <= util_rate < 1
+        ), f"utilization ratio must lie in [0,1), but got {util_rate}"
+
+        borrow_rate = util_rate / (rb_factor * (1 - util_rate))
+        # initial_borrow_rate / (1 - util_rate) ** EXPONENT
+        supply_rate = util_rate / (rs_factor * (1 - util_rate))
+        # initial_supply_rate / (1 - util_rate) ** EXPONENT
+        return borrow_rate, supply_rate
+
     @property
     def supply_apy(self) -> float:
-        _, rs = borrow_lend_rates(self.utilization_ratio)
+        _, rs = self.borrow_lend_rates(self.utilization_ratio)
         return rs
 
     @property
     def borrow_apy(self) -> float:
-        rb, _ = borrow_lend_rates(self.utilization_ratio)
+        rb, _ = self.borrow_lend_rates(self.utilization_ratio)
         return rb
 
     @property
@@ -123,27 +111,6 @@ class Market:
     @property
     def daily_borrow_multiplier(self) -> float:
         return (1 + self.borrow_apy) ** (1 / 365)
-
-    def get_user_pool_fraction(self, user_name: str) -> tuple[float, float]:
-        if user_name not in self.user_i_tokens:
-            self.user_i_tokens[user_name] = self.env.users[user_name].funds_available[
-                self.interest_token_name
-            ] = 0.0
-        i_token_fraction = self.user_i_tokens[user_name] / self.total_pool_shares[0]
-
-        if user_name not in self.user_b_tokens:
-            self.user_b_tokens[user_name] = self.env.users[user_name].funds_available[
-                self.borrow_token_name
-            ] = 0.0
-
-        assert 0 <= self.user_b_tokens[user_name] <= self.total_pool_shares[1]
-
-        if self.total_pool_shares[1] == 0:
-            b_token_fraction = 0
-        else:
-            b_token_fraction = self.user_b_tokens[user_name] / self.total_pool_shares[1]
-
-        return i_token_fraction, b_token_fraction
 
     def accrue_interest(self):
         for user_name in self.user_i_tokens:
@@ -163,3 +130,8 @@ class Market:
 
             # update b token register
             self.user_b_tokens[user_name] = user_funds[self.borrow_token_name]
+
+
+if __name__ == "__main__":
+    market = Market()
+    print(market)

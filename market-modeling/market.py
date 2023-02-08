@@ -358,7 +358,7 @@ class CPAmm:
 
 @dataclass
 class Plf:
-    env: Env
+    # env: Env
     initiator: User
     reward_token_name: str = "aave"
     # supply_apy: float = 0.06
@@ -472,6 +472,7 @@ class Plf:
             # update b token register
             self.user_b_tokens[user_name] = user_funds[self.borrow_token_name]
 
+    # no need
     def distribute_reward(self, quantity: float):
         for user_name in self.env.users:
             user_funds = self.env.users[user_name].funds_available
