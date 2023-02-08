@@ -22,13 +22,50 @@ class Market:
         self.cumulative_protocol_earning: float = 0
         self.this_step_protocol_earning: float = 0
 
+    def get_state(self) -> np.ndarray:
+        return np.array(
+            [
+                self.utilization_rate,
+                self.total_supply,
+                self.liquidation_threshold,
+                self.liquidation_discount_factor,
+                self.collateral_factor,
+            ]
+        )
+
+    def update_market(self) -> None:
+        pass
+
+    def lower_collateral_factor(self) -> None:
+        self.collateral_factor -= 0.01
+        self.update_market()
+
+    def keep_collateral_factor(self) -> None:
+        self.update_market()
+
+    def raise_collateral_factor(self) -> None:
+        self.collateral_factor += 0.01
+        self.update_market()
+
+    def get_reward(self) -> float:
+        # Important!!!!
+        # Example reward function
+        reward = self.this_step_protocol_earning
+        return reward
+
+    def is_done(self) -> bool:
+        self.steps += 1
+        if self.steps >= self.max_steps:
+            return True
+        return False
+
     def __post_init__(self):
         self.total_available_funds = self.initial_starting_funds
         self.total_borrowed_funds = 0.0  # start with no funds borrowed
 
         available_prices = self.env.prices
-        self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_names
-        self.borrow_token_name = DEBT_TOKEN_PREFIX + self.asset_names
+        # self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_names
+        # self.borrow_token_name = DEBT_TOKEN_PREFIX + self.asset_names
 
         assert (
             self.asset_names in self.initiator.funds_available
