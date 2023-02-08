@@ -4,6 +4,10 @@ import numpy as np
 import pandas as pd
 from dataclasses import dataclass
 from rl_env import LendingProtocolEnv, Market
+from typing import Optional, cast
+import logging
+from utils import PriceDict
+
 
 class Env:
     def __init__(
@@ -54,41 +58,10 @@ class User:
         logging.info(f"{self.name}'s wealth in DAI: {user_wealth}")
 
         return user_wealth
-        """
-        add (pool_shares_delta>0) or remove (pool_shares_delta<0) liquidity to an AMM
-        """
-
-        if self.name not in amm.user_pool_shares:
-            amm.user_pool_shares[self.name] = 0
-
-        assert (
-            amm.user_pool_shares[self.name] + pool_shares_delta >= 0
-        ), "cannot deplete user pool shares"
-
-        # with signs, + means add to pool. - means remove from pool
-        liquidity_fraction_delta = pool_shares_delta / amm.total_pool_shares
-        funds_delta = [w * liquidity_fraction_delta for w in amm.reserves]
-
-        assert all(
-            self.funds_available[amm.asset_names[i]] - funds_delta[i] >= 0
-            for i in range(2)
-        ), "insufficient funds to provide liquidity"
-
-        for i in range(2):
-            # update own funds
-            self.funds_available[amm.asset_names[i]] -= funds_delta[i]
-            # update liquidity pool
-            amm.reserves[i] += funds_delta[i]
-
-        # update pool shares of the user in the pool registry
-        amm.user_pool_shares[self.name] += pool_shares_delta
-
-        # matching balance in user's account to pool registry record
-        self.funds_available[amm.lp_token_name] = amm.user_pool_shares[self.name]
 
     # -------------------------  PLF actions ------------------------------
 
-    def supply_withdraw(self, amount: float, plf: Plf):  # negative for withdrawing
+    def supply_withdraw(self, amount: float, plf: Market):  # negative for withdrawing
         if self.name not in plf.user_i_tokens:
             plf.user_i_tokens[self.name] = 0
 
@@ -111,7 +84,7 @@ class User:
         # matching balance in user's account to pool registry record
         self.funds_available[plf.interest_token_name] = plf.user_i_tokens[self.name]
 
-    def borrow_repay(self, amount: float, plf: Plf):
+    def borrow_repay(self, amount: float, plf: Market):
         if self.name not in plf.user_b_tokens:
             plf.user_b_tokens[self.name] = 0
 
@@ -140,25 +113,31 @@ class User:
 
         self.funds_available[plf.asset_names] += amount
 
+
 @dataclass
 class Market:
     def __init__(self):
         self.liquidation_threshold: float = 0
         self.liquidation_discount_factor: float = 0
         self.collateral_factor: float = 0.85
-        self.user_i_token: float = 0  # total supply
-        self.user_b_token: float = 0  # total borrow
-        self.utilization_rate: float = self.user_b_token / self.user_i_token
+        # self.user_i_token: float = 0  # total supply
+        # self.user_b_token: float = 0  # total borrow
+        # self.utilization_rate: float = self.user_b_token / self.user_i_token
         self.steps = 0
         self.max_steps = 10000
         self.cumulative_protocol_earning: float = 0
         self.this_step_protocol_earning: float = 0
 
+        # initial funds
+        self.initial_starting_funds: float = 1000
+        self.total_available_funds: float = self.initial_starting_funds
+        self.total_borrowed_funds: float = 0
+
     def get_state(self) -> np.ndarray:
         return np.array(
             [
-                self.utilization_rate,
-                self.user_i_token,  # total supply
+                self.utilization_ratio,
+                self.total_available_funds + self.total_borrowed_funds,  # total supply
                 self.liquidation_threshold,
                 self.liquidation_discount_factor,
                 self.collateral_factor,
@@ -166,7 +145,7 @@ class Market:
         )
 
     def update_market(self) -> None:
-        collateral_factor -> total borrow/total supply -> utilization -> this_step_protocol_earning
+        # collateral_factor -> total borrow/total supply -> utilization -> this_step_protocol_earning
 
         pass
 
