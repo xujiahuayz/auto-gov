@@ -120,9 +120,6 @@ class Market:
         self.liquidation_threshold: float = 0
         self.liquidation_discount_factor: float = 0
         self.collateral_factor: float = 0.85
-        # self.user_i_token: float = 0  # total supply
-        # self.user_b_token: float = 0  # total borrow
-        # self.utilization_rate: float = self.user_b_token / self.user_i_token
         self.steps = 0
         self.max_steps = 10000
         self.cumulative_protocol_earning: float = 0
@@ -138,13 +135,15 @@ class Market:
             [
                 self.utilization_ratio,
                 self.total_available_funds + self.total_borrowed_funds,  # total supply
-                self.liquidation_threshold,
-                self.liquidation_discount_factor,
+                # self.liquidation_threshold,
+                # self.liquidation_discount_factor,
                 self.collateral_factor,
             ]
         )
 
+    # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     def update_market(self) -> None:
+        # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # collateral_factor -> total borrow/total supply -> utilization -> this_step_protocol_earning
 
         pass
