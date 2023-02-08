@@ -3,10 +3,142 @@ import math
 import numpy as np
 import pandas as pd
 from dataclasses import dataclass
-from typing import Dict, List, Tuple, Union
-from collections import defaultdict
 from rl_env import LendingProtocolEnv, Market
 
+class Env:
+    def __init__(
+        self,
+        users: Optional[dict[str, User]] = None,
+        prices: Optional[PriceDict] = None,
+    ):
+        if users is None:
+            users = {}
+
+        if prices is None:
+            prices = PriceDict({"dai": 1.0, "eth": 2.0})
+
+        self.users = users
+        self.prices = prices
+
+    @property
+    def prices(self) -> PriceDict:
+        return self._prices
+
+    @prices.setter
+    def prices(self, value: PriceDict):
+        if type(value) is not PriceDict:
+            raise TypeError("must use PriceDict type")
+        self._prices = value
+
+
+class User:
+    def __init__(self, env: Env, name: str, funds_available: Optional[dict] = None):
+        assert name not in env.users, f"User {name} exists"
+        self.env = env
+        # add the user to the environment
+        self.env.users[name] = self
+
+        if funds_available is None:
+            funds_available = {"dai": 0.0, "eth": 0.0}
+        self.funds_available = funds_available
+        self.env = env
+
+        self.name = name
+
+    @property
+    def wealth(self) -> float:
+        user_wealth = sum(
+            value * self.env.prices[asset_name]
+            for asset_name, value in self.funds_available.items()
+        )
+        logging.info(f"{self.name}'s wealth in DAI: {user_wealth}")
+
+        return user_wealth
+        """
+        add (pool_shares_delta>0) or remove (pool_shares_delta<0) liquidity to an AMM
+        """
+
+        if self.name not in amm.user_pool_shares:
+            amm.user_pool_shares[self.name] = 0
+
+        assert (
+            amm.user_pool_shares[self.name] + pool_shares_delta >= 0
+        ), "cannot deplete user pool shares"
+
+        # with signs, + means add to pool. - means remove from pool
+        liquidity_fraction_delta = pool_shares_delta / amm.total_pool_shares
+        funds_delta = [w * liquidity_fraction_delta for w in amm.reserves]
+
+        assert all(
+            self.funds_available[amm.asset_names[i]] - funds_delta[i] >= 0
+            for i in range(2)
+        ), "insufficient funds to provide liquidity"
+
+        for i in range(2):
+            # update own funds
+            self.funds_available[amm.asset_names[i]] -= funds_delta[i]
+            # update liquidity pool
+            amm.reserves[i] += funds_delta[i]
+
+        # update pool shares of the user in the pool registry
+        amm.user_pool_shares[self.name] += pool_shares_delta
+
+        # matching balance in user's account to pool registry record
+        self.funds_available[amm.lp_token_name] = amm.user_pool_shares[self.name]
+
+    # -------------------------  PLF actions ------------------------------
+
+    def supply_withdraw(self, amount: float, plf: Plf):  # negative for withdrawing
+        if self.name not in plf.user_i_tokens:
+            plf.user_i_tokens[self.name] = 0
+
+        assert (
+            plf.user_i_tokens[self.name] + amount >= 0
+        ), "cannot withdraw more i-tokens than you have"
+
+        assert (
+            self.funds_available[plf.asset_names] - amount >= 0
+        ), "insufficient funds to provide liquidity"
+
+        self.funds_available[plf.asset_names] -= amount
+
+        # update liquidity pool
+        plf.total_available_funds += amount
+
+        # update i tokens of the user in the pool registry
+        plf.user_i_tokens[self.name] += amount
+
+        # matching balance in user's account to pool registry record
+        self.funds_available[plf.interest_token_name] = plf.user_i_tokens[self.name]
+
+    def borrow_repay(self, amount: float, plf: Plf):
+        if self.name not in plf.user_b_tokens:
+            plf.user_b_tokens[self.name] = 0
+
+        if plf.borrow_token_name not in self.funds_available:
+            self.funds_available[plf.borrow_token_name] = 0
+
+        if plf.user_b_tokens[self.name] + amount < 0:
+            raise ValueError("cannot repay more b-tokens than you have")
+
+        if self.funds_available[plf.interest_token_name] * plf.collateral_factor <= (
+            amount + self.funds_available[plf.borrow_token_name]
+        ):
+            raise ValueError(
+                "insufficient collateral to get the amount of requested debt tokens"
+            )
+
+        # update liquidity pool
+        plf.total_borrowed_funds += amount
+        plf.total_available_funds -= amount
+
+        # update b tokens of the user in the pool registry
+        plf.user_b_tokens[self.name] += amount
+
+        # matching balance in user's account to pool registry record
+        self.funds_available[plf.borrow_token_name] = plf.user_b_tokens[self.name]
+
+        self.funds_available[plf.asset_names] += amount
 
 @dataclass
 class Market:
@@ -26,7 +158,7 @@ class Market:
         return np.array(
             [
                 self.utilization_rate,
-                self.total_supply,
+                self.user_i_token,  # total supply
                 self.liquidation_threshold,
                 self.liquidation_discount_factor,
                 self.collateral_factor,
@@ -34,6 +166,8 @@ class Market:
         )
 
     def update_market(self) -> None:
+        collateral_factor -> total borrow/total supply -> utilization -> this_step_protocol_earning
+
         pass
 
     def lower_collateral_factor(self) -> None:
@@ -48,8 +182,7 @@ class Market:
         self.update_market()
 
     def get_reward(self) -> float:
-        # Important!!!!
-        # Example reward function
+        # Important !!!!
         reward = self.this_step_protocol_earning
         return reward
 
