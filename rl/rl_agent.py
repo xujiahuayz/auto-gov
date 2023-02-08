@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.types import Number
 import numpy as np
-from rl_env import LendingProtocolEnv
-from rl_env import Market
+from rl_env import LendingProtocolEnv, Market
 
 
 class DQNAgent(nn.Module):
@@ -12,12 +12,12 @@ class DQNAgent(nn.Module):
 
     def __init__(
         self,
-        state_size,
-        action_size,
-        learning_rate=0.001,
-        gamma=0.95,
-        epsilon=0.05,
-        epsilon_decay=0.999,
+        state_size: int,
+        action_size: int,
+        learning_rate: float = 0.001,
+        gamma: float = 0.95,
+        epsilon: float = 0.05,
+        epsilon_decay: float = 0.999,
     ):
         # initialize agent
         super(DQNAgent, self).__init__()
@@ -32,14 +32,14 @@ class DQNAgent(nn.Module):
         self.fc3 = nn.Linear(24, action_size)
         self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
 
-    def act(self, state):
-        # TODO: implement
+    def act(self, state: torch.Tensor) -> Number:
+        # TODO: implement, typing inconsistency
         if torch.rand(1).item() <= self.epsilon:
             return torch.randint(self.action_size, (1,))
         state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
@@ -47,8 +47,15 @@ class DQNAgent(nn.Module):
         action = torch.argmax(q_values).item()
         return action
 
-    def learn(self, state, action, reward, next_state, done):
-        # TODO: implement
+    def learn(
+        self,
+        state: torch.Tensor,
+        action: int,
+        reward: torch.Tensor,
+        next_state: torch.Tensor,
+        done: bool,
+    ):
+        # TODO: implement, check typing
         state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
         q_values = self.forward(state)
         if done:
@@ -58,7 +65,7 @@ class DQNAgent(nn.Module):
             next_q_values = self.forward(next_state)
             target = reward + self.gamma * torch.max(next_q_values).item()
         q_values[0][action] = target
-        loss = F.mse_loss(q_values, target)
+        loss = F.mse_loss(input=q_values, target=target)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -66,27 +73,27 @@ class DQNAgent(nn.Module):
             self.epsilon *= self.epsilon_decay
 
 
-# initialize market and environment
-market = Market()
-env = LendingProtocolEnv(market)
+if __name__ == "__main__":
+    # initialize market and environment
+    market = Market()
+    env = LendingProtocolEnv(market)
 
-# initialize agent
-state_size = env.observation_space.shape[0]
-action_size = env.action_space.n
-agent = DQNAgent(state_size, action_size)
+    # initialize agent
+    state_size = env.observation_space.shape[0]
+    action_size = env.action_space.n
+    agent = DQNAgent(state_size, action_size)
 
-num_episodes = 1000
-batch_size = 64
+    num_episodes = 1000
+    batch_size = 64
 
-
-for episode in range(num_episodes):
-    state = env.reset()
-    total_reward = 0
-    done = False
-    while not done:
-        action = agent.act(state)
-        next_state, reward, done, _ = env.step(action)
-        agent.learn(state, action, reward, next_state, done)
-        state = next_state
-        total_reward += reward
-    print(f"Episode {episode} finished with reward {total_reward}")
+    for episode in range(num_episodes):
+        state = env.reset()
+        total_reward = 0
+        done = False
+        while not done:
+            action = agent.act(state)
+            next_state, reward, done, _ = env.step(action)
+            agent.learn(state, action, reward, next_state, done)
+            state = next_state
+            total_reward += reward
+        print(f"Episode {episode} finished with reward {total_reward}")
