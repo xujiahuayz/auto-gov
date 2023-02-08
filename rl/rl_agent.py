@@ -2,10 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-# import gym
 import numpy as np
-import rl_env as env
+from rl_env import LendingProtocolEnv
+from rl_env import Market
 
 
 class DQNAgent(nn.Module):
@@ -37,6 +36,7 @@ class DQNAgent(nn.Module):
         return x
 
     def act(self, state):
+        # TODO: implement
         if torch.rand(1).item() <= self.epsilon:
             return torch.randint(self.action_size, (1,))
         state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
@@ -45,6 +45,7 @@ class DQNAgent(nn.Module):
         return action
 
     def learn(self, state, action, reward, next_state, done):
+        # TODO: implement
         state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
         q_values = self.forward(state)
         if done:
@@ -62,12 +63,18 @@ class DQNAgent(nn.Module):
             self.epsilon *= self.epsilon_decay
 
 
-state_size = 5
-action_size = 3
+# initialize market and environment
+market = Market()
+env = LendingProtocolEnv(market)
+
+# initialize agent
+state_size = env.observation_space.shape[0]
+action_size = env.action_space.n
 agent = DQNAgent(state_size, action_size)
 
 num_episodes = 1000
 batch_size = 64
+
 
 for episode in range(num_episodes):
     state = env.reset()
@@ -75,4 +82,8 @@ for episode in range(num_episodes):
     done = False
     while not done:
         action = agent.act(state)
-        next_state, reward, done
+        next_state, reward, done, _ = env.step(action)
+        agent.learn(state, action, reward, next_state, done)
+        state = next_state
+        total_reward += reward
+    print(f"Episode {episode} finished with reward {total_reward}")
