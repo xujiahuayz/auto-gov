@@ -1,16 +1,20 @@
 import gym
 import numpy as np
+from market_env import Market
 
 
 class Market:
     def __init__(self):
-        self.utilization_rate = 0
-        self.total_supply = 0
-        self.liquidation_threshold = 0
-        self.liquidation_discount_factor = 0
-        self.collateral_factor = 0
+        self.liquidation_threshold: float = 0
+        self.liquidation_discount_factor: float = 0
+        self.collateral_factor: float = 0.85
+        self.user_i_token: float = 0  # total supply
+        self.user_b_token: float = 0  # total borrow
+        self.utilization_rate: float = self.user_b_token / self.user_i_token
         self.steps = 0
-        self.max_steps = 1000
+        self.max_steps = 10000
+        self.cumulative_protocol_earning: float = 0
+        self.this_step_protocol_earning: float = 0
 
     def get_state(self) -> np.ndarray:
         return np.array(
@@ -23,20 +27,24 @@ class Market:
             ]
         )
 
+    def update_market(self) -> None:
+        pass
+
     def lower_collateral_factor(self) -> None:
         self.collateral_factor -= 0.01
+        self.update_market()
 
     def keep_collateral_factor(self) -> None:
-        pass
+        self.update_market()
 
     def raise_collateral_factor(self) -> None:
         self.collateral_factor += 0.01
+        self.update_market()
 
     def get_reward(self) -> float:
         # Important!!!!
         # Example reward function
-        # we need to use repay?
-        reward = self.utilization_rate * self.collateral_factor
+        reward = self.this_step_protocol_earning
         return reward
 
     def is_done(self) -> bool:
@@ -44,6 +52,26 @@ class Market:
         if self.steps >= self.max_steps:
             return True
         return False
+
+    def accrue_interest(self):
+        # update this!!!
+        for user_name in self.user_i_tokens:
+            user_funds = self.env.users[user_name].funds_available
+
+            # distribute i-token
+            user_funds[self.interest_token_name] *= self.daily_supplier_multiplier
+
+            # update i token register
+            self.user_i_tokens[user_name] = user_funds[self.interest_token_name]
+
+        for user_name in self.user_b_tokens:
+            user_funds = self.env.users[user_name].funds_available
+
+            # distribute b-token
+            user_funds[self.borrow_token_name] *= self.daily_borrow_multiplier
+
+            # update b token register
+            self.user_b_tokens[user_name] = user_funds[self.borrow_token_name]
 
 
 class LendingProtocolEnv(gym.Env):
