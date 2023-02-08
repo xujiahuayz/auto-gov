@@ -8,6 +8,8 @@ from rl_env import Market
 
 
 class DQNAgent(nn.Module):
+    # agent for DQN
+
     def __init__(
         self,
         state_size,
@@ -17,6 +19,7 @@ class DQNAgent(nn.Module):
         epsilon=0.05,
         epsilon_decay=0.999,
     ):
+        # initialize agent
         super(DQNAgent, self).__init__()
         self.state_size = state_size
         self.action_size = action_size
