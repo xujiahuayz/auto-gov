@@ -8,14 +8,18 @@ class LendingProtocolEnv(gym.Env):
         self.market = market
         self.action_space = gym.spaces.Discrete(3)  # lower, keep, raise
         self.observation_space = gym.spaces.Box(
-            low=np.array([0, 0, 0, 0, 0]),
-            high=np.array([1, np.inf, np.inf, np.inf, np.inf]),
+            # utilization_ratio, total_supply, collateral_factor
+            low=np.array([0, 0, 0]),
+            high=np.array([1, np.inf, 1]),
             dtype=np.float32,
         )
 
     def reset(self) -> np.ndarray:
         state = self.market.get_state()
         return state
+
+    def observation(self) -> np.ndarray:
+        return self.market.get_state()
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
         # lower, keep, raise the collateral factor

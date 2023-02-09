@@ -148,16 +148,6 @@ class User:
         else:
             self._borrow_repay(buffer_funds, plf)
 
-    def reactive_borrow(self, plf: Plf) -> None:
-        """
-        borrow funds from the liquidity pool in response to market conditions
-        """
-
-        self.funds_available.setdefault(plf.borrow_token_name, 0)
-
-        # borrow all the funds available to the lending pool
-        self._borrow_repay(plf.total_available_funds, plf)
-
 
 @dataclass
 class Plf:
