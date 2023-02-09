@@ -49,7 +49,7 @@ def simulate_simple_lending(
     ), f"initial borrow ratio {_initial_borrow_ratio} cannot exceed collateral factor {dai_plf.collateral_factor}"
 
     # assume that 80% of the supplied funds are borrowed
-    market_maker.borrow_repay(initial_borrowed_funds, dai_plf)
+    market_maker._borrow_repay(initial_borrowed_funds, dai_plf)
 
     # create a user for the aggregator, has 10M DAI available
     aggregator = User(
@@ -58,7 +58,7 @@ def simulate_simple_lending(
         funds_available={"dai": initial_supplied_funds_aggr},
     )
     # aggregator supplies all funds into the plf pool
-    aggregator.supply_withdraw(initial_supplied_funds_aggr, dai_plf)
+    aggregator._supply_withdraw(initial_supplied_funds_aggr, dai_plf)
 
     # create array of x days of returns
     returns = [0.0] * days_to_simulate
@@ -125,7 +125,7 @@ def simulate_spiral_lending(
     ), f"initial borrow ratio {_initial_borrow_ratio} cannot exceed collateral factor {dai_plf.collateral_factor}"
 
     # assume that 80% of the supplied funds are borrowed
-    market_maker.borrow_repay(initial_borrowed_funds, dai_plf)
+    market_maker._borrow_repay(initial_borrowed_funds, dai_plf)
 
     # create a user for the aggregator, has 10M DAI available
     aggregator = User(
@@ -135,7 +135,7 @@ def simulate_spiral_lending(
     )
 
     # aggregator supplies all funds into the plf pool
-    aggregator.supply_withdraw(aggregator.funds_available["dai"], dai_plf)
+    aggregator._supply_withdraw(aggregator.funds_available["dai"], dai_plf)
 
     for i in range(_spirals):
         # print(aggregator.funds_available)
@@ -153,11 +153,11 @@ def simulate_spiral_lending(
         # print(available_to_borrow)
 
         # aggregator puts borrowed funds back into plf
-        aggregator.borrow_repay(available_to_borrow, dai_plf)
+        aggregator._borrow_repay(available_to_borrow, dai_plf)
 
         # print(aggregator.funds_available)
 
-        aggregator.supply_withdraw(available_to_borrow, dai_plf)
+        aggregator._supply_withdraw(available_to_borrow, dai_plf)
 
         # print(aggregator.funds_available)
 

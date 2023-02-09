@@ -1,11 +1,10 @@
 import pandas as pd
-from plf_env.simulation_manager import organize_market_data, organize_oracle_price
-from plf_env.env import Market, PLFEnv, ExternalData
+from market_env.env import Plf
 import pytest
 
 
 @pytest.fixture
-def plf_env(
+def market_env(
     dai_market_name: str,
     dai_address: str,
     bat_market_name: str,
@@ -19,18 +18,18 @@ def plf_env(
     alice: str,
     bob: str,
 ):
-    plf_env = PLFEnv()
-    plf_env.external_data = ExternalData(
+    market_env = Plf()
+    market_env.external_data = ExternalData(
         prices=prices, volume=volumes, volatility=volatility
     )
-    plf_env.markets[dai_market_name] = Market(
+    market_env.markets[dai_market_name] = Market(
         dai_market_name,
         dai_address,
         collateral_factor=collateral_factors[dai_market_name],
         liquidation_threshold=liquidation_thresholds[dai_market_name],
         liquidation_discount=liquidation_discounts[dai_market_name],
     )
-    plf_env.markets[bat_market_name] = Market(
+    market_env.markets[bat_market_name] = Market(
         bat_market_name,
         bat_address,
         collateral_factor=collateral_factors[bat_market_name],
@@ -39,10 +38,10 @@ def plf_env(
     )
 
     # alice starts with 100 DAI
-    plf_env.markets[dai_market_name].get_user(alice).unsupplied_amount = 100
-    plf_env.markets[bat_market_name].get_user(bob).unsupplied_amount = 100
+    market_env.markets[dai_market_name].get_user(alice).unsupplied_amount = 100
+    market_env.markets[bat_market_name].get_user(bob).unsupplied_amount = 100
 
-    return plf_env
+    return market_env
 
 
 @pytest.fixture

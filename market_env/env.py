@@ -7,6 +7,8 @@ from typing import Optional
 
 from market_env.utils import PriceDict
 
+SAFETY_MARGIN = 0.05
+
 
 class Env:
     def __init__(
@@ -70,22 +72,23 @@ class User:
 
         return user_wealth
 
-    def supply_withdraw(self, amount: float, plf: Plf):
+    def _supply_withdraw(self, amount: float, plf: Plf) -> None:
         """
         Supply (amount > 0) or withdraw (amount < 0) funds to the liquidity pool
         """
-        if self.name not in plf.user_i_tokens:
-            plf.user_i_tokens[self.name] = 0
+        # set default values for user_i_tokens and asset balance if they don't exist
+        plf.user_i_tokens.setdefault(self.name, 0)
+        self.funds_available.setdefault(plf.asset_name, 0)
 
         assert (
             plf.user_i_tokens[self.name] + amount >= 0
         ), "cannot withdraw more i-tokens than you have"
 
         assert (
-            self.funds_available[plf.asset_names] - amount >= 0
+            self.funds_available[plf.asset_name] - amount >= 0
         ), "insufficient funds to provide liquidity"
 
-        self.funds_available[plf.asset_names] -= amount
+        self.funds_available[plf.asset_name] -= amount
 
         # update liquidity pool
         plf.total_available_funds += amount
@@ -96,12 +99,13 @@ class User:
         # matching balance in user's account to pool registry record
         self.funds_available[plf.interest_token_name] = plf.user_i_tokens[self.name]
 
-    def borrow_repay(self, amount: float, plf: Plf):
-        if self.name not in plf.user_b_tokens:
-            plf.user_b_tokens[self.name] = 0
+    def _borrow_repay(self, amount: float, plf: Plf) -> None:
+        # set default values for user_b_tokens and funds_available if they don't exist
 
-        if plf.borrow_token_name not in self.funds_available:
-            self.funds_available[plf.borrow_token_name] = 0
+        plf.user_b_tokens.setdefault(self.name, 0)
+        self.funds_available.setdefault(plf.borrow_token_name, 0)
+        self.funds_available.setdefault(plf.asset_name, 0)
+        self.funds_available.setdefault(plf.interest_token_name, 0)
 
         if plf.user_b_tokens[self.name] + amount < 0:
             raise ValueError("cannot repay more b-tokens than you have")
@@ -123,7 +127,36 @@ class User:
         # matching balance in user's account to pool registry record
         self.funds_available[plf.borrow_token_name] = plf.user_b_tokens[self.name]
 
-        self.funds_available[plf.asset_names] += amount
+        self.funds_available[plf.asset_name] += amount
+
+    def reactive_action(self, plf: Plf) -> None:
+        """
+        supply funds to the liquidity pool in response to market conditions
+        """
+
+        self.funds_available.setdefault(plf.asset_name, 0)
+        self.funds_available.setdefault(plf.interest_token_name, 0)
+        self.funds_available.setdefault(plf.borrow_token_name, 0)
+
+        buffer_funds = self.funds_available[
+            plf.interest_token_name
+        ] * plf.collateral_factor - self.funds_available[plf.borrow_token_name] * (
+            SAFETY_MARGIN + 1
+        )
+        if buffer_funds > 0:
+            self._supply_withdraw(buffer_funds, plf)
+        else:
+            self._borrow_repay(buffer_funds, plf)
+
+    def reactive_borrow(self, plf: Plf) -> None:
+        """
+        borrow funds from the liquidity pool in response to market conditions
+        """
+
+        self.funds_available.setdefault(plf.borrow_token_name, 0)
+
+        # borrow all the funds available to the lending pool
+        self._borrow_repay(plf.total_available_funds, plf)
 
 
 @dataclass
@@ -132,27 +165,26 @@ class Plf:
     initiator: User
     initial_starting_funds: float = 1000
     collateral_factor: float = 0.85
-    asset_names: str = "dai"  # you can only deposit and borrow 1 token
+    asset_name: str = "dai"  # you can only deposit and borrow 1 token
 
     def __post_init__(self):
-        # actual underlying that's still available, not the interest-bearing tokens
-        self.total_available_funds = self.initial_starting_funds
+        assert (
+            self.asset_name in self.initiator.funds_available
+            and self.initiator.funds_available[self.asset_name]
+            >= self.initial_starting_funds
+        ), "insufficient funds"
 
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
         self.total_borrowed_funds = 0.0
 
-        available_prices = self.env.prices
-        self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_names
-        self.borrow_token_name = DEBT_TOKEN_PREFIX + self.asset_names
-
-        assert (
-            self.asset_names in self.initiator.funds_available
-            and self.initiator.funds_available[self.asset_names]
-            >= self.initial_starting_funds
-        ), "insufficient funds"
+        self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_name
+        self.borrow_token_name = DEBT_TOKEN_PREFIX + self.asset_name
 
         # deduct funds from user balance
-        self.initiator.funds_available[self.asset_names] -= self.initial_starting_funds
+        self.initiator.funds_available[self.asset_name] -= self.initial_starting_funds
+
+        # actual underlying that's still available, not the interest-bearing tokens
+        self.total_available_funds = self.initial_starting_funds
 
         self.user_i_tokens = {self.initiator.name: self.initial_starting_funds}
 
