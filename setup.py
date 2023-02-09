@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 
 setup(
-    name="plf_env",
+    name="market_env",
     packages=find_packages(),
     install_requires=[
         "numpy",
@@ -15,7 +15,4 @@ setup(
         "matplotlib",
     ],
     extras_require={"dev": ["pylint", "black", "pytest"]},
-    entry_points={
-        "console_scripts": ["plf-env=plf_env.cli:run"],
-    },
 )

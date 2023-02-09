@@ -1,13 +1,13 @@
 # make sure User is recognized
 from __future__ import annotations
 from dataclasses import dataclass, field
-from yieldenv.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
+from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 import numpy as np
 import logging
 from typing import Optional, cast
-from yieldenv.interest_rate import borrow_lend_rates
+from market_env.interest_rate import borrow_lend_rates
 
-from yieldenv.utils import PriceDict
+from market_env.utils import PriceDict
 
 
 class Env:

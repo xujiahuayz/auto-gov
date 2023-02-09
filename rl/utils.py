@@ -1,6 +1,6 @@
 from collections.abc import MutableMapping
 
-# from yieldenv.settings import PROJECT_ROOT
+# from market_env.settings import PROJECT_ROOT
 import matplotlib.pyplot as plt
 from typing import Optional, Literal
 from os import path
