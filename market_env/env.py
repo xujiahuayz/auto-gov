@@ -139,6 +139,8 @@ class User:
         self.funds_available.setdefault(plf.interest_token_name, 0)
         self.funds_available.setdefault(plf.borrow_token_name, 0)
 
+        # NOTE: this is only looking at one market, not considering user's other assets
+        # TODO: add a check for the user's other assets
         buffer_funds = self.funds_available[
             plf.interest_token_name
         ] * plf.collateral_factor - self.funds_available[plf.borrow_token_name] * (
@@ -208,7 +210,7 @@ class Plf:
         # self.previous_profit = self.profit
 
         self.accrue_daily_interest()
-        for user in self.env.users:
+        for user in self.env.users.values():
             user.reactive_action(self)
 
     def get_state(self) -> np.ndarray:
