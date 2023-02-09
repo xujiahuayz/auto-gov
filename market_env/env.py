@@ -292,7 +292,7 @@ class Plf:
 
     @property
     def profit(self) -> float:
-        return self.total_i_tokens - self.total_b_tokens - self.total_available_funds
+        return self.total_b_tokens + self.total_available_funds - self.total_i_tokens
 
     @property
     def daily_supplier_multiplier(self) -> float:
@@ -306,7 +306,7 @@ class Plf:
         self,
         util_rate: float,
         rb_factor: float = 20,
-        rs_factor: float = 20,
+        rs_factor: float = 50,
     ) -> tuple[float, float]:
         """
         calculate borrow and supply rates based on utilization ratio
@@ -357,17 +357,17 @@ if __name__ == "__main__":
         asset_name="tkn",
         collateral_factor=0.8,
     )
-    print(plf)
     print(f"**Alice {Alice} \n")
+    print(f"++{plf} \n")
 
     # Alice react first
     Alice.reactive_action(plf)
     print(f"**Alice {Alice} \n")
-    print(plf)
+    print(f"++{plf} \n")
 
     # then the market update
     plf.raise_collateral_factor()
     plf.update_market()
     Alice.reactive_action(plf)
     print(f"**Alice {Alice} \n")
-    print(plf)
+    print(f"++{plf} \n")
