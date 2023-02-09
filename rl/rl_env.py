@@ -1,6 +1,7 @@
 import gym
 import numpy as np
 from test_market import TestMarket
+import sys
 
 
 class ProtocolEnv(gym.Env):
@@ -46,8 +47,8 @@ class ProtocolEnv(gym.Env):
         elif action == 2:
             self.market.raise_collateral_factor()
         else:
-            # error and break the program
-            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+            print("!" * 30)
+            sys.exit(1)
 
         state = self.market.get_state()
         reward = self.market.get_reward()

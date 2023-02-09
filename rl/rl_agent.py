@@ -18,7 +18,7 @@ class DQNAgent(nn.Module):
         action_size: int,
         learning_rate: float = 0.05,
         gamma: float = 0.9,
-        epsilon: float = 0.3,
+        epsilon: float = 0.4,
         epsilon_decay: float = 0.999,
     ):
         # initialize agent
@@ -93,8 +93,8 @@ class DQNAgent(nn.Module):
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
-        if self.epsilon > 0.05:
-            self.epsilon *= self.epsilon_decay
+        # if self.epsilon > 0.05:
+        #     self.epsilon *= self.epsilon_decay
 
 
 if __name__ == "__main__":
