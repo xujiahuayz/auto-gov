@@ -26,24 +26,28 @@ class ProtocolEnv(gym.Env):
         state = self.market.get_state()
         collateral_factor = state[2]
 
-        # lower, keep, raise the collateral factor
-        if collateral_factor <= 0:
-            if action == 0:
-                action = 1
-            elif action == 2:
-                action = 1
-        elif collateral_factor >= 1:
-            if action == 2:
-                action = 1
-            elif action == 0:
-                action = 1
+        # # constrain the action
+        # if collateral_factor <= 0:
+        #     if action == 0:
+        #         action = 1
+        #     elif action == 2:
+        #         action = 1
+        # elif collateral_factor >= 1:
+        #     if action == 2:
+        #         action = 1
+        #     elif action == 0:
+        #         action = 1
 
+        # lower, keep, raise the collateral factor
         if action == 0:
             self.market.lower_collateral_factor()
         elif action == 1:
             self.market.keep_collateral_factor()
-        else:
+        elif action == 2:
             self.market.raise_collateral_factor()
+        else:
+            # error and break the program
+            print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
         state = self.market.get_state()
         reward = self.market.get_reward()

@@ -47,12 +47,23 @@ class DQNAgent(nn.Module):
 
     def act(self, state: torch.Tensor) -> Number:
         # choose action to take
-        if torch.rand(1).item() <= self.epsilon:
-            return torch.randint(self.action_size, (1,))
-        # state = torch.Tensor(state, dtype=torch.float32).unsqueeze(0)
         state = torch.from_numpy(state).float().unsqueeze(0)
-        q_values = self.forward(state)
-        action = torch.argmax(q_values).item()
+        if torch.rand(1).item() <= self.epsilon:
+            action = torch.randint(self.action_size, (1,))
+        else:
+            # state = torch.from_numpy(state).float().unsqueeze(0)
+            q_values = self.forward(state)
+            action = torch.argmax(q_values).item()
+
+        # If the current collateral factor is less than 0, only allow keep or raise actions
+        if state[0][2] <= 0:
+            if action == 0:
+                action = 1
+        # If the current collateral factor is more than 1, only allow keep or lower actions
+        elif state[0][2] >= 1:
+            if action == 2:
+                action = 1
+
         return action
 
     def learn(

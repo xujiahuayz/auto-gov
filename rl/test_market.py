@@ -12,8 +12,12 @@ class TestMarket:
 
         # initial funds
         self.total_funds: float = 10000
-        self.total_borrowed_funds: float = 0
-        self.total_available_funds: float = self.total_funds - self.total_borrowed_funds
+        if self.collateral_factor <= 0.5:
+            util_ratio = self.collateral_factor
+        else:
+            util_ratio = 1 - self.collateral_factor
+        self.total_borrowed_funds = self.total_funds * util_ratio
+        self.total_available_funds = self.total_funds - self.total_borrowed_funds
 
     def reset(self):
         self.collateral_factor: float = 0.8
@@ -25,8 +29,12 @@ class TestMarket:
 
         # initial funds
         self.total_funds: float = 10000
-        self.total_borrowed_funds: float = 0
-        self.total_available_funds: float = self.total_funds - self.total_borrowed_funds
+        if self.collateral_factor <= 0.5:
+            util_ratio = self.collateral_factor
+        else:
+            util_ratio = 1 - self.collateral_factor
+        self.total_borrowed_funds = self.total_funds * util_ratio
+        self.total_available_funds = self.total_funds - self.total_borrowed_funds
 
     def get_state(self) -> np.ndarray:
         return np.array(
