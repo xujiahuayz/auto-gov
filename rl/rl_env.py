@@ -3,14 +3,14 @@ import numpy as np
 from market_env import Market
 
 
-class LendingProtocolEnv(gym.Env):
+class ProtocolEnv(gym.Env):
     def __init__(self, market: Market):
         self.market = market
         self.action_space = gym.spaces.Discrete(3)  # lower, keep, raise
         self.observation_space = gym.spaces.Box(
-            # utilization_ratio, total_supply, collateral_factor
+            # total_available_funds, total_borrowed_funds, collateral_factor
             low=np.array([0, 0, 0]),
-            high=np.array([1, np.inf, 1]),
+            high=np.array([np.inf, np.inf, 1]),
             dtype=np.float32,
         )
 
@@ -39,7 +39,7 @@ class LendingProtocolEnv(gym.Env):
 
 if __name__ == "__main__":
     market = Market()  # env
-    env = LendingProtocolEnv(market)
+    env = ProtocolEnv(market)
 
     state = env.reset()
     done = False

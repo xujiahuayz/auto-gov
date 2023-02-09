@@ -4,7 +4,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.types import Number
 import numpy as np
-from rl_env import LendingProtocolEnv, Market
+from test_market import TestMarket
+from lr_env import ProtocolEnv
 
 
 class DQNAgent(nn.Module):
@@ -27,9 +28,14 @@ class DQNAgent(nn.Module):
         self.gamma = gamma
         self.epsilon = epsilon
         self.epsilon_decay = epsilon_decay
-        self.fc1 = nn.Linear(state_size, 24)
-        self.fc2 = nn.Linear(24, 24)
-        self.fc3 = nn.Linear(24, action_size)
+
+        # 0 0 0
+        # - - - - - - - - - -
+        # 0 0 0
+
+        self.fc1 = nn.Linear(state_size, 10)
+        self.fc2 = nn.Linear(10, 10)
+        self.fc3 = nn.Linear(10, action_size)
         self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -39,10 +45,10 @@ class DQNAgent(nn.Module):
         return x
 
     def act(self, state: torch.Tensor) -> Number:
-        # TODO: implement, typing inconsistency
+        # choose action to take
         if torch.rand(1).item() <= self.epsilon:
             return torch.randint(self.action_size, (1,))
-        state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+        state = torch.Tensor(state, dtype=torch.float32).unsqueeze(0)
         q_values = self.forward(state)
         action = torch.argmax(q_values).item()
         return action
@@ -55,15 +61,17 @@ class DQNAgent(nn.Module):
         next_state: torch.Tensor,
         done: bool,
     ):
-        # TODO: implement, check typing
-        state = torch.tensor(state, dtype=torch.float32).unsqueeze(0)
+        # learn from experience
+        state = torch.Tensor(state, dtype=torch.float32).unsqueeze(0)
+
         q_values = self.forward(state)
         if done:
             target = reward
         else:
-            next_state = torch.tensor(next_state, dtype=torch.float32).unsqueeze(0)
+            next_state = torch.Tensor(next_state, dtype=torch.float32).unsqueeze(0)
             next_q_values = self.forward(next_state)
             target = reward + self.gamma * torch.max(next_q_values).item()
+
         q_values[0][action] = target
         loss = F.mse_loss(input=q_values, target=target)
         self.optimizer.zero_grad()
@@ -75,8 +83,8 @@ class DQNAgent(nn.Module):
 
 if __name__ == "__main__":
     # initialize market and environment
-    market = Market()
-    env = LendingProtocolEnv(market)
+    market = TestMarket()
+    env = ProtocolEnv(market)
 
     # initialize agent
     state_size = env.observation_space.shape[0]
