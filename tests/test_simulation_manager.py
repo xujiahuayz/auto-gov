@@ -17,7 +17,6 @@ def test_execute_blocks(
     dai_market_name: str,
     dai_address: str,
 ):
-
     event1 = Event(
         args={
             "reserve": dai_address,

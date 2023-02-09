@@ -35,6 +35,16 @@ class Env:
             raise TypeError("must use PriceDict type")
         self._prices = value
 
+    @property
+    def is_done(self) -> bool:
+        """
+        Returns True if step reaches max_steps, otherwise False
+        """
+        self.step += 1
+        if self.step >= self.max_steps:
+            return True
+        return False
+
 
 class User:
     def __init__(self, env: Env, name: str, funds_available: Optional[dict] = None):
@@ -60,7 +70,10 @@ class User:
 
         return user_wealth
 
-    def supply_withdraw(self, amount: float, plf: Plf):  # negative for withdrawing
+    def supply_withdraw(self, amount: float, plf: Plf):
+        """
+        Supply (amount > 0) or withdraw (amount < 0) funds to the liquidity pool
+        """
         if self.name not in plf.user_i_tokens:
             plf.user_i_tokens[self.name] = 0
 
@@ -122,8 +135,11 @@ class Plf:
     asset_names: str = "dai"  # you can only deposit and borrow 1 token
 
     def __post_init__(self):
+        # actual underlying that's still available, not the interest-bearing tokens
         self.total_available_funds = self.initial_starting_funds
-        self.total_borrowed_funds = 0.0  # start with no funds borrowed
+
+        # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
+        self.total_borrowed_funds = 0.0
 
         available_prices = self.env.prices
         self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_names
@@ -168,10 +184,16 @@ class Plf:
         return rb
 
     @property
-    def total_pool_shares(self) -> tuple[float, float]:
-        total_i_tokens = sum(self.user_i_tokens.values())
-        total_b_tokens = sum(self.user_b_tokens.values())
-        return total_i_tokens, total_b_tokens
+    def total_i_tokens(self) -> float:
+        return sum(self.user_i_tokens.values())
+
+    @property
+    def total_b_tokens(self) -> float:
+        return sum(self.user_b_tokens.values())
+
+    @property
+    def profit(self) -> float:
+        return self.total_i_tokens - self.total_b_tokens - self.total_available_funds
 
     @property
     def daily_supplier_multiplier(self) -> float:
@@ -201,7 +223,11 @@ class Plf:
 
         return borrow_rate, supply_rate
 
-    def accrue_interest(self):
+    def accrue_daily_interest(self):
+        """
+        accrue interest to all users in the pool
+        record profit
+        """
         for user_name in self.user_i_tokens:
             user_funds = self.env.users[user_name].funds_available
 

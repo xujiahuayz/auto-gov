@@ -14,7 +14,6 @@ def simulate_simple_lending(
     _gov_price_trend: float,
     _days_to_simulate: int = 365,
 ) -> list[float]:
-
     # set up an environment with all DAI prices of 1, price for governance token
     simulation_env = Env(prices=PriceDict({"dai": 1}))
 
@@ -72,7 +71,7 @@ def simulate_simple_lending(
     # simulate every day
     for i in range(days_to_simulate):
         simulation_env.prices["aave"] = gov_token_prices[i]
-        dai_plf.accrue_interest()
+        dai_plf.accrue_daily_interest()
         dai_plf.distribute_reward(_gov_tokens_distributed_perday)
         returns[i] = aggregator.wealth
 
@@ -91,7 +90,6 @@ def simulate_spiral_lending(
     _spirals: int,
     _days_to_simulate: int = 365,
 ) -> list[float]:
-
     # set up an environment with all DAI prices of 1, price for governance token
     simulation_env = Env(prices=PriceDict({"dai": 1}))
 
@@ -174,7 +172,7 @@ def simulate_spiral_lending(
     # simulate every day
     for i in range(days_to_simulate):
         simulation_env.prices["aave"] = gov_token_prices[i]
-        dai_plf.accrue_interest()
+        dai_plf.accrue_daily_interest()
         dai_plf.distribute_reward(_gov_tokens_distributed_perday)
         returns[i] = aggregator.wealth
 
