@@ -5,8 +5,12 @@ from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 import logging
 from typing import Optional
 import numpy as np
+import logging
 
 from market_env.utils import PriceDict
+
+# set logging level
+logging.basicConfig(level=logging.INFO)
 
 SAFETY_MARGIN = 0.05
 
@@ -69,9 +73,12 @@ class User:
             value * self.env.prices[asset_name]
             for asset_name, value in self.funds_available.items()
         )
-        logging.info(f"{self.name}'s wealth in DAI: {user_wealth}")
+        logging.info(f"{self.name}'s wealth in USD: {user_wealth}")
 
         return user_wealth
+
+    def __repr__(self) -> str:
+        return f"name: {self.name}, funds available: {self.funds_available}, wealth: {self.wealth}"
 
     def _supply_withdraw(self, amount: float, plf: Plf) -> None:
         """
@@ -81,13 +88,14 @@ class User:
         plf.user_i_tokens.setdefault(self.name, 0)
         self.funds_available.setdefault(plf.asset_name, 0)
 
-        assert (
-            plf.user_i_tokens[self.name] + amount >= 0
-        ), "cannot withdraw more i-tokens than you have"
-
-        assert (
-            self.funds_available[plf.asset_name] - amount >= 0
-        ), "insufficient funds to provide liquidity"
+        if amount > 0:
+            amount = min(amount, self.funds_available[plf.asset_name])
+            # add logging
+            logging.info(f"supplying {amount} {plf.asset_name}")
+        else:
+            amount = max(amount, -plf.user_i_tokens[self.name])
+            # add logging
+            logging.info(f"withdrawing {amount} {plf.asset_name}")
 
         self.funds_available[plf.asset_name] -= amount
 
@@ -141,31 +149,52 @@ class User:
 
         # NOTE: this is only looking at one market, not considering user's other assets
         # TODO: add a check for the user's other assets
-        buffer_funds = self.funds_available[
-            plf.interest_token_name
-        ] * plf.collateral_factor - self.funds_available[plf.borrow_token_name] * (
-            SAFETY_MARGIN + 1
-        )
-        if buffer_funds > 0:
-            self._supply_withdraw(buffer_funds, plf)
-        else:
-            self._borrow_repay(buffer_funds, plf)
+        # check loan health
+        existing_borrow = self.funds_available[plf.borrow_token_name]
+        existing_supply = self.funds_available[plf.interest_token_name]
+
+        max_borrow = existing_supply * plf.collateral_factor / (1 + SAFETY_MARGIN)
+
+        if max_borrow > existing_borrow:  # healthy loan
+            # can deposit all existing funds in the pool
+            self._supply_withdraw(self.funds_available[plf.asset_name], plf)
+            # can borrow up to the buffer
+            new_loan = (
+                self.funds_available[plf.interest_token_name] * plf.collateral_factor
+            ) / (1 + SAFETY_MARGIN)
+            self._borrow_repay(new_loan - existing_borrow, plf)
+        else:  # unhealthy loan
+            self._borrow_repay(max_borrow - existing_borrow, plf)
 
 
-@dataclass
 class Plf:
-    env: Env
-    initiator: User
-    initial_starting_funds: float = 1000
-    collateral_factor: float = 0.85
-    asset_name: str = "dai"  # you can only deposit and borrow 1 token
+    def __init__(
+        self,
+        env: Env,
+        initiator: User,
+        initial_starting_funds: float = 1000,
+        collateral_factor: float = 0.85,
+        asset_name: str = "dai",
+    ) -> None:
+        """
+        :param env: the environment in which the liquidity pool is operating
+        :param initiator: the user who is initiating the liquidity pool
+        :param initial_starting_funds: the initial amount of funds the initiator is putting into the liquidity pool
+        :param collateral_factor: the collateral factor of the liquidity pool
+        :param asset_name: the name of the asset that the liquidity pool is operating with
+        """
 
-    def __post_init__(self):
-        assert (
-            self.asset_name in self.initiator.funds_available
-            and self.initiator.funds_available[self.asset_name]
-            >= self.initial_starting_funds
-        ), "insufficient funds"
+        if collateral_factor > 1 or collateral_factor < 0:
+            raise ValueError("collateral factor must be between 0 and 1")
+        initiator.funds_available.setdefault(asset_name, 0)
+        if initiator.funds_available[asset_name] < initial_starting_funds:
+            raise ValueError("insufficient funds to start liquidity pool")
+
+        self.env = env
+        self.initiator = initiator
+        self.initial_starting_funds = initial_starting_funds
+        self._collateral_factor = collateral_factor
+        self.asset_name = asset_name
 
         self.previous_profit: float = 0.0
 
@@ -191,8 +220,18 @@ class Plf:
         ] = self.initial_starting_funds
         self.initiator.funds_available[self.borrow_token_name] = 0
 
-    def __repr__(self):
-        return f"(available funds = {self.total_available_funds}, borrowed funds = {self.total_borrowed_funds})"
+    def __repr__(self) -> str:
+        return f"{self.asset_name} PLF: (available funds = {self.total_available_funds}, borrowed funds = {self.total_borrowed_funds}, profit = {self.profit})"
+
+    @property
+    def collateral_factor(self):
+        return self._collateral_factor
+
+    @collateral_factor.setter
+    def collateral_factor(self, value: float):
+        if value < 0 or value > 1:
+            raise ValueError("collateral factor must be between 0 and 1")
+        self._collateral_factor = value
 
     # actions
     def lower_collateral_factor(self) -> None:
@@ -266,8 +305,8 @@ class Plf:
     def borrow_lend_rates(
         self,
         util_rate: float,
-        rb_factor: float = 25,
-        rs_factor: float = 50,
+        rb_factor: float = 20,
+        rs_factor: float = 20,
     ) -> tuple[float, float]:
         """
         calculate borrow and supply rates based on utilization ratio
@@ -305,3 +344,30 @@ class Plf:
 
             # update b token register
             self.user_b_tokens[user_name] = user_funds[self.borrow_token_name]
+
+
+if __name__ == "__main__":
+    # initialize environment
+    env = Env(prices=PriceDict({"tkn": 1}))
+    Alice = User(name="alice", env=env, funds_available={"tkn": 2_000})
+    plf = Plf(
+        env=env,
+        initiator=Alice,
+        initial_starting_funds=1000,
+        asset_name="tkn",
+        collateral_factor=0.8,
+    )
+    print(plf)
+    print(f"**Alice {Alice} \n")
+
+    # Alice react first
+    Alice.reactive_action(plf)
+    print(f"**Alice {Alice} \n")
+    print(plf)
+
+    # then the market update
+    plf.raise_collateral_factor()
+    plf.update_market()
+    Alice.reactive_action(plf)
+    print(f"**Alice {Alice} \n")
+    print(plf)
