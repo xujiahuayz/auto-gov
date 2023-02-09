@@ -38,7 +38,7 @@ class LendingProtocolEnv(gym.Env):
 
 
 if __name__ == "__main__":
-    market = Market()
+    market = Market()  # env
     env = LendingProtocolEnv(market)
 
     state = env.reset()

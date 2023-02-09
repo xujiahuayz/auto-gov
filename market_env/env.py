@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 import logging
 from typing import Optional
+import numpy as np
 
 from market_env.utils import PriceDict
 
@@ -164,6 +165,8 @@ class Plf:
             >= self.initial_starting_funds
         ), "insufficient funds"
 
+        self.previous_profit: float = 0.0
+
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
         self.total_borrowed_funds = 0.0
 
@@ -188,6 +191,39 @@ class Plf:
 
     def __repr__(self):
         return f"(available funds = {self.total_available_funds}, borrowed funds = {self.total_borrowed_funds})"
+
+    # actions
+    def lower_collateral_factor(self) -> None:
+        self.collateral_factor -= 0.01
+        self.update_market()
+
+    def keep_collateral_factor(self) -> None:
+        self.update_market()
+
+    def raise_collateral_factor(self) -> None:
+        self.collateral_factor += 0.01
+        self.update_market()
+
+    def update_market(self) -> None:
+        # self.previous_profit = self.profit
+
+        self.accrue_daily_interest()
+        for user in self.env.users:
+            user.reactive_action(self)
+
+    def get_state(self) -> np.ndarray:
+        return np.array(
+            [
+                self.total_available_funds,
+                self.total_borrowed_funds,
+                self.collateral_factor,
+            ]
+        )
+
+    def get_reward(self) -> float:
+        previous_profit = self.previous_profit
+        self.previous_profit = self.profit
+        return self.profit - previous_profit
 
     @property
     def utilization_ratio(self) -> float:
