@@ -4,8 +4,9 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.types import Number
 import numpy as np
+import test_market as tm
 from test_market import TestMarket
-from lr_env import ProtocolEnv
+from rl_env import ProtocolEnv
 
 
 class DQNAgent(nn.Module):
@@ -15,9 +16,9 @@ class DQNAgent(nn.Module):
         self,
         state_size: int,
         action_size: int,
-        learning_rate: float = 0.001,
-        gamma: float = 0.95,
-        epsilon: float = 0.05,
+        learning_rate: float = 0.05,
+        gamma: float = 0.9,
+        epsilon: float = 0.3,
         epsilon_decay: float = 0.999,
     ):
         # initialize agent
@@ -33,9 +34,9 @@ class DQNAgent(nn.Module):
         # - - - - - - - - - -
         # 0 0 0
 
-        self.fc1 = nn.Linear(state_size, 10)
-        self.fc2 = nn.Linear(10, 10)
-        self.fc3 = nn.Linear(10, action_size)
+        self.fc1 = nn.Linear(state_size, 6)
+        self.fc2 = nn.Linear(6, 6)
+        self.fc3 = nn.Linear(6, action_size)
         self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -48,31 +49,35 @@ class DQNAgent(nn.Module):
         # choose action to take
         if torch.rand(1).item() <= self.epsilon:
             return torch.randint(self.action_size, (1,))
-        state = torch.Tensor(state, dtype=torch.float32).unsqueeze(0)
+        # state = torch.Tensor(state, dtype=torch.float32).unsqueeze(0)
+        state = torch.from_numpy(state).float().unsqueeze(0)
         q_values = self.forward(state)
         action = torch.argmax(q_values).item()
         return action
 
     def learn(
         self,
-        state: torch.Tensor,
+        state,
         action: int,
-        reward: torch.Tensor,
+        reward,
         next_state: torch.Tensor,
         done: bool,
     ):
         # learn from experience
-        state = torch.Tensor(state, dtype=torch.float32).unsqueeze(0)
+        # state = torch.Tensor(state, dtype=torch.float32).unsqueeze(0)
+        state = torch.from_numpy(state).float().unsqueeze(0)
 
         q_values = self.forward(state)
         if done:
             target = reward
         else:
-            next_state = torch.Tensor(next_state, dtype=torch.float32).unsqueeze(0)
+            # next_state = torch.Tensor(next_state, dtype=torch.float32).unsqueeze(0)
+            next_state = torch.from_numpy(next_state).float().unsqueeze(0)
             next_q_values = self.forward(next_state)
             target = reward + self.gamma * torch.max(next_q_values).item()
 
         q_values[0][action] = target
+        target = torch.tensor([target], dtype=torch.float32)
         loss = F.mse_loss(input=q_values, target=target)
         self.optimizer.zero_grad()
         loss.backward()
@@ -91,8 +96,8 @@ if __name__ == "__main__":
     action_size = env.action_space.n
     agent = DQNAgent(state_size, action_size)
 
-    num_episodes = 1000
-    batch_size = 64
+    num_episodes = 10000
+    batch_size = 128
 
     for episode in range(num_episodes):
         state = env.reset()

@@ -1,10 +1,10 @@
 import gym
 import numpy as np
-from market_env import Market
+from test_market import TestMarket
 
 
 class ProtocolEnv(gym.Env):
-    def __init__(self, market: Market):
+    def __init__(self, market: TestMarket):
         self.market = market
         self.action_space = gym.spaces.Discrete(3)  # lower, keep, raise
         self.observation_space = gym.spaces.Box(
@@ -15,6 +15,7 @@ class ProtocolEnv(gym.Env):
         )
 
     def reset(self) -> np.ndarray:
+        self.market.reset()
         state = self.market.get_state()
         return state
 
@@ -22,7 +23,21 @@ class ProtocolEnv(gym.Env):
         return self.market.get_state()
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
+        state = self.market.get_state()
+        collateral_factor = state[2]
+
         # lower, keep, raise the collateral factor
+        if collateral_factor <= 0:
+            if action == 0:
+                action = 1
+            elif action == 2:
+                action = 1
+        elif collateral_factor >= 1:
+            if action == 2:
+                action = 1
+            elif action == 0:
+                action = 1
+
         if action == 0:
             self.market.lower_collateral_factor()
         elif action == 1:
@@ -38,7 +53,7 @@ class ProtocolEnv(gym.Env):
 
 
 if __name__ == "__main__":
-    market = Market()  # env
+    market = TestMarket()
     env = ProtocolEnv(market)
 
     state = env.reset()
