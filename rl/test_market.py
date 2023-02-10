@@ -4,9 +4,9 @@ import numpy as np
 class TestMarket:
     def __init__(self):
         self.steps = 0
-        self.max_steps = 256
+        self.max_steps = 30
 
-        self.collateral_factor: float = 0.8
+        self.collateral_factor: float = 0.75
         # initial funds
         self.total_funds: float = 10000
         if self.collateral_factor <= 0.5:
@@ -22,7 +22,7 @@ class TestMarket:
         self.steps = 0
         self.max_steps = 128
 
-        self.collateral_factor: float = 0.8
+        self.collateral_factor: float = 0.75
         # initial funds
         self.total_funds: float = 10000
         if self.collateral_factor <= 0.5:
@@ -56,21 +56,29 @@ class TestMarket:
         self.total_available_funds = self.total_funds - self.total_borrowed_funds
 
         self.this_step_protocol_earning = self.total_borrowed_funds * 0.1
+        self.reward = self.this_step_protocol_earning - self.previous_earning
 
     def lower_collateral_factor(self) -> None:
-        self.collateral_factor -= 0.02
-        self.update_market()
+        if self.collateral_factor <= 0:
+            self.reward = -1000
+        else:
+            self.collateral_factor -= 0.05
+            self.update_market()
 
     def keep_collateral_factor(self) -> None:
         self.update_market()
 
     def raise_collateral_factor(self) -> None:
-        self.collateral_factor += 0.02
-        self.update_market()
+        if self.collateral_factor >= 1:
+            self.reward = -1000
+        else:
+            self.collateral_factor += 0.05
+            self.update_market()
 
     def get_reward(self) -> float:
-        reward = self.this_step_protocol_earning - self.previous_earning
-        return reward
+        # reward = self.this_step_protocol_earning - self.previous_earning
+        # return reward
+        return self.reward
 
     def is_done(self) -> bool:
         self.steps += 1

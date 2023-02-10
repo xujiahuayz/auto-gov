@@ -43,8 +43,8 @@ class Agent:
         batch_size,
         n_actions,
         max_mem_size=100000,
-        eps_end=0.01,
-        eps_dec=5e-4,
+        eps_end=0.1,
+        eps_dec=5e-5,
     ):
         self.gamma = gamma
         self.epsilon = epsilon
@@ -62,8 +62,8 @@ class Agent:
             self.lr,
             n_actions=n_actions,
             input_dims=input_dims,
-            fc1_dims=256,
-            fc2_dims=256,
+            fc1_dims=20,
+            fc2_dims=20,
         )
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
@@ -97,7 +97,21 @@ class Agent:
         else:
             action = np.random.choice(self.action_space)
 
-        # TODO
+        # print("=========================")
+        # print(observation[2])
+        # print(action)
+        # print("=========================")
+
+        # # add constraint
+        # # If the current collateral factor is less than 0, only allow keep or raise actions
+        # if observation[2] <= 0:
+        #     if action == 0:
+        #         action = 1
+        # # If the current collateral factor is more than 1, only allow keep or lower actions
+        # elif observation[2] >= 1:
+        #     if action == 2:
+        #         action = 1
+
         return action
 
     def learn(self):

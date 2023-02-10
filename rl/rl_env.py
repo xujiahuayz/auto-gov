@@ -10,8 +10,8 @@ class ProtocolEnv(gym.Env):
         self.action_space = gym.spaces.Discrete(3)  # lower, keep, raise
         self.observation_space = gym.spaces.Box(
             # total_available_funds, total_borrowed_funds, collateral_factor
-            low=np.array([0, 0, 0]),
-            high=np.array([np.inf, np.inf, 1]),
+            low=np.array([0, 0, -np.inf]),
+            high=np.array([np.inf, np.inf, np.inf]),
             dtype=np.float32,
         )
 
@@ -46,9 +46,6 @@ class ProtocolEnv(gym.Env):
             self.market.keep_collateral_factor()
         elif action == 2:
             self.market.raise_collateral_factor()
-        else:
-            print("!" * 30)
-            sys.exit(1)
 
         state = self.market.get_state()
         reward = self.market.get_reward()
