@@ -18,7 +18,7 @@ if __name__ == "__main__":
         n_actions=env.action_space.n,
         eps_end=0.1,
         input_dims=env.observation_space.shape,
-        lr=0.001,
+        lr=0.003,
     )
 
     scores, eps_history = [], []
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         scores.append(score)
         eps_history.append(agent.epsilon)
 
-        avg_score = np.mean(scores[-30:])
+        avg_score = np.mean(scores[-256:])
         print(
             "episode ",
             i,
