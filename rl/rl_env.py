@@ -11,14 +11,19 @@ class ProtocolEnv(gym.Env):
         self.defi_env = defi_env
         self.action_space = gym.spaces.Discrete(3)  # lower, keep, raise
         self.observation_space = gym.spaces.Box(
-            # total_available_funds, total_borrowed_funds, collateral_factor
-            low=np.array([0, 0, -np.inf]),
-            high=np.array([np.inf, np.inf, np.inf]),
+            # self.total_available_funds,
+            # self.total_borrowed_funds,
+            # self.collateral_factor,
+            # self.total_i_tokens,
+            # self.total_b_tokens,
+            low=np.array([0, -np.inf, -np.inf, 0, 0]),
+            high=np.array([np.inf, np.inf, np.inf, np.inf, np.inf]),
             dtype=np.float32,
         )
 
     def reset(self) -> np.ndarray:
         # self.market.reset()
+        self.defi_env.reset()
         state = self.defi_env.get_state()
         return state
 

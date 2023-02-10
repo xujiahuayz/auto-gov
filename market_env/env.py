@@ -59,6 +59,7 @@ class DefiEnv:
         return sum(self._apply_to_all_pools(PlfPool.get_reward))
 
     def get_state(self) -> np.ndarray:
+        print("Total available funds: ", self.plf_pools.values())
         return np.concatenate(self._apply_to_all_pools(PlfPool.get_state))
 
     def is_done(self) -> bool:
@@ -66,9 +67,11 @@ class DefiEnv:
         Returns True if step reaches max_steps, otherwise False
         """
         self.step += 1
+        # print("Step: ", self.step, "Max steps: ", self.max_steps)
         return self.step >= self.max_steps
 
     def reset(self):
+        self.step = 0
         for user in self.users.values():
             user.reset()
         self._apply_to_all_pools(PlfPool.reset)
@@ -219,15 +222,15 @@ class User:
         max_borrow = existing_supply * plf.collateral_factor / (1 + self.safety_margin)
 
         if max_borrow > existing_borrow:  # healthy loan
-            if plf.borrow_apy <= plf.competing_borrow_apy - 0.01:
+            if plf.borrow_apy <= plf.competing_borrow_apy + 0.01:
                 # can borrow up to the buffer
                 self._borrow_repay(max_borrow - existing_borrow, plf)
             else:
                 # repay as much as you can
                 self._borrow_repay(-self.funds_available[plf.asset_name], plf)
 
-            # can deposit all existing funds in the pool if the supply APY is higher than the competing supply APY by 1%
-            if plf.supply_apy >= plf.competing_supply_apy + 0.01:
+            # can deposit all existing funds in the pool if the competing supply APY is no higher than the plf supply APY plus 1%
+            if plf.supply_apy >= plf.competing_supply_apy - 0.01:
                 self._supply_withdraw(self.funds_available[plf.asset_name], plf)
             else:
                 # withdraw as much as you can
@@ -259,7 +262,7 @@ class PlfPool:
         collateral_factor: float = 0.85,
         asset_name: str = "dai",
         competing_supply_apy: float = 0.05,
-        competing_borrow_apy: float = 0.08,
+        competing_borrow_apy: float = 0.15,
     ) -> None:
         """
         :param env: the environment in which the liquidity pool is operating
@@ -382,6 +385,8 @@ class PlfPool:
                 self.total_available_funds,
                 self.total_borrowed_funds,
                 self.collateral_factor,
+                self.total_i_tokens,
+                self.total_b_tokens,
             ]
         )
 
