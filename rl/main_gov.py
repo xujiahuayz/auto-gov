@@ -1,5 +1,7 @@
+from os import path
 import numpy as np
 import matplotlib.pyplot as plt
+from market_env.constants import FIGURES_PATH
 
 from market_env.env import DefiEnv, PlfPool, PriceDict, User
 from rl.dqn_gov import Agent
@@ -33,7 +35,7 @@ if __name__ == "__main__":
     # agent = Agent(state_size, action_size)
 
     scores, eps_history = [], []
-    n_games = 100_000
+    n_games = 50_000
 
     collateral_factors = []
 
@@ -71,8 +73,8 @@ if __name__ == "__main__":
         )
 
     x = [i + 1 for i in range(n_games)]
-    filename = "defi.png"
+    filename = path.join(FIGURES_PATH, "defi.png")
     plot_learning_curve(x, scores, eps_history, filename)
     plt.clf()
     plt.plot(x, collateral_factors)
-    plt.savefig("collateral_factors.png")
+    plt.savefig(path.join(FIGURES_PATH, "collateral_factors.png"))

@@ -34,7 +34,7 @@ class DefiEnv:
         self.prices = prices
         self.plf_pools = plf_pools
         self.step = 0
-        self.max_steps = 256
+        self.max_steps = 30
 
     @property
     def prices(self) -> PriceDict:
@@ -125,14 +125,20 @@ class User:
         plf.user_i_tokens.setdefault(self.name, 0)
         self.funds_available.setdefault(plf.asset_name, 0)
 
-        if amount > 0:
+        if amount > 0:  # supply
             amount = min(amount, self.funds_available[plf.asset_name])
             # add logging
-            logging.info(f"supplying {amount} {plf.asset_name}")
-        else:
-            amount = max(amount, -plf.user_i_tokens[self.name])
+            logging.info(f"supplying {amount} {plf.asset_name}") if amount > 0 else None
+        else:  # withdraw
+            withdraw_limit = (
+                plf.user_i_tokens[self.name]
+                - plf.user_b_tokens[self.name] / plf.collateral_factor
+            )
+            amount = min(max(amount, -withdraw_limit), 0)
             # add logging
-            logging.info(f"withdrawing {-amount} {plf.asset_name}")
+            logging.info(
+                f"withdrawing {-amount} {plf.asset_name}"
+            ) if amount < 0 else None
 
         self.funds_available[plf.asset_name] -= amount
 
@@ -158,29 +164,23 @@ class User:
 
         if amount > 0:
             # borrow case
-            amount = min(
-                amount,
-                plf.total_available_funds,
-                self.funds_available[plf.interest_token_name] * plf.collateral_factor
-                - self.funds_available[plf.borrow_token_name],
+            amount = max(
+                min(
+                    amount,
+                    plf.total_available_funds,
+                    self.funds_available[plf.interest_token_name]
+                    * plf.collateral_factor
+                    - self.funds_available[plf.borrow_token_name],
+                ),
+                0,
             )
             # add logging
-            logging.info(f"borrowing {amount} {plf.asset_name}")
+            logging.info(f"borrowing {amount} {plf.asset_name}") if amount > 0 else None
         else:
             # repay case
             amount = max(amount, -plf.user_b_tokens[self.name])
             # add logging
-            logging.info(f"repaying {-amount} {plf.asset_name}")
-
-        # if plf.user_b_tokens[self.name] + amount < 0:
-        #     raise ValueError("cannot repay more b-tokens than you have")
-
-        # if self.funds_available[plf.interest_token_name] * plf.collateral_factor <= (
-        #     amount + self.funds_available[plf.borrow_token_name]
-        # ):
-        #     raise ValueError(
-        #         "insufficient collateral to get the amount of requested debt tokens"
-        #     )
+            logging.info(f"repaying {-amount} {plf.asset_name}") if amount < 0 else None
 
         # update liquidity pool
         plf.total_borrowed_funds += amount
@@ -194,8 +194,9 @@ class User:
 
         self.funds_available[plf.asset_name] += amount
 
-        if plf.total_available_funds < 0:
-            raise ValueError("total available funds cannot be negative")
+        assert (
+            plf.total_available_funds >= 0
+        ), "total available funds cannot be negative"
 
     def reactive_action(self, plf: PlfPool) -> None:
         """
@@ -215,13 +216,20 @@ class User:
         max_borrow = existing_supply * plf.collateral_factor / (1 + self.safety_margin)
 
         if max_borrow > existing_borrow:  # healthy loan
-            # can deposit all existing funds in the pool
-            self._supply_withdraw(self.funds_available[plf.asset_name], plf)
-            # can borrow up to the buffer
-            new_loan = (
-                self.funds_available[plf.interest_token_name] * plf.collateral_factor
-            ) / (1 + self.safety_margin)
-            self._borrow_repay(new_loan - existing_borrow, plf)
+            if plf.borrow_apy <= plf.competing_borrow_apy - 0.01:
+                # can borrow up to the buffer
+                self._borrow_repay(max_borrow - existing_borrow, plf)
+            else:
+                # repay as much as you can
+                self._borrow_repay(-self.funds_available[plf.asset_name], plf)
+
+            # can deposit all existing funds in the pool if the supply APY is higher than the competing supply APY by 1%
+            if plf.supply_apy >= plf.competing_supply_apy + 0.01:
+                self._supply_withdraw(self.funds_available[plf.asset_name], plf)
+            else:
+                # withdraw as much as you can
+                self._supply_withdraw(-plf.user_i_tokens[self.name], plf)
+
             self.consecutive_healthy_borrows += 1
             if self.consecutive_healthy_borrows > 10 and self.safety_margin > 0.05:
                 self.safety_margin -= 0.05
@@ -247,6 +255,8 @@ class PlfPool:
         initial_starting_funds: float = 1000,
         collateral_factor: float = 0.85,
         asset_name: str = "dai",
+        competing_supply_apy: float = 0.05,
+        competing_borrow_apy: float = 0.08,
     ) -> None:
         """
         :param env: the environment in which the liquidity pool is operating
@@ -267,13 +277,15 @@ class PlfPool:
         self.initial_starting_funds = initial_starting_funds
         self._collateral_factor = collateral_factor
         self.asset_name = asset_name
+        self.competing_supply_apy = competing_supply_apy
+        self.competing_borrow_apy = competing_borrow_apy
 
         self.env.plf_pools[self.asset_name] = self
         self.reset()
 
     def reset(self):
         self.previous_reserve: float = 0.0
-        self.previous_reward: float = 0.0
+        self.previous_profit: float = 0.0
         self.reward: float = 0.0
 
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
@@ -318,7 +330,8 @@ class PlfPool:
         # if the new collateral factor is less than 0
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor < 0:
-            self.reward = -900_000
+            self.update_market()
+            self.reward = -90
         else:
             self.collateral_factor = new_collateral_factor
             self.update_market()
@@ -332,6 +345,7 @@ class PlfPool:
         # if the new collateral factor is greater than 1
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor > 1:
+            self.update_market()
             self.reward = -90
         else:
             self.collateral_factor = new_collateral_factor
@@ -344,13 +358,14 @@ class PlfPool:
         for user in self.env.users.values():
             user.reactive_action(self)
 
-        this_reward = self.get_profit()
-        if this_reward <= 0:
+        this_profit = self.get_profit()
+        if this_profit <= 0:
             self.reward = -10
         else:
-            reward_diff = this_reward - self.previous_reward
-            self.previous_reward = this_reward
+            reward_diff = this_profit - self.previous_profit
+            self.previous_profit = this_profit
             self.reward = reward_diff
+        self.reward = this_profit
 
     def get_reward(self) -> float:
         """
