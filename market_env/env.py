@@ -59,7 +59,6 @@ class DefiEnv:
         return sum(self._apply_to_all_pools(PlfPool.get_reward))
 
     def get_state(self) -> np.ndarray:
-        print("Total available funds: ", self.plf_pools.values())
         return np.concatenate(self._apply_to_all_pools(PlfPool.get_state))
 
     def is_done(self) -> bool:
@@ -67,7 +66,6 @@ class DefiEnv:
         Returns True if step reaches max_steps, otherwise False
         """
         self.step += 1
-        # print("Step: ", self.step, "Max steps: ", self.max_steps)
         return self.step >= self.max_steps
 
     def reset(self):
@@ -113,7 +111,7 @@ class User:
             value * self.env.prices[asset_name]
             for asset_name, value in self.funds_available.items()
         )
-        logging.info(f"{self.name}'s wealth in USD: {user_wealth}")
+        logging.debug(f"{self.name}'s wealth in USD: {user_wealth}")
 
         return user_wealth
 
@@ -135,13 +133,15 @@ class User:
                 plf.user_i_tokens[self.name]
                 - plf.user_b_tokens[self.name] / plf.collateral_factor
             )
-            amount = min(max(amount, -withdraw_limit), 0)
+            amount = min(max(amount, -withdraw_limit), -plf.total_available_funds)
 
         if -1e-3 < amount < 1e-3:
             return
 
-        logging.info(
-            f"{'supplying' if amount > 0 else 'withdrawing'} {amount} {plf.asset_name}"
+        logging.debug(
+            f"supplying {amount} {plf.asset_name}"
+            if amount > 0
+            else f"withdrawing {-amount} {plf.asset_name}"
         )
 
         self.funds_available[plf.asset_name] -= amount
@@ -185,8 +185,10 @@ class User:
         if -1e-3 < amount < 1e-3:
             return
 
-        logging.info(
-            f"{'borrowing' if amount > 0 else 'repaying'} {-amount} {plf.asset_name}"
+        logging.debug(
+            f"borrowing {amount} {plf.borrow_token_name}"
+            if amount > 0
+            else f"repaying {-amount} {plf.borrow_token_name}"
         )
         # update liquidity pool
         plf.total_borrowed_funds += amount

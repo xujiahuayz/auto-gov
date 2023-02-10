@@ -1,3 +1,4 @@
+import logging
 from os import path
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,6 +8,9 @@ from market_env.env import DefiEnv, PlfPool, PriceDict, User
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from rl.utils import plot_learning_curve
+
+# show logging level at info
+logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     # initialize environment
@@ -35,7 +39,7 @@ if __name__ == "__main__":
     # agent = Agent(state_size, action_size)
 
     scores, eps_history = [], []
-    n_games = 50_000
+    n_games = 5_000
 
     collateral_factors = []
 
@@ -43,17 +47,9 @@ if __name__ == "__main__":
         score = 0
         done = False
         observation = env.reset()
-        # print("=====================================")
-        # print(observation.astype(np.float32))
-        # print("=====================================")
         while not done:
             action = agent.choose_action(observation.astype(np.float32))
             observation_, reward, done, _ = env.step(action)
-            # print("=====================================")
-            # print(observation_)
-            # print(reward)
-            # print(done)
-            # print("=====================================")
             score += reward
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
@@ -62,17 +58,10 @@ if __name__ == "__main__":
         eps_history.append(agent.epsilon)
 
         avg_score = np.mean(scores[-30:])
-        print(
-            "episode ",
-            i,
-            "score %.2f" % score,
-            "average score %.2f" % avg_score,
-            "epsilon %.2f" % agent.epsilon,
-            "collateral factor %s"
-            % ",".join(
-                f"{p.collateral_factor:.2}" for p in defi_env.plf_pools.values()
-            ),
-        )
+        if i % 10 == 0:
+            logging.info(
+                f"logging.debug {i} score {score:.2f} average score {avg_score:.2f} epsilon {agent.epsilon:.2f} collateral factor {next(iter(defi_env.plf_pools.values())).collateral_factor:.2f}"
+            )
         collateral_factors.append(
             next(iter(defi_env.plf_pools.values())).collateral_factor
         )
