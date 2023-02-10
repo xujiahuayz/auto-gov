@@ -11,8 +11,6 @@ from market_env.utils import PriceDict
 # set logging level
 logging.basicConfig(level=logging.INFO)
 
-SAFETY_MARGIN = 0.05
-
 
 class DefiEnv:
     def __init__(
@@ -78,7 +76,13 @@ class DefiEnv:
 
 
 class User:
-    def __init__(self, env: DefiEnv, name: str, funds_available: Optional[dict] = None):
+    def __init__(
+        self,
+        env: DefiEnv,
+        name: str,
+        safety_margin=0.05,
+        funds_available: Optional[dict] = None,
+    ):
         assert name not in env.users, f"User {name} exists"
         self.env = env
         # add the user to the environment
@@ -91,9 +95,12 @@ class User:
         self.env = env
 
         self.name = name
+        self.safety_margin = safety_margin
+        self.consecutive_healthy_borrows = 0
 
     def reset(self):
         self.funds_available = self._initial_funds_available
+        self.consecutive_healthy_borrows = 0
 
     @property
     def wealth(self) -> float:
@@ -203,7 +210,7 @@ class User:
         existing_borrow = self.funds_available[plf.borrow_token_name]
         existing_supply = self.funds_available[plf.interest_token_name]
 
-        max_borrow = existing_supply * plf.collateral_factor / (1 + SAFETY_MARGIN)
+        max_borrow = existing_supply * plf.collateral_factor / (1 + self.safety_margin)
 
         if max_borrow > existing_borrow:  # healthy loan
             # can deposit all existing funds in the pool
@@ -211,10 +218,23 @@ class User:
             # can borrow up to the buffer
             new_loan = (
                 self.funds_available[plf.interest_token_name] * plf.collateral_factor
-            ) / (1 + SAFETY_MARGIN)
+            ) / (1 + self.safety_margin)
             self._borrow_repay(new_loan - existing_borrow, plf)
+            self.consecutive_healthy_borrows += 1
+            if self.consecutive_healthy_borrows > 10 and self.safety_margin > 0.05:
+                self.safety_margin -= 0.05
         else:  # unhealthy loan
-            self._borrow_repay(max_borrow - existing_borrow, plf)
+            # repay as much as you can
+            self._borrow_repay(-self.funds_available[plf.asset_name], plf)
+            existing_borrow = self.funds_available[plf.borrow_token_name]
+            existing_supply = self.funds_available[plf.interest_token_name]
+            self.consecutive_healthy_borrows = 0
+
+            if existing_borrow > existing_supply * plf.collateral_factor:
+                # inject funds to the user to repay the loan
+                self.funds_available[plf.asset_name] += existing_borrow * 0.1
+                self._borrow_repay(self.funds_available[plf.asset_name], plf)
+                self.safety_margin += 0.05
 
 
 class PlfPool:
@@ -252,6 +272,7 @@ class PlfPool:
     def reset(self):
         self.previous_reserve: float = 0.0
         self.previous_reward: float = 0.0
+        self.reward: float = 0.0
 
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
         self.total_borrowed_funds = 0.0
@@ -295,7 +316,7 @@ class PlfPool:
         # if the new collateral factor is less than 0
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor < 0:
-            self.reward = -1000
+            self.reward = -900_000
         else:
             self.collateral_factor = new_collateral_factor
             self.update_market()
@@ -309,7 +330,7 @@ class PlfPool:
         # if the new collateral factor is greater than 1
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor > 1:
-            self.reward = -1000
+            self.reward = -900_000
         else:
             self.collateral_factor = new_collateral_factor
             self.update_market()
@@ -322,9 +343,12 @@ class PlfPool:
             user.reactive_action(self)
 
         this_reward = self.get_profit()
-        reward_diff = this_reward - self.previous_reward
-        self.previous_reward = this_reward
-        self.reward = reward_diff
+        if this_reward == self.previous_reward == 0:
+            self.reward = -10_000
+        else:
+            reward_diff = this_reward - self.previous_reward
+            self.previous_reward = this_reward
+            self.reward = reward_diff
 
     def get_reward(self) -> float:
         """

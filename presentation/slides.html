@@ -1,0 +1,130 @@
+<!-- https://github.com/danhper/danhper.github.io/blob/master/talks/2021/plfs/index.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Title</title>
+    <meta charset="utf-8" />
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+
+      body {
+        font-family: "Droid Serif";
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: "Yanone Kaffeesatz";
+        font-weight: normal;
+      }
+      .remark-code,
+      .remark-inline-code {
+        font-family: "Ubuntu Mono";
+      }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Auto.gov
+
+
+Daniel Perez, Jiahua Xu, and Benjamin Livshits
+
+---
+
+# Background
+
+---
+
+# Protocols for Loanable Funds (PLF)
+
+* Protocol that intermediates funds between users
+* Unlike peer-to-peer lending, funds are pooled
+* Requires users to deposit collateral
+
+.text-center[
+![Protocols for Loanable Funds overview](./plf.png)
+.caption[Protocols for Loanable Funds overview]
+]
+
+---
+
+# PLF definitions
+
+* *Market* A smart contract acting as the intermediary of loanable funds for a particular crypto-asset, where users supply and borrow funds.
+* *Supply* Funds deposited to a market that can be loaned out to other users and used as collateral against depositors’ own borrow positions.
+* *Borrow* Funds loaned out to users of a market.
+* *Collateral* Funds available to back a user’s aggregate borrow positions.
+* *Locked funds* Funds remaining in the PLF smart contracts, equal to the difference between supplied and borrowed funds.
+
+# Agents in the system
+
+* *Supplier* A user who deposits funds to a market.
+* *Borrower* A user who borrows funds from a market. Since a borrow position must be collateralized by deposited funds, a borrower must also be a supplier.
+* *Liquidator* A user who purchases a borrower’s supply in a market when the borrower’s collateral to borrow ratio falls below some threshold.
+
+---
+
+# PLF building blocks
+
+* *Interest rate models*: Some function(s) taking liquidity as an argument and returning an interest rate
+* *Interest disbursement mechanism*: Interest typically accrued per second and paid out per block. Often an interest bearing derivative token used.
+* *Collateral*: Deposit that can be sold off to recover the debt of a defaulted position
+* *Liquidations*: The process of selling a borrower’s collateral to recover the debt value upon default
+* *Governance mechanism*: Decentralized governance typically achieved through an ERC-20 governance token, where token holders' votes are in proportion to their stake
+
+---
+
+
+## Deep reinforcement learning
+
+### Overview
+* A type of machine learning where an agent learns to make decisions by performing actions in an environment and receiving feedback in the form of rewards.
+* Combines the concepts of Reinforcement Learning with deep learning techniques.
+* Uses deep neural networks as function approximators to represent the policy, value function, or model of the environment.
+
+
+
+### Components of Deep Reinforcement Learning
+
+* *Agent*: The agent takes actions in the environment.
+* *Environment*: The environment is the world in which the agent operates and receives rewards for its actions.
+* *State*: The state represents the current condition of the environment.
+* *Action*: The action is taken by the agent in response to the state.
+* *Reward*: The reward is feedback received by the agent in response to its actions.
+
+---
+
+## Empirical data
+
+## Modelling framework
+
+### A simplified DeFi environment for training
+* One PLF pool
+* One aggregate market user
+* One adjustable risk parameter: collateral factor
+* Pre-programmed user behavior reactive to market condition
+
+## Preliminary results
+
+## Future direction
+
+## Conclusion
+
+---
+
+## Bibliography
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script>
+      var slideshow = remark.create({
+        ratio: "16:9",
+      });
+    </script>
+  </body>
+</html>

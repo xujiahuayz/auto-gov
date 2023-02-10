@@ -1,8 +1,10 @@
-from market_env.env import DefiEnv, PlfPool, User, PriceDict
-from dqn_gov import Agent
-from utils2 import plot_learning_curve
 import numpy as np
-from rl_env import ProtocolEnv
+import matplotlib.pyplot as plt
+
+from market_env.env import DefiEnv, PlfPool, PriceDict, User
+from rl.dqn_gov import Agent
+from rl.rl_env import ProtocolEnv
+from rl.utils2 import plot_learning_curve
 
 if __name__ == "__main__":
     # initialize environment
@@ -31,7 +33,9 @@ if __name__ == "__main__":
     # agent = Agent(state_size, action_size)
 
     scores, eps_history = [], []
-    n_games = 50000
+    n_games = 100_000
+
+    collateral_factors = []
 
     for i in range(n_games):
         score = 0
@@ -57,8 +61,18 @@ if __name__ == "__main__":
             "score %.2f" % score,
             "average score %.2f" % avg_score,
             "epsilon %.2f" % agent.epsilon,
+            "collateral factor %s"
+            % ",".join(
+                f"{p.collateral_factor:.2}" for p in defi_env.plf_pools.values()
+            ),
+        )
+        collateral_factors.append(
+            next(iter(defi_env.plf_pools.values())).collateral_factor
         )
 
     x = [i + 1 for i in range(n_games)]
     filename = "defi.png"
     plot_learning_curve(x, scores, eps_history, filename)
+    plt.clf()
+    plt.plot(x, collateral_factors)
+    plt.savefig("collateral_factors.png")
