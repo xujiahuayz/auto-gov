@@ -330,7 +330,7 @@ class PlfPool:
         # if the new collateral factor is greater than 1
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor > 1:
-            self.reward = -900_000
+            self.reward = -90
         else:
             self.collateral_factor = new_collateral_factor
             self.update_market()
@@ -343,8 +343,8 @@ class PlfPool:
             user.reactive_action(self)
 
         this_reward = self.get_profit()
-        if this_reward == self.previous_reward == 0:
-            self.reward = -10_000
+        if this_reward <= 0:
+            self.reward = -10
         else:
             reward_diff = this_reward - self.previous_reward
             self.previous_reward = this_reward
