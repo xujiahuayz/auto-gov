@@ -1,6 +1,4 @@
-# plf-env
-
-RL environment for [Protocols for Loanable Funds](https://arxiv.org/abs/2006.13922)
+# auto.gov
 
 ## Setup
 
