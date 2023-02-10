@@ -1,9 +1,9 @@
-import gym
-from dqn_gov import Agent
-from utils2 import plot_learning_curve
 import numpy as np
-from test_market import TestMarket
-from rl_env import ProtocolEnv, DefiProtocolEnv
+
+from rl.dqn_gov import Agent
+from rl.rl_env import DefiProtocolEnv
+from rl.test_market import TestMarket
+from rl.utils import plot_learning_curve
 
 if __name__ == "__main__":
     # initialize market and environment

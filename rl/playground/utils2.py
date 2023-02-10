@@ -1,8 +1,9 @@
 import collections
+
 import cv2
-import numpy as np
-import matplotlib.pyplot as plt
 import gym
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plotLearning(scores, filename, x=None, window=5):

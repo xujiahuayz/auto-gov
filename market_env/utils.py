@@ -1,6 +1,6 @@
 from collections.abc import MutableMapping
 
-from market_env.constants import INTEREST_TOKEN_PREFIX, DEBT_TOKEN_PREFIX
+from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 
 
 class PriceDict(MutableMapping):

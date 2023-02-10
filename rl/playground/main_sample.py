@@ -1,7 +1,7 @@
 import gym
+import numpy as np
 from dqn_complicated import Agent
 from utils2 import plot_learning_curve
-import numpy as np
 
 if __name__ == "__main__":
     env = gym.make("LunarLander-v2")

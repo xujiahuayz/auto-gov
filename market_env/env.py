@@ -1,11 +1,13 @@
 # pylint: disable=missing-module-docstring,missing-function-docstring
 # make sure User is recognized
 from __future__ import annotations
+
 import logging
 from typing import Optional
-import numpy as np
-from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 
+import numpy as np
+
+from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 from market_env.utils import PriceDict
 
 # set logging level

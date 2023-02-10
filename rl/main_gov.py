@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from market_env.env import DefiEnv, PlfPool, PriceDict, User
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
-from rl.utils2 import plot_learning_curve
+from rl.utils import plot_learning_curve
 
 if __name__ == "__main__":
     # initialize environment
