@@ -1,14 +1,22 @@
-import gym
+from market_env.env import Env, PlfPool, User, PriceDict
 from dqn_gov import Agent
 from utils2 import plot_learning_curve
 import numpy as np
-from test_market import TestMarket
-from rl_env import ProtocolEnv, DefiProtocolEnv
+from rl_env import ProtocolEnv
 
 if __name__ == "__main__":
-    # initialize market and environment
-    market = TestMarket()
-    env = DefiProtocolEnv(market)
+    # initialize environment
+    defi_env = Env(prices=PriceDict({"tkn": 1}))
+    Alice = User(name="alice", env=defi_env, funds_available={"tkn": 2_000})
+    plf = PlfPool(
+        env=defi_env,
+        initiator=Alice,
+        initial_starting_funds=1000,
+        asset_name="tkn",
+        collateral_factor=0.8,
+    )
+
+    env = ProtocolEnv(plf)
 
     # initialize agent
     agent = Agent(
@@ -20,9 +28,10 @@ if __name__ == "__main__":
         input_dims=env.observation_space.shape,
         lr=0.001,
     )
+    # agent = Agent(state_size, action_size)
 
     scores, eps_history = [], []
-    n_games = 500000
+    n_games = 50000
 
     for i in range(n_games):
         score = 0
@@ -51,17 +60,5 @@ if __name__ == "__main__":
         )
 
     x = [i + 1 for i in range(n_games)]
-    filename = "defi_test.png"
+    filename = "defi.png"
     plot_learning_curve(x, scores, eps_history, filename)
-
-    # for episode in range(num_episodes):
-    #     state = env.reset()
-    #     total_reward = 0
-    #     done = False
-    #     while not done:
-    #         action = agent.act(state)
-    #         next_state, reward, done, _ = env.step(action)
-    #         agent.learn(state, action, reward, next_state, done)
-    #         state = next_state
-    #         total_reward += reward
-    #     print(f"Episode {episode} finished with reward {total_reward}")

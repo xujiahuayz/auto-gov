@@ -1,10 +1,10 @@
 import numpy as np
 import pytest
-from market_env.env import Plf, User
+from market_env.env import PlfPool, User
 
 
 def test_encode_user_state(
-    market_env: Plf, alice: str, dai_market_name: str, bat_market_name: str
+    market_env: PlfPool, alice: str, dai_market_name: str, bat_market_name: str
 ):
     market_env.markets[bat_market_name].get_user(bob).unsupplied_amount = 0
 

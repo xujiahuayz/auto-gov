@@ -1,6 +1,6 @@
 from ipaddress import collapse_addresses
 from market_env.utils import PriceDict, define_price_gov_token
-from market_env.env import Env, User, Plf, CPAmm
+from market_env.env import Env, User, PlfPool, CPAmm
 
 
 def simulate_simple_lending(
@@ -33,7 +33,7 @@ def simulate_simple_lending(
     )
 
     # set up a plf pool with DAI - Initialized by the market maker with 500M DAI
-    dai_plf = Plf(
+    dai_plf = PlfPool(
         env=simulation_env,
         reward_token_name="aave",
         initiator=market_maker,
@@ -109,7 +109,7 @@ def simulate_spiral_lending(
     )
 
     # set up a plf pool with DAI - Initialized by the market maker with 500M DAI
-    dai_plf = Plf(
+    dai_plf = PlfPool(
         env=simulation_env,
         reward_token_name="aave",
         initiator=market_maker,

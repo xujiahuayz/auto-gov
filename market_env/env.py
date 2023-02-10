@@ -30,7 +30,7 @@ class Env:
         self.users = users
         self.prices = prices
         self.step = 0
-        self.max_steps = 100_000
+        self.max_steps = 256
 
     @property
     def prices(self) -> PriceDict:
@@ -80,7 +80,7 @@ class User:
     def __repr__(self) -> str:
         return f"name: {self.name}, funds available: {self.funds_available}, wealth: {self.wealth}"
 
-    def _supply_withdraw(self, amount: float, plf: Plf) -> None:
+    def _supply_withdraw(self, amount: float, plf: PlfPool) -> None:
         """
         Supply (amount > 0) or withdraw (amount < 0) funds to the liquidity pool
         """
@@ -108,7 +108,7 @@ class User:
         # matching balance in user's account to pool registry record
         self.funds_available[plf.interest_token_name] = plf.user_i_tokens[self.name]
 
-    def _borrow_repay(self, amount: float, plf: Plf) -> None:
+    def _borrow_repay(self, amount: float, plf: PlfPool) -> None:
         # set default values for user_b_tokens and funds_available if they don't exist
 
         plf.user_b_tokens.setdefault(self.name, 0)
@@ -138,7 +138,7 @@ class User:
 
         self.funds_available[plf.asset_name] += amount
 
-    def reactive_action(self, plf: Plf) -> None:
+    def reactive_action(self, plf: PlfPool) -> None:
         """
         supply funds to the liquidity pool in response to market conditions
         """
@@ -167,7 +167,7 @@ class User:
             self._borrow_repay(max_borrow - existing_borrow, plf)
 
 
-class Plf:
+class PlfPool:
     def __init__(
         self,
         env: Env,
@@ -236,15 +236,29 @@ class Plf:
 
     # actions
     def lower_collateral_factor(self) -> None:
-        self.collateral_factor -= 0.01
-        self.update_market()
+        new_collateral_factor = self.collateral_factor - 0.05
+        # Constrain check
+        # if the new collateral factor is less than 0
+        # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
+        if new_collateral_factor < 0:
+            self.reward = -1000
+        else:
+            self.collateral_factor = new_collateral_factor
+            self.update_market()
 
     def keep_collateral_factor(self) -> None:
         self.update_market()
 
     def raise_collateral_factor(self) -> None:
-        self.collateral_factor += 0.01
-        self.update_market()
+        new_collateral_factor = self.collateral_factor + 0.05
+        # Constrain check
+        # if the new collateral factor is greater than 1
+        # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
+        if new_collateral_factor > 1:
+            self.reward = -1000
+        else:
+            self.collateral_factor = new_collateral_factor
+            self.update_market()
 
     def update_market(self) -> None:
         # self.previous_profit = self.profit
@@ -252,6 +266,17 @@ class Plf:
         self.accrue_daily_interest()
         for user in self.env.users.values():
             user.reactive_action(self)
+
+        this_reward = self.get_profit()
+        reward_diff = this_reward - self.previous_reward
+        self.previous_reward = this_reward
+        self.reward = reward_diff
+
+    def get_reward(self) -> float:
+        """
+        get the difference between the profit gained from this episode and the profit gained from the previous episode
+        """
+        return self.reward
 
     def get_state(self) -> np.ndarray:
         return np.array(
@@ -266,15 +291,6 @@ class Plf:
         previous_profit = self.previous_profit
         self.previous_profit = self.profit
         return self.profit - previous_profit
-
-    def get_reward(self) -> float:
-        """
-        get the difference between the profit gained from this episode and the profit gained from the previous episode
-        """
-        this_reward = self.get_profit()
-        reward_diff = this_reward - self.previous_reward
-        self.previous_profit = this_reward
-        return reward_diff
 
     @property
     def utilization_ratio(self) -> float:
@@ -358,10 +374,10 @@ class Plf:
 
 if __name__ == "__main__":
     # initialize environment
-    env = Env(prices=PriceDict({"tkn": 1}))
-    Alice = User(name="alice", env=env, funds_available={"tkn": 2_000})
-    plf = Plf(
-        env=env,
+    defi_env = Env(prices=PriceDict({"tkn": 1}))
+    Alice = User(name="alice", env=defi_env, funds_available={"tkn": 2_000})
+    plf = PlfPool(
+        env=defi_env,
         initiator=Alice,
         initial_starting_funds=1000,
         asset_name="tkn",

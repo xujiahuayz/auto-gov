@@ -1,5 +1,5 @@
 import pandas as pd
-from market_env.env import Plf
+from market_env.env import PlfPool
 import pytest
 
 
@@ -18,7 +18,7 @@ def market_env(
     alice: str,
     bob: str,
 ):
-    market_env = Plf()
+    market_env = PlfPool()
     market_env.external_data = ExternalData(
         prices=prices, volume=volumes, volatility=volatility
     )
