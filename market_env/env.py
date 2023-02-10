@@ -197,6 +197,7 @@ class Plf:
         self.asset_name = asset_name
 
         self.previous_profit: float = 0.0
+        self.previous_reward: float = 0.0
 
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
         self.total_borrowed_funds = 0.0
@@ -261,10 +262,19 @@ class Plf:
             ]
         )
 
-    def get_reward(self) -> float:
+    def get_profit(self) -> float:
         previous_profit = self.previous_profit
         self.previous_profit = self.profit
         return self.profit - previous_profit
+
+    def get_reward(self) -> float:
+        """
+        get the difference between the profit gained from this episode and the profit gained from the previous episode
+        """
+        this_reward = self.get_profit()
+        reward_diff = this_reward - self.previous_reward
+        self.previous_profit = this_reward
+        return reward_diff
 
     @property
     def utilization_ratio(self) -> float:
