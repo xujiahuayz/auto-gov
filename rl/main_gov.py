@@ -49,6 +49,11 @@ if __name__ == "__main__":
         while not done:
             action = agent.choose_action(observation.astype(np.float32))
             observation_, reward, done, _ = env.step(action)
+            # print("=====================================")
+            # print(observation_)
+            # print(reward)
+            # print(done)
+            # print("=====================================")
             score += reward
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
