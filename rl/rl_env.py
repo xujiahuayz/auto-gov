@@ -16,7 +16,7 @@ class ProtocolEnv(gym.Env):
         )
 
     def reset(self) -> np.ndarray:
-        self.market.reset()
+        # self.market.reset()
         state = self.market.get_state()
         return state
 
@@ -61,8 +61,4 @@ if __name__ == "__main__":
     market = TestMarket()
     env = ProtocolEnv(market)
 
-    state = env.reset()
-    done = False
-    while not done:
-        action = env.action_space.sample()
-        state, reward, done, _ = env.step(action)
+    print(env.reset())

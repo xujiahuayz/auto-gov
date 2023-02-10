@@ -7,94 +7,94 @@ import numpy as np
 import test_market as tm
 from test_market import TestMarket
 from rl_env import ProtocolEnv
+import copy
+import random
+from collections import deque
+from tqdm import tqdm
 
 
-class DQNAgent(nn.Module):
-    # agent for DQN
+class DQN_Agent:
+    def __init__(self, seed, layer_sizes, lr, sync_freq, exp_replay_size):
+        torch.manual_seed(seed)
+        self.q_net = self.build_nn(layer_sizes)
+        self.target_net = copy.deepcopy(self.q_net)
+        # self.q_net.cuda()
+        # self.target_net.cuda()
+        self.loss_fn = torch.nn.MSELoss()
+        self.optimizer = torch.optim.Adam(self.q_net.parameters(), lr=lr)
 
-    def __init__(
-        self,
-        state_size: int,
-        action_size: int,
-        learning_rate: float = 0.05,
-        gamma: float = 0.9,
-        epsilon: float = 0.4,
-        epsilon_decay: float = 0.999,
-    ):
-        # initialize agent
-        super(DQNAgent, self).__init__()
-        self.state_size = state_size
-        self.action_size = action_size
-        self.learning_rate = learning_rate
-        self.gamma = gamma
-        self.epsilon = epsilon
-        self.epsilon_decay = epsilon_decay
+        self.network_sync_freq = sync_freq
+        self.network_sync_counter = 0
+        self.gamma = 0.95
+        self.experience_replay = deque(maxlen=exp_replay_size)
+        return
 
-        # 0 0 0
-        # - - - - - - - - - -
-        # 0 0 0
+    def build_nn(self, layer_sizes):
+        assert len(layer_sizes) > 1
+        layers = []
+        for index in range(len(layer_sizes) - 1):
+            linear = nn.Linear(layer_sizes[index], layer_sizes[index + 1])
+            act = nn.Tanh() if index < len(layer_sizes) - 2 else nn.Identity()
+            layers += (linear, act)
+        return nn.Sequential(*layers)
 
-        self.fc1 = nn.Linear(state_size, 6)
-        self.fc2 = nn.Linear(6, 6)
-        self.fc3 = nn.Linear(6, action_size)
-        self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
+    def get_action(self, state, action_space_len, epsilon):
+        # We do not require gradient at this point, because this function will be used either
+        # during experience collection or during inference
+        with torch.no_grad():
+            Qp = self.q_net(torch.from_numpy(state).float())
+        Q, A = torch.max(Qp, axis=0)
+        A = (
+            A
+            if torch.rand(
+                1,
+            ).item()
+            > epsilon
+            else torch.randint(0, action_space_len, (1,))
+        )
+        return A
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
+    def get_q_next(self, state):
+        with torch.no_grad():
+            qp = self.target_net(state)
+        q, _ = torch.max(qp, axis=1)
+        return q
 
-    def act(self, state: torch.Tensor) -> Number:
-        # choose action to take
-        state = torch.from_numpy(state).float().unsqueeze(0)
-        if torch.rand(1).item() <= self.epsilon:
-            action = torch.randint(self.action_size, (1,))
-        else:
-            # state = torch.from_numpy(state).float().unsqueeze(0)
-            q_values = self.forward(state)
-            action = torch.argmax(q_values).item()
+    def collect_experience(self, experience):
+        self.experience_replay.append(experience)
+        return
 
-        # If the current collateral factor is less than 0, only allow keep or raise actions
-        if state[0][2] <= 0:
-            if action == 0:
-                action = 1
-        # If the current collateral factor is more than 1, only allow keep or lower actions
-        elif state[0][2] >= 1:
-            if action == 2:
-                action = 1
+    def sample_from_experience(self, sample_size):
+        if len(self.experience_replay) < sample_size:
+            sample_size = len(self.experience_replay)
+        sample = random.sample(self.experience_replay, sample_size)
+        s = torch.tensor([exp[0] for exp in sample]).float()
+        a = torch.tensor([exp[1] for exp in sample]).float()
+        rn = torch.tensor([exp[2] for exp in sample]).float()
+        sn = torch.tensor([exp[3] for exp in sample]).float()
+        return s, a, rn, sn
 
-        return action
+    def train(self, batch_size):
+        s, a, rn, sn = self.sample_from_experience(sample_size=batch_size)
+        if self.network_sync_counter == self.network_sync_freq:
+            self.target_net.load_state_dict(self.q_net.state_dict())
+            self.network_sync_counter = 0
 
-    def learn(
-        self,
-        state,
-        action: int,
-        reward,
-        next_state: torch.Tensor,
-        done: bool,
-    ):
-        # learn from experience
-        # state = torch.Tensor(state, dtype=torch.float32).unsqueeze(0)
-        state = torch.from_numpy(state).float().unsqueeze(0)
+        # predict expected return of current state using main network
+        qp = self.q_net(s)
+        pred_return, _ = torch.max(qp, axis=1)
 
-        q_values = self.forward(state)
-        if done:
-            target = reward
-        else:
-            # next_state = torch.Tensor(next_state, dtype=torch.float32).unsqueeze(0)
-            next_state = torch.from_numpy(next_state).float().unsqueeze(0)
-            next_q_values = self.forward(next_state)
-            target = reward + self.gamma * torch.max(next_q_values).item()
+        # get target return using target network
+        q_next = self.get_q_next(sn)
+        target_return = rn + self.gamma * q_next
 
-        q_values[0][action] = target
-        target = torch.tensor([target], dtype=torch.float32)
-        loss = F.mse_loss(input=q_values, target=target)
+        loss = self.loss_fn(pred_return, target_return)
         self.optimizer.zero_grad()
-        loss.backward()
+        loss.backward(retain_graph=True)
         self.optimizer.step()
-        # if self.epsilon > 0.05:
-        #     self.epsilon *= self.epsilon_decay
+
+        self.network_sync_counter += 1
+        return loss.item()
 
 
 if __name__ == "__main__":
@@ -103,21 +103,57 @@ if __name__ == "__main__":
     env = ProtocolEnv(market)
 
     # initialize agent
-    state_size = env.observation_space.shape[0]
-    action_size = env.action_space.n
-    agent = DQNAgent(state_size, action_size)
+    input_dim = env.observation_space.shape[0]
+    output_dim = env.action_space.n
+    exp_replay_size = 1000
+    agent = DQN_Agent(
+        seed=1423,
+        layer_sizes=[input_dim, 10, output_dim],
+        lr=0.001,
+        sync_freq=5,
+        exp_replay_size=exp_replay_size,
+    )
 
-    num_episodes = 10000
-    batch_size = 128
-
-    for episode in range(num_episodes):
-        state = env.reset()
-        total_reward = 0
+    # initialize experience replay
+    Index = 0
+    for i in range(exp_replay_size):
+        obs = env.reset()
         done = False
-        while not done:
-            action = agent.act(state)
-            next_state, reward, done, _ = env.step(action)
-            agent.learn(state, action, reward, next_state, done)
-            state = next_state
-            total_reward += reward
-        print(f"Episode {episode} finished with reward {total_reward}")
+        while done != False:
+            A = agent.get_action(obs, env.action_space.n, epsilon=1)
+            obs_next, reward, done, _ = env.step(A.item())
+            agent.collect_experience([obs, A.item(), reward, obs_next])
+            obs = obs_next
+            index += 1
+            if index > exp_replay_size:
+                break
+
+    # train agent
+    losses_list, reward_list, episode_len_list, epsilon_list = [], [], [], []
+    index = 128
+    episodes = 10000
+    epsilon = 0.4
+
+    for i in tqdm(range(episodes)):
+        obs, done, losses, ep_len, rew = env.reset(), False, 0, 0, 0
+        while done != True:
+            ep_len += 1
+            A = agent.get_action(obs, env.action_space.n, epsilon)
+            obs_next, reward, done, _ = env.step(A.item())
+            agent.collect_experience([obs, A.item(), reward, obs_next])
+
+            obs = obs_next
+            rew += reward
+            index += 1
+
+            if index > 128:
+                index = 0
+                for j in range(4):
+                    loss = agent.train(batch_size=16)
+                    losses += loss
+        if epsilon > 0.05:
+            epsilon -= 1 / 5000
+
+        losses_list.append(losses / ep_len), reward_list.append(
+            rew
+        ), episode_len_list.append(ep_len), epsilon_list.append(epsilon)
