@@ -127,18 +127,19 @@ class User:
 
         if amount > 0:  # supply
             amount = min(amount, self.funds_available[plf.asset_name])
-            # add logging
-            logging.info(f"supplying {amount} {plf.asset_name}") if amount > 0 else None
         else:  # withdraw
             withdraw_limit = (
                 plf.user_i_tokens[self.name]
                 - plf.user_b_tokens[self.name] / plf.collateral_factor
             )
             amount = min(max(amount, -withdraw_limit), 0)
-            # add logging
-            logging.info(
-                f"withdrawing {-amount} {plf.asset_name}"
-            ) if amount < 0 else None
+
+        if -1e-3 < amount < 1e-3:
+            return
+
+        logging.info(
+            f"{'supplying' if amount > 0 else 'withdrawing'} {amount} {plf.asset_name}"
+        )
 
         self.funds_available[plf.asset_name] -= amount
 
@@ -174,14 +175,16 @@ class User:
                 ),
                 0,
             )
-            # add logging
-            logging.info(f"borrowing {amount} {plf.asset_name}") if amount > 0 else None
         else:
             # repay case
             amount = max(amount, -plf.user_b_tokens[self.name])
-            # add logging
-            logging.info(f"repaying {-amount} {plf.asset_name}") if amount < 0 else None
 
+        if -1e-3 < amount < 1e-3:
+            return
+
+        logging.info(
+            f"{'borrowing' if amount > 0 else 'repaying'} {-amount} {plf.asset_name}"
+        )
         # update liquidity pool
         plf.total_borrowed_funds += amount
         plf.total_available_funds -= amount
