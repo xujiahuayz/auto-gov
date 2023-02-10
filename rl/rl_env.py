@@ -1,8 +1,9 @@
+import sys
+from typing import Union
 import gym
 import numpy as np
-from test_market import TestMarket
-from market_env.env import Env, PlfPool, User, PriceDict
-import sys
+from rl.test_market import TestMarket
+from market_env.env import DefiEnv, PlfPool, User, PriceDict
 
 
 class ProtocolEnv(gym.Env):
@@ -56,8 +57,8 @@ class ProtocolEnv(gym.Env):
 
 
 class DefiProtocolEnv(gym.Env):
-    def __init__(self, market: PlfPool):
-        self.market = market
+    def __init__(self, defi_env: DefiEnv):
+        self.defi_env = defi_env
         self.action_space = gym.spaces.Discrete(3)  # lower, keep, raise
         self.observation_space = gym.spaces.Box(
             # total_available_funds, total_borrowed_funds, collateral_factor
@@ -68,14 +69,14 @@ class DefiProtocolEnv(gym.Env):
 
     def reset(self) -> np.ndarray:
         # self.market.reset()
-        state = self.market.get_state()
+        state = self.defi_env.get_state()
         return state
 
     def observation(self) -> np.ndarray:
-        return self.market.get_state()
+        return self.defi_env.get_state()
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
-        state = self.market.get_state()
+        state = self.defi_env.get_state()
         collateral_factor = state[2]
 
         # # constrain the action
@@ -92,15 +93,15 @@ class DefiProtocolEnv(gym.Env):
 
         # lower, keep, raise the collateral factor
         if action == 0:
-            self.market.lower_collateral_factor()
+            self.defi_env.lower_collateral_factor()
         elif action == 1:
-            self.market.keep_collateral_factor()
+            self.defi_env.keep_collateral_factor()
         elif action == 2:
-            self.market.raise_collateral_factor()
+            self.defi_env.raise_collateral_factor()
 
-        state = self.market.get_state()
-        reward = self.market.get_reward()
-        done = self.market.is_done()
+        state = self.defi_env.get_state()
+        reward = self.defi_env.get_reward()
+        done = self.defi_env.is_done()
 
         return state, reward, done, {}
 

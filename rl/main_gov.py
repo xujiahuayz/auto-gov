@@ -1,4 +1,4 @@
-from market_env.env import Env, PlfPool, User, PriceDict
+from market_env.env import DefiEnv, PlfPool, User, PriceDict
 from dqn_gov import Agent
 from utils2 import plot_learning_curve
 import numpy as np
@@ -6,7 +6,7 @@ from rl_env import ProtocolEnv
 
 if __name__ == "__main__":
     # initialize environment
-    defi_env = Env(prices=PriceDict({"tkn": 1}))
+    defi_env = DefiEnv(prices=PriceDict({"tkn": 1}))
     Alice = User(name="alice", env=defi_env, funds_available={"tkn": 2_000})
     plf = PlfPool(
         env=defi_env,
@@ -16,7 +16,7 @@ if __name__ == "__main__":
         collateral_factor=0.8,
     )
 
-    env = ProtocolEnv(plf)
+    env = ProtocolEnv(defi_env)
 
     # initialize agent
     agent = Agent(

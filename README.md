@@ -9,6 +9,8 @@ cd auto-gov
 
 ### Give execute permission to your script and then run `setup_repo.sh`
 
+<!-- TODO: use non-deprecated setup -->
+
 ```
 chmod +x setup_repo.sh
 ./setup_repo.sh

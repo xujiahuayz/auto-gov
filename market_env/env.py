@@ -1,11 +1,10 @@
+# pylint: disable=missing-module-docstring,missing-function-docstring
 # make sure User is recognized
 from __future__ import annotations
-from dataclasses import dataclass
-from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 import logging
 from typing import Optional
 import numpy as np
-import logging
+from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 
 from market_env.utils import PriceDict
 
@@ -15,20 +14,25 @@ logging.basicConfig(level=logging.INFO)
 SAFETY_MARGIN = 0.05
 
 
-class Env:
+class DefiEnv:
     def __init__(
         self,
         users: Optional[dict[str, User]] = None,
         prices: Optional[PriceDict] = None,
+        plf_pools: Optional[dict[str, PlfPool]] = None,
     ):
         if users is None:
             users = {}
+
+        if plf_pools is None:
+            plf_pools = {}
 
         if prices is None:
             prices = PriceDict({"dai": 1.0, "eth": 2.0})
 
         self.users = users
         self.prices = prices
+        self.plf_pools = plf_pools
         self.step = 0
         self.max_steps = 256
 
@@ -38,23 +42,43 @@ class Env:
 
     @prices.setter
     def prices(self, value: PriceDict):
-        if type(value) is not PriceDict:
+        if not isinstance(value, PriceDict):
             raise TypeError("must use PriceDict type")
         self._prices = value
 
-    @property
+    def lower_collateral_factor(self) -> None:
+        self._apply_to_all_pools(PlfPool.lower_collateral_factor)
+
+    def keep_collateral_factor(self) -> None:
+        self._apply_to_all_pools(PlfPool.keep_collateral_factor)
+
+    def raise_collateral_factor(self) -> None:
+        self._apply_to_all_pools(PlfPool.raise_collateral_factor)
+
+    def get_reward(self) -> float:
+        return sum(self._apply_to_all_pools(PlfPool.get_reward))
+
+    def get_state(self) -> np.ndarray:
+        return np.concatenate(self._apply_to_all_pools(PlfPool.get_state))
+
     def is_done(self) -> bool:
         """
         Returns True if step reaches max_steps, otherwise False
         """
         self.step += 1
-        if self.step >= self.max_steps:
-            return True
-        return False
+        return self.step >= self.max_steps
+
+    def reset(self):
+        for user in self.users.values():
+            user.reset()
+        self._apply_to_all_pools(PlfPool.reset)
+
+    def _apply_to_all_pools(self, func):
+        return [func(pool) for pool in self.plf_pools.values()]
 
 
 class User:
-    def __init__(self, env: Env, name: str, funds_available: Optional[dict] = None):
+    def __init__(self, env: DefiEnv, name: str, funds_available: Optional[dict] = None):
         assert name not in env.users, f"User {name} exists"
         self.env = env
         # add the user to the environment
@@ -62,10 +86,14 @@ class User:
 
         if funds_available is None:
             funds_available = {"dai": 0.0, "eth": 0.0}
+        self._initial_funds_available = funds_available.copy()
         self.funds_available = funds_available
         self.env = env
 
         self.name = name
+
+    def reset(self):
+        self.funds_available = self._initial_funds_available
 
     @property
     def wealth(self) -> float:
@@ -95,7 +123,7 @@ class User:
         else:
             amount = max(amount, -plf.user_i_tokens[self.name])
             # add logging
-            logging.info(f"withdrawing {amount} {plf.asset_name}")
+            logging.info(f"withdrawing {-amount} {plf.asset_name}")
 
         self.funds_available[plf.asset_name] -= amount
 
@@ -108,6 +136,9 @@ class User:
         # matching balance in user's account to pool registry record
         self.funds_available[plf.interest_token_name] = plf.user_i_tokens[self.name]
 
+        if plf.total_available_funds < 0:
+            raise ValueError("total available funds cannot be negative")
+
     def _borrow_repay(self, amount: float, plf: PlfPool) -> None:
         # set default values for user_b_tokens and funds_available if they don't exist
 
@@ -116,15 +147,31 @@ class User:
         self.funds_available.setdefault(plf.asset_name, 0)
         self.funds_available.setdefault(plf.interest_token_name, 0)
 
-        if plf.user_b_tokens[self.name] + amount < 0:
-            raise ValueError("cannot repay more b-tokens than you have")
-
-        if self.funds_available[plf.interest_token_name] * plf.collateral_factor <= (
-            amount + self.funds_available[plf.borrow_token_name]
-        ):
-            raise ValueError(
-                "insufficient collateral to get the amount of requested debt tokens"
+        if amount > 0:
+            # borrow case
+            amount = min(
+                amount,
+                plf.total_available_funds,
+                self.funds_available[plf.interest_token_name] * plf.collateral_factor
+                - self.funds_available[plf.borrow_token_name],
             )
+            # add logging
+            logging.info(f"borrowing {amount} {plf.asset_name}")
+        else:
+            # repay case
+            amount = max(amount, -plf.user_b_tokens[self.name])
+            # add logging
+            logging.info(f"repaying {-amount} {plf.asset_name}")
+
+        # if plf.user_b_tokens[self.name] + amount < 0:
+        #     raise ValueError("cannot repay more b-tokens than you have")
+
+        # if self.funds_available[plf.interest_token_name] * plf.collateral_factor <= (
+        #     amount + self.funds_available[plf.borrow_token_name]
+        # ):
+        #     raise ValueError(
+        #         "insufficient collateral to get the amount of requested debt tokens"
+        #     )
 
         # update liquidity pool
         plf.total_borrowed_funds += amount
@@ -137,6 +184,9 @@ class User:
         self.funds_available[plf.borrow_token_name] = plf.user_b_tokens[self.name]
 
         self.funds_available[plf.asset_name] += amount
+
+        if plf.total_available_funds < 0:
+            raise ValueError("total available funds cannot be negative")
 
     def reactive_action(self, plf: PlfPool) -> None:
         """
@@ -170,7 +220,7 @@ class User:
 class PlfPool:
     def __init__(
         self,
-        env: Env,
+        env: DefiEnv,
         initiator: User,
         initial_starting_funds: float = 1000,
         collateral_factor: float = 0.85,
@@ -196,7 +246,11 @@ class PlfPool:
         self._collateral_factor = collateral_factor
         self.asset_name = asset_name
 
-        self.previous_profit: float = 0.0
+        self.env.plf_pools[self.asset_name] = self
+        self.reset()
+
+    def reset(self):
+        self.previous_reserve: float = 0.0
         self.previous_reward: float = 0.0
 
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
@@ -222,7 +276,7 @@ class PlfPool:
         self.initiator.funds_available[self.borrow_token_name] = 0
 
     def __repr__(self) -> str:
-        return f"{self.asset_name} PLF: (available funds = {self.total_available_funds}, borrowed funds = {self.total_borrowed_funds}, profit = {self.profit})"
+        return f"{self.asset_name} PLF: (available funds = {self.total_available_funds}, borrowed funds = {self.total_borrowed_funds}, profit = {self.reserve})"
 
     @property
     def collateral_factor(self):
@@ -288,15 +342,16 @@ class PlfPool:
         )
 
     def get_profit(self) -> float:
-        previous_profit = self.previous_profit
-        self.previous_profit = self.profit
-        return self.profit - previous_profit
+        previous_reserve = self.previous_reserve
+        self.previous_reserve = self.reserve
+        return self.reserve - previous_reserve
 
     @property
     def utilization_ratio(self) -> float:
-        return self.total_borrowed_funds / (
+        ratio = self.total_borrowed_funds / (
             self.total_available_funds + self.total_borrowed_funds
         )
+        return max(0, min(1 - 1e-3, ratio))
 
     @property
     def supply_apy(self) -> float:
@@ -317,7 +372,7 @@ class PlfPool:
         return sum(self.user_b_tokens.values())
 
     @property
-    def profit(self) -> float:
+    def reserve(self) -> float:
         return self.total_b_tokens + self.total_available_funds - self.total_i_tokens
 
     @property
@@ -374,20 +429,26 @@ class PlfPool:
 
 if __name__ == "__main__":
     # initialize environment
-    defi_env = Env(prices=PriceDict({"tkn": 1}))
+    defi_env = DefiEnv(prices=PriceDict({"tkn": 1}))
     Alice = User(name="alice", env=defi_env, funds_available={"tkn": 2_000})
     plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        initial_starting_funds=1000,
+        initial_starting_funds=500,
         asset_name="tkn",
         collateral_factor=0.8,
     )
+    print("Initial")
     print(f"**Alice {Alice} \n")
     print(f"++{plf} \n")
 
     # Alice react first
     Alice.reactive_action(plf)
+    print(f"**Alice {Alice} \n")
+    print(f"++{plf} \n")
+
+    defi_env.reset()
+    print("After reset")
     print(f"**Alice {Alice} \n")
     print(f"++{plf} \n")
 

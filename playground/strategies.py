@@ -1,6 +1,6 @@
 from ipaddress import collapse_addresses
 from market_env.utils import PriceDict, define_price_gov_token
-from market_env.env import Env, User, PlfPool, CPAmm
+from market_env.env import DefiEnv, User, PlfPool, CPAmm
 
 
 def simulate_simple_lending(
@@ -15,7 +15,7 @@ def simulate_simple_lending(
     _days_to_simulate: int = 365,
 ) -> list[float]:
     # set up an environment with all DAI prices of 1, price for governance token
-    simulation_env = Env(prices=PriceDict({"dai": 1}))
+    simulation_env = DefiEnv(prices=PriceDict({"dai": 1}))
 
     # initialization vars
     initial_supplied_funds_plf = _initial_funds_plf
@@ -91,7 +91,7 @@ def simulate_spiral_lending(
     _days_to_simulate: int = 365,
 ) -> list[float]:
     # set up an environment with all DAI prices of 1, price for governance token
-    simulation_env = Env(prices=PriceDict({"dai": 1}))
+    simulation_env = DefiEnv(prices=PriceDict({"dai": 1}))
 
     # initialization vars
     initial_supplied_funds_plf = _initial_funds_plf
@@ -206,7 +206,9 @@ def simulate_cpamm(
     )
 
     # set up an environment with all DAI prices of 1, price for governance token
-    simulation_env = Env(prices=PriceDict({"dai": 1, "eth": _startprice_quote_token}))
+    simulation_env = DefiEnv(
+        prices=PriceDict({"dai": 1, "eth": _startprice_quote_token})
+    )
 
     # set up a user that represents (market - yield aggregator)
     market_maker = User(

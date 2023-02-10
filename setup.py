@@ -11,9 +11,9 @@ setup(
         "gym==0.26.2",
         "opencv-python==4.7.0.68",
         "matplotlib==3.6.3",
-        "box2d-py==2.3.5",
-        "pygame==2.1.0",
-        "swig==4.1.1",
+        # "box2d-py==2.3.5",
+        # "pygame==2.1.0",
+        # "swig==4.1.1",
     ],
     extras_require={"dev": ["pylint", "black", "pytest"]},
 )
