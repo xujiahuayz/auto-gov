@@ -10,9 +10,7 @@ from rl.rl_env import ProtocolEnv
 from rl.utils import plot_learning_curve
 
 
-if __name__ == "__main__":
-    # show logging level at info
-    logging.basicConfig(level=logging.INFO)
+def training(n_games: int = 2_000):
     # initialize environment
     defi_env = DefiEnv(prices=PriceDict({"tkn": 1}))
     Alice = User(name="alice", env=defi_env, funds_available={"tkn": 10_000})
@@ -41,16 +39,16 @@ if __name__ == "__main__":
     # agent = Agent(state_size, action_size)
 
     scores, eps_history = [], []
-    N_GAMES = 2_000
 
     collateral_factors = []
 
-    for i in range(N_GAMES):
+    for i in range(n_games):
         score = 0
         done = False
         observation = env.reset()
         while not done:
             action = agent.choose_action(observation.astype(np.float32))
+            # this checks done or not
             observation_, reward, done, _ = env.step(action)
             score += reward
             agent.store_transition(observation, action, reward, observation_, done)
@@ -67,9 +65,16 @@ if __name__ == "__main__":
         collateral_factors.append(
             next(iter(defi_env.plf_pools.values())).collateral_factor
         )
+    return scores, eps_history, collateral_factors
 
     # torch.save(agent.q_eval.state_dict(), "models/dqn_gov.pth")
 
+
+if __name__ == "__main__":
+    # show logging level at info
+    logging.basicConfig(level=logging.INFO)
+    N_GAMES = 2_000
+    scores, eps_history, collateral_factors = training(n_games=N_GAMES)
     x = [i + 1 for i in range(N_GAMES)]
     filename = path.join(FIGURES_PATH, "defi.png")
     plot_learning_curve(x, scores, eps_history, filename)

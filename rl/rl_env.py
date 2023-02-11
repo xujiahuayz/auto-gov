@@ -87,7 +87,7 @@ class DefiProtocolEnv(gym.Env):
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
         state = self.defi_env.get_state()
-        collateral_factor = state[2]
+        # collateral_factor = state[2]
 
         # # constrain the action
         # if collateral_factor <= 0:
