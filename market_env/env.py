@@ -10,8 +10,7 @@ import numpy as np
 from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 from market_env.utils import PriceDict
 
-# set logging level
-logging.basicConfig(level=logging.INFO)
+# set logging level to debug
 
 
 class DefiEnv:
@@ -83,7 +82,8 @@ class User:
         self,
         env: DefiEnv,
         name: str,
-        safety_margin=0.05,
+        safety_borrow_margin=0.05,
+        safety_supply_margin=0.05,
         funds_available: Optional[dict] = None,
     ):
         assert name not in env.users, f"User {name} exists"
@@ -95,17 +95,18 @@ class User:
             funds_available = {"dai": 0.0, "eth": 0.0}
         self._initial_funds_available = funds_available.copy()
         self.funds_available = funds_available.copy()
-        self.env = env
 
         self.name = name
-        self.safety_margin = safety_margin
-        self._initial_safety_margin = safety_margin
-        self.consecutive_healthy_borrows = 0
+        self._initial_safety_borrow_margin = safety_borrow_margin
+        self._initial_safety_supply_margin = safety_supply_margin
+        self.reset()
 
     def reset(self):
         self.funds_available = self._initial_funds_available.copy()
-        self.consecutive_healthy_borrows = 0
-        self.safety_margin = self._initial_safety_margin
+        self.consecutive_good_borrows = 0
+        self.consecutive_good_supplies = 0
+        self.safety_borrow_margin = self._initial_safety_borrow_margin
+        self.safety_supply_margin = self._initial_safety_supply_margin
 
     @property
     def wealth(self) -> float:
@@ -223,38 +224,55 @@ class User:
         existing_borrow = self.funds_available[plf.borrow_token_name]
         existing_supply = self.funds_available[plf.interest_token_name]
 
-        max_borrow = existing_supply * plf.collateral_factor / (1 + self.safety_margin)
+        max_borrow = (
+            existing_supply * plf.collateral_factor / (1 + self.safety_borrow_margin)
+        )
+
+        max_supply = (existing_supply + self.funds_available[plf.asset_name]) / (
+            1 + self.safety_supply_margin
+        )
 
         if max_borrow > existing_borrow:  # healthy loan
             if plf.borrow_apy <= plf.competing_borrow_apy + 0.01:
+                self.consecutive_good_borrows += 1
                 # can borrow up to the buffer
                 self._borrow_repay(max_borrow - existing_borrow, plf)
             else:
                 # repay as much as you can
                 self._borrow_repay(-self.funds_available[plf.asset_name], plf)
 
-            # can deposit all existing funds in the pool if the competing supply APY is no higher than the plf supply APY plus 1%
-            if plf.supply_apy >= plf.competing_supply_apy - 0.01:
-                self._supply_withdraw(self.funds_available[plf.asset_name], plf)
-            else:
+            if plf.competing_supply_apy >= plf.supply_apy + 0.01:
+                self.consecutive_good_supplies = 0
                 # withdraw as much as you can
                 self._supply_withdraw(-plf.user_i_tokens[self.name], plf)
+            else:
+                self.consecutive_good_supplies += 1
+                supply_amount = max(
+                    min(
+                        self.funds_available[plf.asset_name],
+                        max_supply - existing_supply,
+                    ),
+                    0,
+                )
+                self._supply_withdraw(supply_amount, plf)
 
-            self.consecutive_healthy_borrows += 1
-            if self.consecutive_healthy_borrows > 10 and self.safety_margin > 0.05:
-                self.safety_margin -= 0.05
         else:  # unhealthy loan
+            self.consecutive_good_borrows = 0
             # repay as much as you can
             self._borrow_repay(-self.funds_available[plf.asset_name], plf)
             existing_borrow = self.funds_available[plf.borrow_token_name]
             existing_supply = self.funds_available[plf.interest_token_name]
-            self.consecutive_healthy_borrows = 0
 
             if existing_borrow > existing_supply * plf.collateral_factor:
+                self.safety_borrow_margin += 0.05
                 # inject funds to the user to repay the loan
                 self.funds_available[plf.asset_name] += existing_borrow * 0.1
                 self._borrow_repay(self.funds_available[plf.asset_name], plf)
-                self.safety_margin += 0.05
+
+        if self.consecutive_good_borrows > 10 and self.safety_borrow_margin > 0.05:
+            self.safety_borrow_margin -= 0.05
+        if self.consecutive_good_supplies > 10 and self.safety_supply_margin > 0.05:
+            self.safety_supply_margin -= 0.05
 
 
 class PlfPool:
@@ -285,18 +303,19 @@ class PlfPool:
         self.env = env
         self.initiator = initiator
         self.initial_starting_funds = initial_starting_funds
-        self._collateral_factor = collateral_factor
         self.asset_name = asset_name
         self.competing_supply_apy = competing_supply_apy
         self.competing_borrow_apy = competing_borrow_apy
         self.initial_collar_factor = collateral_factor
-        self.env.plf_pools[self.asset_name] = self
-        self.user_i_tokens = {self.initiator.name: self.initial_starting_funds}
-        self.user_b_tokens = {self.initiator.name: 0.0}
         self.reset()
 
     def reset(self):
-        self.collateral_factor = self.initial_collar_factor
+        self.env.plf_pools[self.asset_name] = self
+        self.user_i_tokens: dict[str, float] = {
+            self.initiator.name: self.initial_starting_funds
+        }
+        self.user_b_tokens: dict[str, float] = {self.initiator.name: 0.0}
+        self._collateral_factor: float = self.initial_collar_factor
         self.previous_reserve: float = 0.0
         self.previous_profit: float = 0.0
         self.reward: float = 0.0
@@ -320,7 +339,17 @@ class PlfPool:
         self.initiator.funds_available[self.borrow_token_name] = 0
 
     def __repr__(self) -> str:
-        return f"{self.asset_name} PLF: (available funds = {self.total_available_funds}, borrowed funds = {self.total_borrowed_funds}, profit = {self.reserve})"
+        return (
+            f"{self.asset_name} PLF: "
+            + f"Collateral factor: {self.collateral_factor:.2f} \n"
+            + f"Supply APY: {self.supply_apy:.5f} \n"
+            + f"Borrow APY: {self.borrow_apy:.5f} \n"
+            + f"total borrow: {self.total_b_tokens:.4f} \n"
+            + f"total supply: {self.total_i_tokens:.4f} \n"
+            + f"total available funds: {self.total_available_funds:.4f} \n"
+            + f"utilization rate: {self.utilization_ratio:.5f}\n"
+            + f"reserve: {self.reserve:.4f} \n"
+        )
 
     @property
     def collateral_factor(self):
@@ -334,6 +363,7 @@ class PlfPool:
 
     # actions
     def lower_collateral_factor(self) -> None:
+        # affect users who are borrowing from this pool
         new_collateral_factor = self.collateral_factor - 0.05
         # Constrain check
         # if the new collateral factor is less than 0
@@ -343,6 +373,8 @@ class PlfPool:
             self.reward = -90
         else:
             self.collateral_factor = new_collateral_factor
+            for user in self.env.users.values():
+                user.safety_borrow_margin += 0.05
             self.update_market()
 
     def keep_collateral_factor(self) -> None:
@@ -358,23 +390,16 @@ class PlfPool:
             self.reward = -90
         else:
             self.collateral_factor = new_collateral_factor
+            # affect users who are supplying to this pool with higher exposure to default risk
+            for user in self.env.users.values():
+                user.safety_supply_margin += 0.05
             self.update_market()
 
     def update_market(self) -> None:
-        # self.previous_profit = self.profit
-
         self.accrue_daily_interest()
         for user in self.env.users.values():
             user.reactive_action(self)
-
-        this_profit = self.get_profit()
-        if this_profit <= 0:
-            self.reward = -10
-        else:
-            reward_diff = this_profit - self.previous_profit
-            self.previous_profit = this_profit
-            self.reward = reward_diff
-        self.reward = this_profit
+        self.reward = self.get_profit()
 
     def get_reward(self) -> float:
         """
@@ -403,10 +428,6 @@ class PlfPool:
 
     @property
     def utilization_ratio(self) -> float:
-        # ratio =
-        # self.total_borrowed_funds / (
-        #     self.total_available_funds + self.total_borrowed_funds
-        # )
         if self.total_b_tokens == 0:
             return 0
         return self.total_b_tokens / self.total_i_tokens
@@ -446,22 +467,27 @@ class PlfPool:
     def borrow_lend_rates(
         self,
         util_rate: float,
-        rb_factor: float = 50,
-        rs_factor: float = 100,
+        spread: float = 0.2,
+        rb_factor: float = 20,
     ) -> tuple[float, float]:
         # TODO: check where to put the factors
         """
         calculate borrow and supply rates based on utilization ratio
         with an arbitrarily-set shape
         """
+        # theoretically unnecessary, but to avoid floating point errors
+        if util_rate == 0:
+            return 0, 0
 
-        # assert (
-        #     0 <= util_rate < 1
-        # ), f"utilization ratio must lie in [0,1), but got {util_rate}"
-        util_rate = min(util_rate, 1 - 1e-6)
+        assert (
+            0 < util_rate
+        ), f"utilization ratio must be non-negative, but got {util_rate}"
+        constrained_util_rate = min(util_rate, 1 - 1e-6)
 
-        borrow_rate = util_rate / (rb_factor * (1 - util_rate))
-        supply_rate = util_rate / (rs_factor * (1 - util_rate))
+        borrow_rate = constrained_util_rate / (rb_factor * (1 - constrained_util_rate))
+        daily_borrow_interest = (1 + borrow_rate) ** (1 / 365) - 1
+        daily_supply_interest = daily_borrow_interest * constrained_util_rate
+        supply_rate = ((1 + daily_supply_interest) ** 365 - 1) * (1 - spread)
 
         return borrow_rate, supply_rate
 
@@ -490,33 +516,35 @@ class PlfPool:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG)
     # initialize environment
     defi_env = DefiEnv(prices=PriceDict({"tkn": 1}))
-    Alice = User(name="alice", env=defi_env, funds_available={"tkn": 2_000})
+    Alice = User(name="alice", env=defi_env, funds_available={"tkn": 20_000})
     plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        initial_starting_funds=500,
+        initial_starting_funds=5_000,
         asset_name="tkn",
         collateral_factor=0.8,
     )
     print("Initial")
     print(f"**Alice {Alice} \n")
-    print(f"++{plf} \n")
+    print(plf)
 
     # Alice react first
+    plf.update_market()
     Alice.reactive_action(plf)
     print(f"**Alice {Alice} \n")
-    print(f"++{plf} \n")
+    print(plf)
 
     defi_env.reset()
     print("After reset")
     print(f"**Alice {Alice} \n")
-    print(f"++{plf} \n")
+    print(plf)
 
     # then the market update
-    plf.raise_collateral_factor()
     plf.update_market()
+    plf.raise_collateral_factor()
     Alice.reactive_action(plf)
     print(f"**Alice {Alice} \n")
-    print(f"++{plf} \n")
+    print(plf)

@@ -8,19 +8,18 @@ from market_env.env import DefiEnv, PlfPool, PriceDict, User
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from rl.utils import plot_learning_curve
-import torch
 
-# show logging level at info
-logging.basicConfig(level=logging.DEBUG)
 
 if __name__ == "__main__":
+    # show logging level at info
+    logging.basicConfig(level=logging.INFO)
     # initialize environment
     defi_env = DefiEnv(prices=PriceDict({"tkn": 1}))
-    Alice = User(name="alice", env=defi_env, funds_available={"tkn": 1_000_000})
+    Alice = User(name="alice", env=defi_env, funds_available={"tkn": 10_000})
     plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        initial_starting_funds=800_000,
+        initial_starting_funds=8_000,
         asset_name="tkn",
         collateral_factor=0.8,
     )
@@ -42,11 +41,11 @@ if __name__ == "__main__":
     # agent = Agent(state_size, action_size)
 
     scores, eps_history = [], []
-    n_games = 500
+    N_GAMES = 2_000
 
     collateral_factors = []
 
-    for i in range(n_games):
+    for i in range(N_GAMES):
         score = 0
         done = False
         observation = env.reset()
@@ -71,7 +70,7 @@ if __name__ == "__main__":
 
     # torch.save(agent.q_eval.state_dict(), "models/dqn_gov.pth")
 
-    x = [i + 1 for i in range(n_games)]
+    x = [i + 1 for i in range(N_GAMES)]
     filename = path.join(FIGURES_PATH, "defi.png")
     plot_learning_curve(x, scores, eps_history, filename)
     plt.clf()
