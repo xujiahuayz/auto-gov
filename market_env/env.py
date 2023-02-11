@@ -118,7 +118,7 @@ class User:
         return user_wealth
 
     def __repr__(self) -> str:
-        return f"name: {self.name}, funds available: {self.funds_available}, wealth: {self.wealth}"
+        return f"name: {self.name}, funds available: {self.funds_available}, initial funds: {self._initial_funds_available}, wealth: {self.wealth}"
 
     def _supply_withdraw(self, amount: float, plf: PlfPool) -> None:
         """
