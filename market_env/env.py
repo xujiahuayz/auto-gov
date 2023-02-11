@@ -133,7 +133,7 @@ class User:
                 plf.user_i_tokens[self.name]
                 - plf.user_b_tokens[self.name] / plf.collateral_factor
             )
-            amount = min(max(amount, -withdraw_limit), -plf.total_available_funds)
+            amount = max(amount, -withdraw_limit, -plf.total_available_funds)
 
         if -1e-3 < amount < 1e-3:
             return
@@ -407,6 +407,8 @@ class PlfPool:
         # self.total_borrowed_funds / (
         #     self.total_available_funds + self.total_borrowed_funds
         # )
+        if self.total_b_tokens == 0:
+            return 0
         return self.total_b_tokens / self.total_i_tokens
 
     # max(0, min(1 - 1e-3, ratio))

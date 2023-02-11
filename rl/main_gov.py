@@ -67,7 +67,7 @@ if __name__ == "__main__":
             next(iter(defi_env.plf_pools.values())).collateral_factor
         )
 
-    torch.save(agent.q_eval.state_dict(), "models/dqn_gov.pth")
+    # torch.save(agent.q_eval.state_dict(), "models/dqn_gov.pth")
 
     x = [i + 1 for i in range(n_games)]
     filename = path.join(FIGURES_PATH, "defi.png")
