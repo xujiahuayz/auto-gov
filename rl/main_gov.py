@@ -11,16 +11,16 @@ from rl.utils import plot_learning_curve
 import torch
 
 # show logging level at info
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 if __name__ == "__main__":
     # initialize environment
     defi_env = DefiEnv(prices=PriceDict({"tkn": 1}))
-    Alice = User(name="alice", env=defi_env, funds_available={"tkn": 2_000})
+    Alice = User(name="alice", env=defi_env, funds_available={"tkn": 1_000_000})
     plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        initial_starting_funds=1000,
+        initial_starting_funds=300_000,
         asset_name="tkn",
         collateral_factor=0.8,
     )
