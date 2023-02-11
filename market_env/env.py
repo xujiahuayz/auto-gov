@@ -387,9 +387,12 @@ class PlfPool:
             [
                 self.total_available_funds,
                 self.total_borrowed_funds,
-                self.collateral_factor,
                 self.total_i_tokens,
                 self.total_b_tokens,
+                self.collateral_factor,
+                self.utilization_ratio,
+                self.supply_apy,
+                self.borrow_apy,
             ]
         )
 
@@ -400,10 +403,13 @@ class PlfPool:
 
     @property
     def utilization_ratio(self) -> float:
-        ratio = self.total_borrowed_funds / (
-            self.total_available_funds + self.total_borrowed_funds
-        )
-        return max(0, min(1 - 1e-3, ratio))
+        # ratio =
+        # self.total_borrowed_funds / (
+        #     self.total_available_funds + self.total_borrowed_funds
+        # )
+        return self.total_b_tokens / self.total_i_tokens
+
+    # max(0, min(1 - 1e-3, ratio))
 
     @property
     def supply_apy(self) -> float:
@@ -438,17 +444,19 @@ class PlfPool:
     def borrow_lend_rates(
         self,
         util_rate: float,
-        rb_factor: float = 20,
-        rs_factor: float = 50,
+        rb_factor: float = 50,
+        rs_factor: float = 100,
     ) -> tuple[float, float]:
+        # TODO: check where to put the factors
         """
         calculate borrow and supply rates based on utilization ratio
         with an arbitrarily-set shape
         """
 
-        assert (
-            0 <= util_rate < 1
-        ), f"utilization ratio must lie in [0,1), but got {util_rate}"
+        # assert (
+        #     0 <= util_rate < 1
+        # ), f"utilization ratio must lie in [0,1), but got {util_rate}"
+        util_rate = min(util_rate, 1 - 1e-6)
 
         borrow_rate = util_rate / (rb_factor * (1 - util_rate))
         supply_rate = util_rate / (rs_factor * (1 - util_rate))

@@ -40,7 +40,7 @@ if __name__ == "__main__":
     # agent = Agent(state_size, action_size)
 
     scores, eps_history = [], []
-    n_games = 5_000
+    n_games = 1_500
 
     collateral_factors = []
 

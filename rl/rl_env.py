@@ -3,7 +3,7 @@ from typing import Union
 import gym
 import numpy as np
 from rl.test_market import TestMarket
-from market_env.env import DefiEnv, PlfPool, User, PriceDict
+from market_env.env import DefiEnv
 
 
 class ProtocolEnv(gym.Env):
@@ -13,11 +13,16 @@ class ProtocolEnv(gym.Env):
         self.observation_space = gym.spaces.Box(
             # self.total_available_funds,
             # self.total_borrowed_funds,
-            # self.collateral_factor,
             # self.total_i_tokens,
             # self.total_b_tokens,
-            low=np.array([0, -np.inf, -np.inf, 0, 0]),
-            high=np.array([np.inf, np.inf, np.inf, np.inf, np.inf]),
+            # self.collateral_factor,
+            # self.utilization_ratio,
+            # self.supply_apy,
+            # self.borrow_apy,
+            low=np.array([0, -np.inf, 0, 0, -np.inf, 0, 0, 0]),
+            high=np.array(
+                [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
+            ),
             dtype=np.float32,
         )
 
