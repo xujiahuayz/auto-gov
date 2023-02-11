@@ -99,11 +99,13 @@ class User:
 
         self.name = name
         self.safety_margin = safety_margin
+        self._initial_safety_margin = safety_margin
         self.consecutive_healthy_borrows = 0
 
     def reset(self):
         self.funds_available = self._initial_funds_available
         self.consecutive_healthy_borrows = 0
+        self.safety_margin = self._initial_safety_margin
 
     @property
     def wealth(self) -> float:
@@ -289,6 +291,8 @@ class PlfPool:
         self.competing_borrow_apy = competing_borrow_apy
         self.initial_collar_factor = collateral_factor
         self.env.plf_pools[self.asset_name] = self
+        self.user_i_tokens = {self.initiator.name: self.initial_starting_funds}
+        self.user_b_tokens = {self.initiator.name: 0.0}
         self.reset()
 
     def reset(self):
@@ -308,10 +312,6 @@ class PlfPool:
 
         # actual underlying that's still available, not the interest-bearing tokens
         self.total_available_funds = self.initial_starting_funds
-
-        self.user_i_tokens = {self.initiator.name: self.initial_starting_funds}
-
-        self.user_b_tokens = {self.initiator.name: 0.0}
 
         # add interest-bearing token into initiator's wallet
         self.initiator.funds_available[

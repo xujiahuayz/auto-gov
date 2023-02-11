@@ -20,7 +20,7 @@ if __name__ == "__main__":
     plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        initial_starting_funds=300_000,
+        initial_starting_funds=800_000,
         asset_name="tkn",
         collateral_factor=0.8,
     )
