@@ -8,6 +8,7 @@ from market_env.env import DefiEnv, PlfPool, PriceDict, User
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from rl.utils import plot_learning_curve
+import torch
 
 # show logging level at info
 logging.basicConfig(level=logging.INFO)
@@ -65,6 +66,8 @@ if __name__ == "__main__":
         collateral_factors.append(
             next(iter(defi_env.plf_pools.values())).collateral_factor
         )
+
+    torch.save(agent.q_eval.state_dict(), "models/dqn_gov.pth")
 
     x = [i + 1 for i in range(n_games)]
     filename = path.join(FIGURES_PATH, "defi.png")
