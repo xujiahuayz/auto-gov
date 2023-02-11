@@ -31,11 +31,18 @@ def test_env():
     env = ProtocolEnv(defi_env)
 
     print("initial state:", list(env.reset()))
-    for j in range(10):
+    for j in range(100):
         for i in range(10):
             action = random.randint(0, 2)
             observation_, reward, done, _ = env.step(action)
-            # print("Action: ", action, "\tReward: ", reward, "\tState: ", list(observation_))
+            print(
+                "Action: ",
+                action,
+                "\tReward: ",
+                reward,
+                "\tState: ",
+                list(observation_),
+            )
         print("initial state:", list(env.reset()))
 
 

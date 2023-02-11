@@ -287,11 +287,12 @@ class PlfPool:
         self.asset_name = asset_name
         self.competing_supply_apy = competing_supply_apy
         self.competing_borrow_apy = competing_borrow_apy
-
+        self.initial_collar_factor = collateral_factor
         self.env.plf_pools[self.asset_name] = self
         self.reset()
 
     def reset(self):
+        self.collateral_factor = self.initial_collar_factor
         self.previous_reserve: float = 0.0
         self.previous_profit: float = 0.0
         self.reward: float = 0.0
