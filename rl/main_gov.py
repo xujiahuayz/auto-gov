@@ -10,9 +10,17 @@ from rl.rl_env import ProtocolEnv
 from rl.utils import plot_learning_curve
 
 
-def training(n_games: int = 2_000):
+def training(
+    max_steps: int = 30,
+    n_games: int = 2_000,
+    epsilon: float = 1,
+    eps_end: float = 0.01,
+    eps_dec: float = 5e-5,
+    bath_size: int = 128,
+    lr: float = 0.003,
+):
     # initialize environment
-    defi_env = DefiEnv(prices=PriceDict({"tkn": 1}))
+    defi_env = DefiEnv(prices=PriceDict({"tkn": 1}), max_steps=max_steps)
     Alice = User(name="alice", env=defi_env, funds_available={"tkn": 10_000})
     plf = PlfPool(
         env=defi_env,
@@ -27,14 +35,13 @@ def training(n_games: int = 2_000):
     # initialize agent
     agent = Agent(
         gamma=0.99,
-        epsilon=1,
-        batch_size=128,
+        epsilon=epsilon,
+        batch_size=bath_size,
         n_actions=env.action_space.n,
-        eps_end=0.01,
+        eps_end=eps_end,
         input_dims=env.observation_space.shape,
-        lr=0.003,
-        # eps_dec=0,
-        eps_dec=5e-5,
+        lr=lr,
+        eps_dec=eps_dec,
     )
     # agent = Agent(state_size, action_size)
 

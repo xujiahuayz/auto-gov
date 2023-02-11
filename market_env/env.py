@@ -19,6 +19,7 @@ class DefiEnv:
         users: Optional[dict[str, User]] = None,
         prices: Optional[PriceDict] = None,
         plf_pools: Optional[dict[str, PlfPool]] = None,
+        max_steps: int = 30,
     ):
         if users is None:
             users = {}
@@ -33,7 +34,7 @@ class DefiEnv:
         self.prices = prices
         self.plf_pools = plf_pools
         self.step = 0
-        self.max_steps = 30
+        self.max_steps = max_steps
 
     @property
     def prices(self) -> PriceDict:
