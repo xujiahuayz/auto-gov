@@ -62,8 +62,8 @@ class Agent:
             self.lr,
             n_actions=n_actions,
             input_dims=input_dims,
-            fc1_dims=20,
-            fc2_dims=20,
+            fc1_dims=24,
+            fc2_dims=24,
         )
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)

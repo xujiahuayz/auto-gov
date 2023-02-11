@@ -30,17 +30,19 @@ if __name__ == "__main__":
     # initialize agent
     agent = Agent(
         gamma=0.99,
-        epsilon=1.0,
+        epsilon=1,
         batch_size=128,
         n_actions=env.action_space.n,
-        eps_end=0.1,
+        eps_end=0.01,
         input_dims=env.observation_space.shape,
-        lr=0.001,
+        lr=0.003,
+        # eps_dec=0,
+        eps_dec=5e-5,
     )
     # agent = Agent(state_size, action_size)
 
     scores, eps_history = [], []
-    n_games = 1_500
+    n_games = 500
 
     collateral_factors = []
 
