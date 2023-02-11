@@ -42,7 +42,7 @@ class Agent:
         input_dims,
         batch_size,
         n_actions,
-        max_mem_size=100000,
+        max_mem_size=100_000,
         eps_end=0.1,
         eps_dec=5e-5,
     ):

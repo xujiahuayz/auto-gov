@@ -10,8 +10,6 @@ import numpy as np
 from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 from market_env.utils import PriceDict
 
-# set logging level to debug
-
 
 class DefiEnv:
     def __init__(

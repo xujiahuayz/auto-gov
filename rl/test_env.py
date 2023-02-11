@@ -1,11 +1,8 @@
-import gym
-from dqn_gov import Agent
-from utils import plot_learning_curve
-import numpy as np
-from test_market import TestMarket
-from rl_env import ProtocolEnv
-from market_env.env import DefiEnv, PlfPool, PriceDict, User
 import random
+
+from market_env.env import DefiEnv, PlfPool, PriceDict, User
+from rl.rl_env import ProtocolEnv
+from rl.test_market import TestMarket
 
 
 def test_testmarket():
@@ -76,6 +73,6 @@ def test_env2():
 
 
 if __name__ == "__main__":
-    # test_testmarket()
-    # test_env1()
+    test_testmarket()
+    test_env1()
     test_env2()
