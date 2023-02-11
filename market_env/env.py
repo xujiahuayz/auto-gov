@@ -94,7 +94,7 @@ class User:
         if funds_available is None:
             funds_available = {"dai": 0.0, "eth": 0.0}
         self._initial_funds_available = funds_available.copy()
-        self.funds_available = funds_available
+        self.funds_available = funds_available.copy()
         self.env = env
 
         self.name = name
@@ -103,7 +103,7 @@ class User:
         self.consecutive_healthy_borrows = 0
 
     def reset(self):
-        self.funds_available = self._initial_funds_available
+        self.funds_available = self._initial_funds_available.copy()
         self.consecutive_healthy_borrows = 0
         self.safety_margin = self._initial_safety_margin
 
