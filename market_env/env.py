@@ -379,6 +379,7 @@ class PlfPool:
         self.competing_borrow_apy = competing_borrow_apy
         self._initial_collar_factor = collateral_factor
         self._initial_asset_volatility = initial_asset_volatility
+        self._initial_asset_price = self.env.prices[self.asset_name]
         self.reset()
 
     def reset(self):
@@ -410,7 +411,8 @@ class PlfPool:
         ] = self.initial_starting_funds
 
         self.initiator.funds_available[self.borrow_token_name] = 0
-        self.asset_price_history: list[float] = [self.env.prices[self.asset_name]]
+        self.env.prices[self.asset_name] = self._initial_asset_price
+        self.asset_price_history: list[float] = [self._initial_asset_price]
         self.asset_volatility: float = self._initial_asset_volatility
 
     def __repr__(self) -> str:
@@ -438,14 +440,9 @@ class PlfPool:
 
     def update_asset_price(self):
         ph = self.asset_price_history
-        # asset price follows brownian motion with drift
-        # the drift is the average of the previous 10 prices
-        # the volatility is 0.1
-        # the price cannot be negative
-        new_price = ph[-1] * np.exp(
-            self.asset_volatility * np.random.normal()
-            + np.mean(ph[-min(10, len(ph)) :]) / 1000
-        )
+        # asset price follows brownian motion with 0 drift and volatility of self.asset_volatility
+        # the wiener process follows a normal distribution with mean 0 and variance 1 (1 because it is a single time step)
+        new_price = ph[-1] * np.exp(self.asset_volatility * np.random.normal(0, 1))
 
         assert new_price > 0, "asset price cannot be negative"
         self.env.prices[self.asset_name] = new_price  # type: ignore
