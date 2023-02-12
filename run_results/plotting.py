@@ -49,3 +49,5 @@ def plot_learning_curve(x, scores, epsilons, filename, lines=None):
             plt.axvline(x=line)
 
     plt.savefig(filename)
+    plt.show()
+    plt.close()
