@@ -40,8 +40,6 @@ class Agent:
         epsilon,
         lr,
         input_dims,
-        layer1_size=24,
-        layer2_size=24,
         batch_size: int,
         n_actions: int,
         max_mem_size: int = 100_000,
