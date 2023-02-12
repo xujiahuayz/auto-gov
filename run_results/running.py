@@ -17,8 +17,9 @@ from run_results.plotting import plot_learning_curve
 def save_results(
     initial_collateral_factors: list[float] = [0.75],
     max_steps_values: list[int] = [120],
-    lr_values: list[float] = [0.05],
-    n_games_values: list[int] = [2_500],
+    lr_values: list[float] = [0.02],
+    batch_size_values: list[int] = [128],
+    n_games_values: list[int] = [2_000],
     eps_dec_values: list[float] = [5e-5],
     eps_end_values: list[float] = [0.01],
 ) -> list[dict]:
@@ -30,6 +31,7 @@ def save_results(
                 for lr in lr_values:
                     eps_end = eps_end_values[0]
                     eps_dec = eps_dec_values[0]
+                    batch_size = batch_size_values[0]
                     logging.info(
                         f"Training with initial_collateral_factor={icf}, max_steps={ms}, n_games={n_game}, lr={lr}"
                     )
@@ -40,6 +42,7 @@ def save_results(
                         lr=lr,
                         eps_end=eps_end,
                         eps_dec=eps_dec,
+                        batch_size=batch_size,
                     )
 
                     result = {
@@ -52,6 +55,7 @@ def save_results(
                         "training_collateral_factors": training_collateral_factors,
                         "es_dec": eps_dec,
                         "eps_end": eps_end,
+                        "batch_size": batch_size,
                     }
                     results.append(result)
 

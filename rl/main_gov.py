@@ -19,22 +19,13 @@ def training(
     epsilon: float = 1,
     eps_end: float = 0.01,
     eps_dec: float = 5e-5,
-    bath_size: int = 128,
+    batch_size: int = 128,
     lr: float = 0.003,
     tkn_volatility: float = 2,
-    init_saftey_borrow_margin: float = 0.5,
-    init_saftey_supply_margin: float = 0.5,
+    init_safety_borrow_margin: float = 0.5,
+    init_safety_supply_margin: float = 0.5,
 ) -> tuple[list[float], list[float], dict[str, list[float]]]:
     # initialize environment
-    # defi_env = DefiEnv(prices=PriceDict({"tkn": 1}))
-    # Alice = User(name="alice", env=defi_env, funds_available={"tkn": 10_000})
-    # plf = PlfPool(
-    #     env=defi_env,
-    #     initiator=Alice,
-    #     initial_starting_funds=8_000,
-    #     asset_name="tkn",
-    #     collateral_factor=initial_collateral_factor,
-    # )
 
     defi_env = DefiEnv(
         prices=PriceDict({"tkn": 3, "usdc": 0.1, "weth": 1}), max_steps=max_steps
@@ -43,8 +34,8 @@ def training(
         name="alice",
         env=defi_env,
         funds_available={"tkn": 10_000, "usdc": 200_000, "weth": 20_000},
-        safety_borrow_margin=init_saftey_borrow_margin,
-        safety_supply_margin=init_saftey_supply_margin,
+        safety_borrow_margin=init_safety_borrow_margin,
+        safety_supply_margin=init_safety_supply_margin,
     )
     tkn_plf = PlfPool(
         env=defi_env,
@@ -80,7 +71,7 @@ def training(
     agent = Agent(
         gamma=gamma,
         epsilon=epsilon,
-        batch_size=bath_size,
+        batch_size=batch_size,
         n_actions=env.action_space.n,
         eps_end=eps_end,
         input_dims=env.observation_space.shape,
