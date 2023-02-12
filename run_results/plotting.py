@@ -2,11 +2,12 @@
 Plotting results from training
 """
 
+from typing import Optional
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def plotLearning(scores, filename: str, x=None, window=5):
+def plot_learning(scores, filename: str, x=Optional[int], window: int = 5):
     # for policy gradient algorithms
     N = len(scores)
     running_avg = np.empty(N)

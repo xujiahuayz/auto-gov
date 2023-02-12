@@ -210,7 +210,7 @@ class User:
 
             amount = max(amount, -withdraw_limit, -plf.total_available_funds)
 
-        if -1e-3 < amount < 1e-3:
+        if -1e-9 < amount < 1e-9:
             return
 
         logging.debug(
@@ -264,7 +264,7 @@ class User:
                 -self.funds_available[plf.asset_name],
             )
 
-        if -1e-3 < amount < 1e-3:
+        if -1e-9 < amount < 1e-9:
             return
 
         logging.debug(
