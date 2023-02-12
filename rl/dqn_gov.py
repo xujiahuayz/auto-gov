@@ -45,6 +45,8 @@ class Agent:
         max_mem_size=100_000,
         eps_end=0.1,
         eps_dec=5e-5,
+        layer1_size=24,
+        layer2_size=24,
     ):
         self.gamma = gamma
         self.epsilon = epsilon
@@ -62,8 +64,8 @@ class Agent:
             self.lr,
             n_actions=n_actions,
             input_dims=input_dims,
-            fc1_dims=24,
-            fc2_dims=24,
+            fc1_dims=layer1_size,
+            fc2_dims=layer2_size,
         )
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
