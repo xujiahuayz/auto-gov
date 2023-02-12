@@ -1,14 +1,14 @@
 import numpy as np
 
 from rl.dqn_gov import Agent
-from rl.rl_env import DefiProtocolEnv
+from rl.rl_env import TestProtocolEnv
 from rl.test_market import TestMarket
 from rl.utils import plot_learning_curve
 
 if __name__ == "__main__":
     # initialize market and environment
     market = TestMarket()
-    env = DefiProtocolEnv(market)
+    env = TestProtocolEnv(market)
 
     # initialize agent
     agent = Agent(

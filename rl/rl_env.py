@@ -1,15 +1,14 @@
-import sys
-from typing import Union
 import gym
 import numpy as np
-from rl.test_market import TestMarket
+
 from market_env.env import DefiEnv
+from rl.test_market import TestMarket
 
 
 class ProtocolEnv(gym.Env):
-    def __init__(self, defi_env: DefiEnv, action_space: int = 3):
+    def __init__(self, defi_env: DefiEnv):
         self.defi_env = defi_env
-        self.action_space = gym.spaces.Discrete(action_space)  # lower, keep, raise
+        num_pools = len(defi_env.plf_pools)
         self.observation_space = gym.spaces.Box(
             # self.total_available_funds,
             # self.total_borrowed_funds,
@@ -19,12 +18,15 @@ class ProtocolEnv(gym.Env):
             # self.utilization_ratio,
             # self.supply_apy,
             # self.borrow_apy,
-            low=np.array([0, -np.inf, 0, 0, -np.inf, 0, 0, 0]),
+            low=np.array([0, -np.inf, 0, 0, -np.inf, 0, 0, 0] * num_pools),
             high=np.array(
                 [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
+                * num_pools
             ),
             dtype=np.float32,
         )
+        num_action = defi_env.num_action_pool**num_pools
+        self.action_space = gym.spaces.Discrete(num_action)  # lower, keep, raise
 
     def reset(self) -> np.ndarray:
         # self.market.reset()
@@ -37,33 +39,8 @@ class ProtocolEnv(gym.Env):
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
         state = self.defi_env.get_state()
-        collateral_factor = state[2]
 
-        # # constrain the action
-        # if collateral_factor <= 0:
-        #     if action == 0:
-        #         action = 1
-        #     elif action == 2:
-        #         action = 1
-        # elif collateral_factor >= 1:
-        #     if action == 2:
-        #         action = 1
-        #     elif action == 0:
-        #         action = 1
-
-        # lower, keep, raise the collateral factor
-
-        # convert a number from 0-26 to a tuple[int, int, int] where each int is 0 or 1 or 2
-        action_tuple = (action // (3) ** 2, (action % 9) // 3, action % 3)
-
-        self.defi_env.update_collateral_factor(action_tuple)
-
-        # if action == 0:
-        #     self.defi_env.lower_collateral_factor()
-        # elif action == 1:
-        #     self.defi_env.keep_collateral_factor()
-        # elif action == 2:
-        #     self.defi_env.raise_collateral_factor()
+        self.defi_env.update_collateral_factor(action)
 
         state = self.defi_env.get_state()
         reward = self.defi_env.get_reward()
@@ -72,8 +49,8 @@ class ProtocolEnv(gym.Env):
         return state, reward, done, {}
 
 
-class DefiProtocolEnv(gym.Env):
-    def __init__(self, defi_env: DefiEnv):
+class TestProtocolEnv(gym.Env):
+    def __init__(self, defi_env: TestMarket):
         self.defi_env = defi_env
         self.action_space = gym.spaces.Discrete(3)  # lower, keep, raise
         self.observation_space = gym.spaces.Box(
@@ -93,19 +70,6 @@ class DefiProtocolEnv(gym.Env):
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
         state = self.defi_env.get_state()
-        # collateral_factor = state[2]
-
-        # # constrain the action
-        # if collateral_factor <= 0:
-        #     if action == 0:
-        #         action = 1
-        #     elif action == 2:
-        #         action = 1
-        # elif collateral_factor >= 1:
-        #     if action == 2:
-        #         action = 1
-        #     elif action == 0:
-        #         action = 1
 
         # lower, keep, raise the collateral factor
         if action == 0:
@@ -122,17 +86,5 @@ class DefiProtocolEnv(gym.Env):
         return state, reward, done, {}
 
 
-def test1():
-    market = TestMarket()
-    env = ProtocolEnv(market)
-
-    print(env.reset())
-
-
-def test2():
-    for i in range(3**3):
-        print(i, (i // (3) ** 2, (i % 9) // 3, i % 3))
-
-
 if __name__ == "__main__":
-    test2()
+    pass

@@ -33,6 +33,7 @@ class DefiEnv:
         self.plf_pools = plf_pools
         self.step = 0
         self.max_steps = max_steps
+        self.num_action_pool: int = 3  # lower, keep, raise
 
     @property
     def prices(self) -> PriceDict:
@@ -44,26 +45,25 @@ class DefiEnv:
             raise TypeError("must use PriceDict type")
         self._prices = value
 
-    def update_collateral_factor(self, action: tuple) -> None:
+    def update_collateral_factor(self, action: int) -> None:
+        num_pools: int = len(self.plf_pools)
+        if not 0 <= action < self.num_action_pool**num_pools:
+            raise ValueError("action must be between 0 and {num_pools**3 -1}")
+
         for i, plf in enumerate(self.plf_pools.values()):
-            match action[i]:
+            exponent = num_pools - i
+            this_action = (
+                action
+                % (self.num_action_pool**exponent)
+                // (self.num_action_pool ** (exponent - 1))
+            )
+            match this_action:
                 case 0:
                     plf.keep_collateral_factor()
                 case 1:
                     plf.lower_collateral_factor()
                 case 2:
                     plf.raise_collateral_factor()
-                case _:
-                    raise ValueError("action must be 0, 1, or 2")
-
-    # def lower_collateral_factor(self) -> None:
-    #     self._apply_to_all_pools(PlfPool.lower_collateral_factor)
-
-    # def keep_collateral_factor(self) -> None:
-    #     self._apply_to_all_pools(PlfPool.keep_collateral_factor)
-
-    # def raise_collateral_factor(self) -> None:
-    #     self._apply_to_all_pools(PlfPool.raise_collateral_factor)
 
     def get_reward(self) -> float:
         return sum(self._apply_to_all_pools(PlfPool.get_reward))
