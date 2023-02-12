@@ -21,7 +21,7 @@ def plot_learning(scores, filename: str, x=Optional[int], window: int = 5):
     plt.savefig(filename)
 
 
-def plot_learning_curve(x, scores, epsilons, filename, lines=None):
+def plot_learning_curve(x, scores, epsilons, filename: str, lines=None) -> None:
     fig = plt.figure()
     ax = fig.add_subplot(111, label="1")
     ax2 = fig.add_subplot(111, label="2", frame_on=False)
