@@ -45,8 +45,8 @@ class Agent:
         max_mem_size: int = 100_000,
         eps_end: float = 0.05,
         eps_dec: float = 5e-5,
-        layer1_size: int = 24,
-        layer2_size: int = 24,
+        layer1_size: int = 36,
+        layer2_size: int = 36,
     ):
         self.gamma = gamma
         self.epsilon = epsilon

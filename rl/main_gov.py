@@ -12,7 +12,7 @@ from run_results.plotting import plot_learning_curve
 
 
 def training(
-    initial_collateral_factor: float = 0.8,
+    # hyperparameters
     max_steps: int = 30,
     gamma: float = 0.99,
     n_games: int = 2_000,
@@ -21,6 +21,8 @@ def training(
     eps_dec: float = 5e-5,
     batch_size: int = 128,
     lr: float = 0.003,
+    # settings
+    initial_collateral_factor: float = 0.8,
     tkn_volatility: float = 2,
     init_safety_borrow_margin: float = 0.5,
     init_safety_supply_margin: float = 0.5,
