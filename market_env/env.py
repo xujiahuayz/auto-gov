@@ -570,7 +570,7 @@ class PlfPool:
         assert (
             -1e-9 < util_rate
         ), f"utilization ratio must be non-negative, but got {util_rate}"
-        constrained_util_rate = max(0, min(util_rate, 1 - 1e-6))
+        constrained_util_rate = max(0, min(util_rate, 1 - 1e-3))
 
         borrow_rate = constrained_util_rate / (rb_factor * (1 - constrained_util_rate))
         daily_borrow_interest = (1 + borrow_rate) ** (1 / 365) - 1
