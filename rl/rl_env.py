@@ -122,8 +122,17 @@ class DefiProtocolEnv(gym.Env):
         return state, reward, done, {}
 
 
-if __name__ == "__main__":
+def test1():
     market = TestMarket()
     env = ProtocolEnv(market)
 
     print(env.reset())
+
+
+def test2():
+    for i in range(3**3):
+        print(i, (i // (3) ** 2, (i % 9) // 3, i % 3))
+
+
+if __name__ == "__main__":
+    test2()
