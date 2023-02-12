@@ -7,9 +7,9 @@ from market_env.env import DefiEnv
 
 
 class ProtocolEnv(gym.Env):
-    def __init__(self, defi_env: DefiEnv):
+    def __init__(self, defi_env: DefiEnv, action_space: int = 3):
         self.defi_env = defi_env
-        self.action_space = gym.spaces.Discrete(3)  # lower, keep, raise
+        self.action_space = gym.spaces.Discrete(action_space)  # lower, keep, raise
         self.observation_space = gym.spaces.Box(
             # self.total_available_funds,
             # self.total_borrowed_funds,
