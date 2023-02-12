@@ -53,6 +53,7 @@ def training(
         asset_name="tkn",
         collateral_factor=initial_collateral_factor,
         initial_asset_volatility=tkn_volatility,
+        seed=42,
     )
     usdc_plf = PlfPool(
         env=defi_env,
@@ -61,6 +62,7 @@ def training(
         asset_name="usdc",
         collateral_factor=initial_collateral_factor,
         initial_asset_volatility=0.1,
+        seed=3,
     )
     weth_plf = PlfPool(
         env=defi_env,
@@ -69,6 +71,7 @@ def training(
         asset_name="weth",
         collateral_factor=initial_collateral_factor,
         initial_asset_volatility=0,
+        seed=9,
     )
 
     env = ProtocolEnv(defi_env)
@@ -88,7 +91,8 @@ def training(
 
     scores, eps_history, collateral_factors = [], [], {}
 
-    for plf in defi_env.plf_pools.values():
+    plf_pools = defi_env.plf_pools.values()
+    for plf in plf_pools:
         collateral_factors[plf.asset_name] = []
 
     for i in range(n_games):
@@ -111,23 +115,29 @@ def training(
             logging.info(
                 f"{i} score {score:.2f} average score {avg_score:.2f} epsilon {agent.epsilon:.2f} collateral factor {next(iter(defi_env.plf_pools.values())).collateral_factor:.2f}"
             )
-        plf = next(iter(defi_env.plf_pools.values()))
-        collateral_factors[plf.asset_name].append(plf.collateral_factor)
+        for plf in plf_pools:
+            collateral_factors[plf.asset_name].append(plf.collateral_factor)
     return scores, eps_history, collateral_factors
 
 
 if __name__ == "__main__":
     # show logging level at info
     logging.basicConfig(level=logging.INFO)
-    N_GAMES = 50
+    N_GAMES = 1_200
     training_scores, training_eps_history, training_collateral_factors = training(
-        n_games=N_GAMES, eps_dec=0
+        n_games=N_GAMES,
+        eps_dec=0,
+        initial_collateral_factor=0.75,
+        max_steps=30,
+        lr=0.05,
     )
     x = [i + 1 for i in range(N_GAMES)]
     filename = path.join(FIGURES_PATH, "defi.png")
     plot_learning_curve(x, training_scores, training_eps_history, filename)
     plt.clf()
-    for asset, collateral_factors in training_collateral_factors.items():
+    for (
+        asset,
+        collateral_factors,
+    ) in training_collateral_factors.items():
         plt.plot(x, collateral_factors, label=asset, alpha=0.5)
-    # plt.plot(x, training_collateral_factors)
     plt.savefig(path.join(FIGURES_PATH, "collateral_factors.png"))

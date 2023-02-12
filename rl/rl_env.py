@@ -18,9 +18,10 @@ class ProtocolEnv(gym.Env):
             # self.utilization_ratio,
             # self.supply_apy,
             # self.borrow_apy,
-            low=np.array([0, -np.inf, 0, 0, -np.inf, 0, 0, 0] * num_pools),
+            # self.env.prices[self.asset_name],
+            low=np.array([0, -np.inf, 0, 0, -np.inf, 0, 0, 0, 0] * num_pools),
             high=np.array(
-                [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
+                [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
                 * num_pools
             ),
             dtype=np.float32,

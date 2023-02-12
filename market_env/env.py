@@ -356,6 +356,7 @@ class PlfPool:
         competing_supply_apy: float = 0.05,
         competing_borrow_apy: float = 0.15,
         initial_asset_volatility: float = 0.1,
+        seed: int = 0,
     ) -> None:
         """
         :param env: the environment in which the liquidity pool is operating
@@ -380,9 +381,12 @@ class PlfPool:
         self._initial_collar_factor = collateral_factor
         self._initial_asset_volatility = initial_asset_volatility
         self._initial_asset_price = self.env.prices[self.asset_name]
+        self.seed = seed
+        self.rng = np.random.RandomState(seed)
         self.reset()
 
     def reset(self):
+        self.rng = np.random.RandomState(self.seed)
         self.env.plf_pools[self.asset_name] = self
         self.user_i_tokens: dict[str, float] = {
             self.initiator.name: self.initial_starting_funds
@@ -442,7 +446,7 @@ class PlfPool:
         ph = self.asset_price_history
         # asset price follows brownian motion with 0 drift and volatility of self.asset_volatility
         # the wiener process follows a normal distribution with mean 0 and variance 1 (1 because it is a single time step)
-        new_price = ph[-1] * np.exp(self.asset_volatility * np.random.normal(0, 1))
+        new_price = ph[-1] * np.exp(self.asset_volatility * self.rng.normal(0, 1))
 
         assert new_price > 0, "asset price cannot be negative"
         self.env.prices[self.asset_name] = new_price  # type: ignore
@@ -451,7 +455,7 @@ class PlfPool:
     # actions
     def lower_collateral_factor(self) -> None:
         # affect users who are borrowing from this pool
-        new_collateral_factor = self.collateral_factor - 0.05
+        new_collateral_factor = self.collateral_factor - 0.025
         # Constrain check
         # if the new collateral factor is less than 0
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
@@ -468,7 +472,7 @@ class PlfPool:
         self.update_market()
 
     def raise_collateral_factor(self) -> None:
-        new_collateral_factor = self.collateral_factor + 0.05
+        new_collateral_factor = self.collateral_factor + 0.025
         # Constrain check
         # if the new collateral factor is greater than 1
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
@@ -506,6 +510,7 @@ class PlfPool:
                 self.utilization_ratio,
                 self.supply_apy,
                 self.borrow_apy,
+                self.env.prices[self.asset_name],
             ]
         )
 
@@ -570,7 +575,7 @@ class PlfPool:
         assert (
             -1e-9 < util_rate
         ), f"utilization ratio must be non-negative, but got {util_rate}"
-        constrained_util_rate = max(0, min(util_rate, 1 - 1e-3))
+        constrained_util_rate = max(0, min(util_rate, 0.97))
 
         borrow_rate = constrained_util_rate / (rb_factor * (1 - constrained_util_rate))
         daily_borrow_interest = (1 + borrow_rate) ** (1 / 365) - 1
