@@ -40,13 +40,13 @@ class Agent:
         epsilon,
         lr,
         input_dims,
-        batch_size,
-        n_actions,
-        max_mem_size=100_000,
-        eps_end=0.1,
-        eps_dec=5e-5,
         layer1_size=24,
         layer2_size=24,
+        batch_size: int,
+        n_actions: int,
+        max_mem_size: int = 100_000,
+        eps_end: float = 0.1,
+        eps_dec: float = 5e-5,
     ):
         self.gamma = gamma
         self.epsilon = epsilon
@@ -74,7 +74,7 @@ class Agent:
         self.reward_memory = np.zeros(self.mem_size, dtype=np.float32)
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
 
-    def store_transition(self, state, action, reward, state_, done):
+    def store_transition(self, state, action, reward, state_, done: bool) -> None:
         index = self.mem_cntr % self.mem_size
 
         # ===============================
@@ -116,7 +116,7 @@ class Agent:
 
         return action
 
-    def learn(self):
+    def learn(self) -> None:
         if self.mem_cntr < self.batch_size:
             return
 

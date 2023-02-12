@@ -1,9 +1,10 @@
 import logging
 from os import path
-import numpy as np
-import matplotlib.pyplot as plt
-from market_env.constants import FIGURES_PATH
 
+import matplotlib.pyplot as plt
+import numpy as np
+
+from market_env.constants import FIGURES_PATH
 from market_env.env import DefiEnv, PlfPool, PriceDict, User
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
@@ -81,7 +82,7 @@ if __name__ == "__main__":
     # show logging level at info
     logging.basicConfig(level=logging.INFO)
     N_GAMES = 50
-    scores, eps_history, collateral_factors = training(n_games=N_GAMES)
+    scores, eps_history, collateral_factors = training(n_games=N_GAMES, eps_dec=0)
     x = [i + 1 for i in range(N_GAMES)]
     filename = path.join(FIGURES_PATH, "defi.png")
     plot_learning_curve(x, scores, eps_history, filename)
