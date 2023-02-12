@@ -180,12 +180,20 @@ class User:
         plf.user_i_tokens.setdefault(self.name, 0)
         self.funds_available.setdefault(plf.asset_name, 0)
 
-        if amount > 0:  # supply
+        assert (
+            self.funds_available[plf.interest_token_name] >= 0
+        ), "user cannot have negative interest-bearing asset balance"
+
+        if amount >= 0:  # supply
             # will never supply EVERYTHING - always leave some safety margin
             amount = min(
                 amount,
                 self.funds_available[plf.asset_name] / (1 + self.safety_supply_margin),
             )
+            if 0 <= amount < 1e-9:
+                return
+            log_text = f"supplying {amount} {plf.asset_name}"
+
         else:  # withdraw
             supported_borrow_without_this_plf = sum(
                 self.funds_available[w.interest_token_name]
@@ -207,17 +215,10 @@ class User:
             withdraw_limit = (
                 self.funds_available[plf.interest_token_name] - minimum_supply
             )
-
+            log_text = f"withdrawing {-amount} {plf.asset_name} when pool has {plf.total_available_funds} {plf.asset_name} at limit {withdraw_limit}"
             amount = max(amount, -withdraw_limit, -plf.total_available_funds)
 
-        if -1e-9 < amount < 1e-9:
-            return
-
-        logging.debug(
-            f"supplying {amount} {plf.asset_name}"
-            if amount > 0
-            else f"withdrawing {-amount} {plf.asset_name}"
-        )
+        logging.debug(log_text)
 
         self.funds_available[plf.asset_name] -= amount
 
@@ -230,8 +231,12 @@ class User:
         # matching balance in user's account to pool registry record
         self.funds_available[plf.interest_token_name] = plf.user_i_tokens[self.name]
 
+        assert (
+            self.funds_available[plf.asset_name] >= 0
+        ), "user cannot have negative asset balance"
+
         if plf.total_available_funds < 0:
-            raise ValueError("total available funds cannot be negative")
+            raise ValueError("total available funds cannot be negative at \n %s" % plf)
 
     def _borrow_repay(self, amount: float, plf: PlfPool) -> None:
         # set default values for user_b_tokens and funds_available if they don't exist
@@ -241,7 +246,7 @@ class User:
         self.funds_available.setdefault(plf.asset_name, 0)
         self.funds_available.setdefault(plf.interest_token_name, 0)
 
-        if amount > 0:
+        if amount >= 0:
             # borrow case
             # will never borrow EVERYTHING - always leave some safety margin
             additional_borrowable_amount = (
@@ -256,6 +261,8 @@ class User:
                 ),
                 0,
             )
+            if 0 <= amount < 1e-9:  # if amount is too small,
+                return
         else:
             # repay case
             amount = max(
@@ -263,9 +270,6 @@ class User:
                 -plf.user_b_tokens[self.name],
                 -self.funds_available[plf.asset_name],
             )
-
-        if -1e-9 < amount < 1e-9:
-            return
 
         logging.debug(
             f"borrowing {amount} {plf.borrow_token_name}"
@@ -284,9 +288,9 @@ class User:
 
         self.funds_available[plf.asset_name] += amount
 
-        assert (
-            plf.total_available_funds >= 0
-        ), "total available funds cannot be negative"
+        assert plf.total_available_funds >= 0, (
+            "total available funds cannot be negative at \n %s" % plf
+        )
 
     def reactive_action(self) -> None:
         """
@@ -295,22 +299,27 @@ class User:
 
         if self.existing_borrow_value < self.max_borrowable_value:  # healthy loan
             for plf in self.env.plf_pools.values():
-                if plf.borrow_apy <= plf.competing_borrow_apy + 0.01:
+                if plf.borrow_apy < plf.competing_borrow_apy - 0.005:
                     self.consecutive_good_borrows += 1
                     # borrow as much as you can - note that the borrow function checks loan health
-                    self._borrow_repay(-plf.total_available_funds, plf)
-                else:
+                    self._borrow_repay(plf.total_available_funds, plf)
+                if plf.borrow_apy > plf.competing_borrow_apy + 0.005:
                     # repay as much as you can
                     self._borrow_repay(-self.funds_available[plf.asset_name], plf)
 
-                if plf.competing_supply_apy >= plf.supply_apy + 0.01:
+                if plf.supply_apy < plf.competing_supply_apy - 0.005:
                     self.consecutive_good_supplies = 0
-                    # withdraw as much as you can
+                    # withdraw as much as you can - note that the supply function checks loan health
                     self._supply_withdraw(-plf.user_i_tokens[self.name], plf)
-                else:
+                if plf.supply_apy > plf.competing_supply_apy + 0.005:
                     self.consecutive_good_supplies += 1
-                    # supply as much as you can - note that the supply function checks loan health
+                    # supply as much as you can
                     self._supply_withdraw(self.funds_available[plf.asset_name], plf)
+
+                # if plf.total_b_tokens != 0:
+                #     assert (
+                #         plf.total_i_tokens > 0
+                #     ), f"total i tokens is {plf.total_i_tokens} when total b tokens is {plf.total_b_tokens}"
 
         else:  # unhealthy loan
             self.consecutive_good_borrows = 0
@@ -324,7 +333,11 @@ class User:
                     self.funds_available[plf.asset_name] += (
                         self.existing_borrow_value * 0.1
                     )
-                    self._borrow_repay(self.funds_available[plf.asset_name], plf)
+                    self._borrow_repay(-self.funds_available[plf.asset_name], plf)
+                # if plf.total_b_tokens != 0:
+                #     assert (
+                #         plf.total_i_tokens > 0
+                #     ), f"total i tokens is {plf.total_i_tokens} when total b tokens is {plf.total_b_tokens}"
 
         if self.consecutive_good_borrows > 20 and self.safety_borrow_margin > 0.05:
             self.safety_borrow_margin -= 0.05
@@ -424,14 +437,17 @@ class PlfPool:
         self._collateral_factor = value
 
     def update_asset_price(self):
+        ph = self.asset_price_history
         # asset price follows brownian motion with drift
         # the drift is the average of the previous 10 prices
         # the volatility is 0.1
-        ph = self.asset_price_history
-        new_price = np.random.normal(
-            np.mean(ph[-min(10, len(ph)) :]),
-            self.asset_volatility,
-        )  # type: ignore
+        # the price cannot be negative
+        new_price = ph[-1] * np.exp(
+            self.asset_volatility * np.random.normal()
+            + np.mean(ph[-min(10, len(ph)) :]) / 1000
+        )
+
+        assert new_price > 0, "asset price cannot be negative"
         self.env.prices[self.asset_name] = new_price  # type: ignore
         ph.append(new_price)  # type: ignore
 
@@ -503,7 +519,7 @@ class PlfPool:
 
     @property
     def utilization_ratio(self) -> float:
-        if self.total_b_tokens == 0:
+        if self.total_i_tokens == 0:
             return 0
         return self.total_b_tokens / self.total_i_tokens
 
@@ -555,9 +571,9 @@ class PlfPool:
             return 0, 0
 
         assert (
-            0 < util_rate
+            -1e-9 < util_rate
         ), f"utilization ratio must be non-negative, but got {util_rate}"
-        constrained_util_rate = min(util_rate, 1 - 1e-6)
+        constrained_util_rate = max(0, min(util_rate, 1 - 1e-6))
 
         borrow_rate = constrained_util_rate / (rb_factor * (1 - constrained_util_rate))
         daily_borrow_interest = (1 + borrow_rate) ** (1 / 365) - 1
