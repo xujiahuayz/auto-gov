@@ -52,12 +52,18 @@ class ProtocolEnv(gym.Env):
         #         action = 1
 
         # lower, keep, raise the collateral factor
-        if action == 0:
-            self.defi_env.lower_collateral_factor()
-        elif action == 1:
-            self.defi_env.keep_collateral_factor()
-        elif action == 2:
-            self.defi_env.raise_collateral_factor()
+
+        # convert a number from 0-26 to a tuple[int, int, int] where each int is 0 or 1 or 2
+        action_tuple = (action // (3) ** 2, (action % 9) // 3, action % 3)
+
+        self.defi_env.update_collateral_factor(action_tuple)
+
+        # if action == 0:
+        #     self.defi_env.lower_collateral_factor()
+        # elif action == 1:
+        #     self.defi_env.keep_collateral_factor()
+        # elif action == 2:
+        #     self.defi_env.raise_collateral_factor()
 
         state = self.defi_env.get_state()
         reward = self.defi_env.get_reward()

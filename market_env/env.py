@@ -44,14 +44,26 @@ class DefiEnv:
             raise TypeError("must use PriceDict type")
         self._prices = value
 
-    def lower_collateral_factor(self) -> None:
-        self._apply_to_all_pools(PlfPool.lower_collateral_factor)
+    def update_collateral_factor(self, action: tuple) -> None:
+        for i, plf in enumerate(self.plf_pools.values()):
+            match action[i]:
+                case 0:
+                    plf.keep_collateral_factor()
+                case 1:
+                    plf.lower_collateral_factor()
+                case 2:
+                    plf.raise_collateral_factor()
+                case _:
+                    raise ValueError("action must be 0, 1, or 2")
 
-    def keep_collateral_factor(self) -> None:
-        self._apply_to_all_pools(PlfPool.keep_collateral_factor)
+    # def lower_collateral_factor(self) -> None:
+    #     self._apply_to_all_pools(PlfPool.lower_collateral_factor)
 
-    def raise_collateral_factor(self) -> None:
-        self._apply_to_all_pools(PlfPool.raise_collateral_factor)
+    # def keep_collateral_factor(self) -> None:
+    #     self._apply_to_all_pools(PlfPool.keep_collateral_factor)
+
+    # def raise_collateral_factor(self) -> None:
+    #     self._apply_to_all_pools(PlfPool.raise_collateral_factor)
 
     def get_reward(self) -> float:
         return sum(self._apply_to_all_pools(PlfPool.get_reward))
