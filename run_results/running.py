@@ -17,35 +17,35 @@ from run_results.plotting import plot_learning_curve
 
 def compute_result(params):
     ms, icf, n_game, lr, eps_end, eps_dec, batch_size = params
-                                logging.info(
-                                    f"Training with initial_collateral_factor={icf}, max_steps={ms}, n_games={n_game}, lr={lr}, eps_end={eps_end}, eps_dec={eps_dec}, batch_size={batch_size}"
-                                )
-                                (
-                                    scores,
-                                    eps_history,
-                                    training_collateral_factors,
-                                ) = training(
-                                    initial_collateral_factor=icf,
-                                    max_steps=ms,
-                                    n_games=n_game,
-                                    lr=lr,
-                                    eps_end=eps_end,
-                                    eps_dec=eps_dec,
-                                    batch_size=batch_size,
-                                )
+    logging.info(
+        f"Training with initial_collateral_factor={icf}, max_steps={ms}, n_games={n_game}, lr={lr}, eps_end={eps_end}, eps_dec={eps_dec}, batch_size={batch_size}"
+    )
+    (
+        scores,
+        eps_history,
+        training_collateral_factors,
+    ) = training(
+        initial_collateral_factor=icf,
+        max_steps=ms,
+        n_games=n_game,
+        lr=lr,
+        eps_end=eps_end,
+        eps_dec=eps_dec,
+        batch_size=batch_size,
+    )
 
     return {
-                                    "max_steps": ms,
-                                    "initial_collateral_factor": icf,
-                                    "n_games": n_game,
-                                    "lr": lr,
-                                    "scores": scores,
-                                    "eps_history": eps_history,
-                                    "training_collateral_factors": training_collateral_factors,
-                                    "es_dec": eps_dec,
-                                    "eps_end": eps_end,
-                                    "batch_size": batch_size,
-                                }
+        "max_steps": ms,
+        "initial_collateral_factor": icf,
+        "n_games": n_game,
+        "lr": lr,
+        "scores": scores,
+        "eps_history": eps_history,
+        "training_collateral_factors": training_collateral_factors,
+        "es_dec": eps_dec,
+        "eps_end": eps_end,
+        "batch_size": batch_size,
+    }
 
 
 def save_results(
