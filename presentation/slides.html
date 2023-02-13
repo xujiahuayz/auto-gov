@@ -58,11 +58,11 @@ class: center, middle
 
 # PLF building blocks
 
-* *Interest rate models*: Some function(s) taking liquidity as an argument and returning an interest rate
-* *Interest disbursement mechanism*: Interest typically accrued per second and paid out per block. Often an interest bearing derivative token used.
-* *Collateral*: Deposit that can be sold off to recover the debt of a defaulted position
-* *Liquidations*: The process of selling a borrower's collateral to recover the debt value upon default
-* *Governance mechanism*: Decentralized governance typically achieved through an ERC-20 governance token, where token holders' votes are in proportion to their stake
+* *Interest rate models* Some function(s) taking liquidity as an argument and returning an interest rate
+* *Interest disbursement mechanism* Interest typically accrued per second and paid out per block. Often an interest bearing derivative token used.
+* *Collateral* Deposit that can be sold off to recover the debt of a defaulted position
+* *Liquidations* The process of selling a borrower's collateral to recover the debt value upon default
+* *Governance mechanism* Decentralized governance typically achieved through an ERC-20 governance token, where token holders' votes are in proportion to their stake
 
 ---
 
@@ -77,11 +77,11 @@ class: center, middle
 
 # Components of Deep Reinforcement Learning
 
-* *Agent*: The agent takes actions in the environment.
-* *Environment*: The environment is the world in which the agent operates and receives rewards for its actions.
-* *State*: The state represents the current condition of the environment.
-* *Action*: The action is taken by the agent in response to the state.
-* *Reward*: The reward is feedback received by the agent in response to its actions.
+* *Agent* The agent takes actions in the environment.
+* *Environment* The environment is the world in which the agent operates and receives rewards for its actions.
+* *State* The state represents the current condition of the environment.
+* *Action* The action is taken by the agent in response to the state.
+* *Reward* The reward is feedback received by the agent in response to its actions.
 
 ---
 
@@ -178,11 +178,11 @@ Pre-programmed user behavior reactive to market condition
 
 # Conclusion
 
-* We have developed a deep reinforcement q-learning framework for modelling the dynamics of a PLF market
-* The framework is able to learn the optimal policy for a simplified DeFi environment, and adjust collateral factor automatically to optimize the protocol
-* We are currently working on extending the framework to a more realistic DeFi environment
-* The learning result suggests that the optimal policy is to have the collateral factor highest for the least volatile asset, and lowest for the most volatile asset -- which is intuitive
-* The result in general aligns with the current AAVE governance mechanism; however, the framework is able to learn the optimal policy in a more efficient and automated way
+* We developed a deep reinforcement q-learning framework for modelling the dynamics of a PLF market
+* Framework can learn the optimal policy for a simplified DeFi environment, and adjust collateral factor automatically to optimize the protocol
+* We are working on extending the framework to a more realistic DeFi environment
+* Learning result suggests that the optimal policy is to have the collateral factor highest for least volatile asset, and lowest for most volatile asset
+* Aligns with the current AAVE governance mechanism; but able to learn the optimal policy in a more efficient and automated way
 
 ---
 
