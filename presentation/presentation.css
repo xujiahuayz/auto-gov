@@ -1,0 +1,336 @@
+:root {
+  --primary-color: #8f87c6;
+}
+
+.pull-left-30 {
+  float: left;
+  width: 28.5%;
+}
+.pull-right-70 {
+  float: right;
+  width: 66.5%;
+}
+.pull-right-70 ~ * {
+  clear: both;
+}
+.pull-left-40 {
+  float: left;
+  width: 38%;
+}
+.pull-right-60 {
+  float: right;
+  width: 57%;
+}
+.pull-right-60 ~ * {
+  clear: both;
+}
+.pull-left-50 {
+  float: left;
+  width: 47.5%;
+}
+.pull-right-50 {
+  float: right;
+  width: 47.5%;
+}
+.pull-right-50 ~ * {
+  clear: both;
+}
+.pull-left-60 {
+  float: left;
+  width: 57%;
+}
+.pull-right-40 {
+  float: right;
+  width: 38%;
+}
+.pull-right-40 ~ * {
+  clear: both;
+}
+.pull-left-70 {
+  float: left;
+  width: 66.5%;
+}
+.pull-right-30 {
+  float: right;
+  width: 28.5%;
+}
+.pull-right-30 ~ * {
+  clear: both;
+}
+.width-30 {
+  width: 30%;
+}
+.width-40 {
+  width: 40%;
+}
+.width-50 {
+  width: 50%;
+}
+.width-60 {
+  width: 60%;
+}
+.width-70 {
+  width: 70%;
+}
+h1,
+h2,
+h3,
+h4 {
+  margin-top: 0;
+  padding-top: 0.5em;
+  font-family: "Oswald";
+  font-weight: 400;
+  margin-left: 0;
+}
+.large {
+  font-size: 23px;
+}
+.small {
+  font-size: 15px;
+}
+.remark-slide-content {
+  background-color: #fafafa;
+  color: #000;
+  border-bottom: 5px solid var(--primary-color);
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 1.2;
+  padding: 1em 3em 1em 3em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
+.inverse {
+  background-color: #121316;
+  color: #ffffff;
+}
+.remark-slide-content h1,
+.inverse h1 {
+  color: var(--primary-color);
+  font-size: 42px;
+}
+.remark-slide-content h2,
+.inverse h2 {
+  color: #474554;
+  font-size: 34px;
+}
+.remark-slide-content h3,
+.inverse h3 {
+  color: #aca9bb;
+  font-size: 25px;
+}
+.remark-slide-content h4,
+.inverse h4 {
+  color: #aca9bb;
+  font-size: 22px;
+}
+.title-slide h1 {
+  color: var(--primary-color);
+  font-size: 50px;
+  font-weight: 500;
+  text-align: left;
+  margin-left: 40px;
+  padding-top: 60px;
+}
+.title-slide h2 {
+  font-size: 35px;
+  font-weight: 350;
+  text-align: left;
+  margin-left: 40px;
+  margin-top: -25px;
+  padding-bottom: -20px;
+}
+.title-slide h3 {
+  font-size: 25px;
+  font-weight: 300;
+  text-align: left;
+  margin-left: 40px;
+  margin-bottom: 0;
+}
+.title-slide h4 {
+  font-size: 22px;
+  font-weight: 300;
+  text-align: left;
+  margin-left: 40px;
+  margin-bottom: 0;
+}
+.remark-slide-number {
+  font-size: 10pt;
+  font-family: "EB Garamond";
+  color: #272822;
+  opacity: 1;
+}
+.inverse .remark-slide-number {
+  font-size: 10pt;
+  font-family: "EB Garamond";
+  color: #fafafa;
+  opacity: 1;
+}
+.remark-inline-code {
+  border-radius: 1px;
+  padding: 0;
+}
+.inverse .remark-inline-code {
+  background: #333333;
+}
+.remark-code-line-highlighted {
+  background-color: #ffead3;
+}
+h1.sm-top-margin,
+h2.sm-top-margin,
+h3.sm-top-margin,
+h4.sm-top-margin,
+h5.sm-top-margin,
+h6.sm-top-margin {
+  margin-top: 0.3em;
+}
+h1.sm-bottom-margin,
+h2.sm-bottom-margin,
+h3.sm-bottom-margin,
+h4.sm-bottom-margin,
+h5.sm-bottom-margin,
+h6.sm-bottom-margin {
+  margin-top: 0.3em;
+}
+h1 .minor,
+h2 .minor,
+h3 .minor,
+h4 .minor,
+h5 .minor,
+h6 .minor {
+  font-size: 0.8em;
+}
+h1 .minor.icon,
+h2 .minor.icon,
+h3 .minor.icon,
+h4 .minor.icon,
+h5 .minor.icon,
+h6 .minor.icon {
+  font-size: 0.6em;
+}
+h1 .minor.very,
+h2 .minor.very,
+h3 .minor.very,
+h4 .minor.very,
+h5 .minor.very,
+h6 .minor.very {
+  font-size: 0.6em;
+  font-weight: normal;
+}
+.text.minor {
+  font-size: 0.8em;
+}
+.small-margin > * {
+  margin: 0.5em 0;
+}
+a.discrete {
+  color: #000;
+}
+.simple {
+  list-style-type: none;
+}
+.mono {
+  font-size: 0.8em;
+  font-family: "Lucida Console", Monaco, monospace;
+}
+body {
+  font-family: "Droid Serif";
+}
+h1,
+h2,
+h3 {
+  font-family: "Yanone Kaffeesatz";
+  font-weight: normal;
+}
+.remark-slide-content {
+  font-size: 30px;
+}
+.remark-slide-content .max-content {
+  width: max-content;
+}
+.remark-slide-content .center-block {
+  margin: auto;
+  display: block;
+}
+.remark-slide-content .text-center {
+  text-align: center;
+}
+.remark-slide-content .middle-block {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.remark-slide-content .pull-right-60 .middle-block {
+  max-width: 60%;
+}
+.remark-slide-content a,
+.remark-slide-content a:visited {
+  color: #474554;
+}
+.remark-slide-content table {
+  font-size: 22px;
+  border-collapse: collapse;
+}
+.remark-slide-content table tbody tr:nth-of-type(2n + 1) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.remark-slide-content table td,
+.remark-slide-content table th {
+  padding: 0.3em;
+  vertical-align: top;
+}
+.remark-slide-content table td.text-right,
+.remark-slide-content table th.text-right {
+  text-align: right;
+}
+.remark-slide-content table td.text-center,
+.remark-slide-content table th.text-center {
+  text-align: center;
+}
+.remark-slide-content.full-table table {
+  width: 100%;
+}
+.remark-slide-content em {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+.remark-slide-content .italic {
+  font-style: italic;
+}
+.remark-slide-content .caption {
+  display: block;
+  margin-top: -0.5em;
+  text-align: center;
+}
+.remark-slide-content .caption p {
+  font-size: 24px;
+}
+.remark-slide-content.larger-fonts {
+  font-size: 36px;
+}
+.remark-slide-content.smaller-fonts {
+  font-size: 0.8em;
+}
+.remark-slide-content img {
+  max-width: 100%;
+}
+.remark-slide-content ul > li,
+.remark-slide-content ol > li {
+  margin-bottom: 0.8em;
+}
+.remark-slide-content ul > li ul > li,
+.remark-slide-content ul > li ol > li,
+.remark-slide-content ol > li ul > li,
+.remark-slide-content ol > li ol > li {
+  margin-bottom: 0.2em;
+}
+.remark-slide-content .tight-list ul > li,
+.remark-slide-content .tight-list ol > li {
+  margin-bottom: 0.1em;
+}
+.remark-slide-content thead th {
+  font-size: 0.8em;
+}
+.remark-code,
+.remark-inline-code {
+  font-family: "Consolas";
+}
