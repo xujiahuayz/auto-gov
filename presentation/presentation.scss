@@ -1,0 +1,137 @@
+---
+---
+
+@charset "utf-8";
+
+@import "fc-theme";
+@import "util";
+
+body {
+  font-family: "Droid Serif";
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Yanone Kaffeesatz";
+  font-weight: normal;
+}
+
+.remark-slide-content {
+  font-size: 30px;
+
+  .max-content {
+    width: max-content;
+  }
+
+  .center-block {
+    margin: auto;
+    display: block;
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .middle-block {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .pull-right-60 {
+    .middle-block {
+      max-width: 60%;
+    }
+  }
+
+  a,
+  a:visited {
+    color: $secondary-color;
+  }
+
+  table {
+    font-size: 22px;
+
+    border-collapse: collapse;
+    tbody tr:nth-of-type(2n + 1) {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
+    td,
+    th {
+      padding: 0.3em;
+      vertical-align: top;
+
+      &.text-right {
+        text-align: right;
+      }
+
+      &.text-center {
+        text-align: center;
+      }
+    }
+  }
+
+  &.full-table {
+    table {
+      width: 100%;
+    }
+  }
+
+  em {
+    color: $primary-color;
+    font-weight: bold;
+  }
+
+  .italic {
+    font-style: italic;
+  }
+
+  .caption {
+    display: block;
+    margin-top: -0.5em;
+    text-align: center;
+    p {
+      font-size: 24px;
+    }
+  }
+
+  &.larger-fonts {
+    font-size: 36px;
+  }
+
+  &.smaller-fonts {
+    font-size: 0.8em;
+  }
+
+  img {
+    max-width: 100%;
+  }
+
+  ul > li,
+  ol > li {
+    margin-bottom: 0.8em;
+    ul > li,
+    ol > li {
+      margin-bottom: 0.2em;
+    }
+  }
+
+  .tight-list {
+    ul > li,
+    ol > li {
+      margin-bottom: 0.1em;
+    }
+  }
+
+  thead {
+    th {
+      font-size: 0.8em;
+    }
+  }
+}
+
+.remark-code,
+.remark-inline-code {
+  font-family: "Consolas";
+}

@@ -47,7 +47,7 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 * Requires users to deposit collateral
 
 .text-center[
-![Protocols for Loanable Funds overview](./plf.png)
+![Protocols for Loanable Funds overview](../assets/plf.png)
 .caption[Protocols for Loanable Funds overview]
 ]
 
@@ -56,16 +56,16 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 # PLF definitions
 
 * *Market* A smart contract acting as the intermediary of loanable funds for a particular crypto-asset, where users supply and borrow funds.
-* *Supply* Funds deposited to a market that can be loaned out to other users and used as collateral against depositors’ own borrow positions.
+* *Supply* Funds deposited to a market that can be loaned out to other users and used as collateral against depositors' own borrow positions.
 * *Borrow* Funds loaned out to users of a market.
-* *Collateral* Funds available to back a user’s aggregate borrow positions.
+* *Collateral* Funds available to back a user's aggregate borrow positions.
 * *Locked funds* Funds remaining in the PLF smart contracts, equal to the difference between supplied and borrowed funds.
 
 # Agents in the system
 
 * *Supplier* A user who deposits funds to a market.
 * *Borrower* A user who borrows funds from a market. Since a borrow position must be collateralized by deposited funds, a borrower must also be a supplier.
-* *Liquidator* A user who purchases a borrower’s supply in a market when the borrower’s collateral to borrow ratio falls below some threshold.
+* *Liquidator* A user who purchases a borrower's supply in a market when the borrower's collateral to borrow ratio falls below some threshold.
 
 ---
 
@@ -74,7 +74,7 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 * *Interest rate models*: Some function(s) taking liquidity as an argument and returning an interest rate
 * *Interest disbursement mechanism*: Interest typically accrued per second and paid out per block. Often an interest bearing derivative token used.
 * *Collateral*: Deposit that can be sold off to recover the debt of a defaulted position
-* *Liquidations*: The process of selling a borrower’s collateral to recover the debt value upon default
+* *Liquidations*: The process of selling a borrower's collateral to recover the debt value upon default
 * *Governance mechanism*: Decentralized governance typically achieved through an ERC-20 governance token, where token holders' votes are in proportion to their stake
 
 ---
@@ -101,13 +101,44 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 
 ## Empirical data
 
+
+
+---
+
 ## Modelling framework
 
+### The deep reinforcement q-learning architecture
+
+.pull-left-50[
+![RL architecture applied to DeFi environment](../assets/arc-rl-arc.drawio.svg)
+.caption[RL architecture applied to DeFi environment]
+]
+
+.pull-right-50[
+![RL training](../assets/arc-training.drawio.svg)
+.caption[RL training]
+]
+
+---
+
 ### A simplified DeFi environment for training
-* One PLF pool
+* Three PLF pools
+      * WETH -- the numeraire for the protocol
+      * USDC -- a USD-pegged stablecoin
+      * TKN -- an arbitrary token
 * One aggregate market user
 * One adjustable risk parameter: collateral factor
 * Pre-programmed user behavior reactive to market condition
+      * Motivated to deposit when collateral factor is low (safer market) and supply interest rate is high compared to competing rate; withdraw when the opposite is true
+      * Motivated to borrow when collateral factor is high, liquidation and collateral factor change do not occur often, and borrow interest rate is low compared to competing rate; repay when the opposite is true 
+      * Other action constraints apply (e.g. must have sufficient collateral to borrow, must have sufficient balance to withdraw, etc.)
+
+---
+
+.text-center[
+![Simplified DeFi environment](../assets/arc-protocol.drawio.svg)
+.caption[DeFi environment for training]
+]
 
 ## Preliminary results
 
