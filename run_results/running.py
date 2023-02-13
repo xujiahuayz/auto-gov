@@ -128,7 +128,7 @@ if __name__ == "__main__":
         initial_collateral_factors=[0.75],
         max_steps_values=[45],
         lr_values=[0.01],
-        batch_size_values=[64, 128],
+        batch_size_values=[64],
         n_games_values=[1_500],
         eps_dec_values=[5e-5],
         eps_end_values=[0.03],
