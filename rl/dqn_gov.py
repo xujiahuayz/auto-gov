@@ -164,6 +164,8 @@ class Agent:
         if self.update_counter % self.target_update == 0:
             self.Q_target.load_state_dict(self.Q_eval.state_dict())
 
+        self.update_counter += 1
+
         self.epsilon = (
             self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
         )
