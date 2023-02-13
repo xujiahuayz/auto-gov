@@ -6,6 +6,7 @@ import logging
 import pickle
 import time
 from os import path
+from itertools import product
 
 from matplotlib import pyplot as plt
 
@@ -14,24 +15,8 @@ from rl.main_gov import training
 from run_results.plotting import plot_learning_curve
 
 
-def save_results(
-    initial_collateral_factors: list[float],
-    max_steps_values: list[int],
-    lr_values: list[float],
-    batch_size_values: list[int],
-    n_games_values: list[int],
-    eps_dec_values: list[float],
-    eps_end_values: list[float],
-) -> list[dict]:
-    # make combinations of different values of initial collateral factor and n_games
-    results = []
-    for ms in max_steps_values:
-        for icf in initial_collateral_factors:
-            for n_game in n_games_values:
-                for lr in lr_values:
-                    for eps_end in eps_end_values:
-                        for eps_dec in eps_dec_values:
-                            for batch_size in batch_size_values:
+def compute_result(params):
+    ms, icf, n_game, lr, eps_end, eps_dec, batch_size = params
                                 logging.info(
                                     f"Training with initial_collateral_factor={icf}, max_steps={ms}, n_games={n_game}, lr={lr}, eps_end={eps_end}, eps_dec={eps_dec}, batch_size={batch_size}"
                                 )
@@ -49,7 +34,7 @@ def save_results(
                                     batch_size=batch_size,
                                 )
 
-                                result = {
+    return {
                                     "max_steps": ms,
                                     "initial_collateral_factor": icf,
                                     "n_games": n_game,
@@ -61,7 +46,31 @@ def save_results(
                                     "eps_end": eps_end,
                                     "batch_size": batch_size,
                                 }
-                                results.append(result)
+
+
+def save_results(
+    initial_collateral_factors: list[float],
+    max_steps_values: list[int],
+    lr_values: list[float],
+    batch_size_values: list[int],
+    n_games_values: list[int],
+    eps_dec_values: list[float],
+    eps_end_values: list[float],
+) -> list[dict]:
+    # make combinations of different values of initial collateral factor and n_games
+    combinations = list(
+        product(
+            max_steps_values,
+            initial_collateral_factors,
+            n_games_values,
+            lr_values,
+            eps_end_values,
+            eps_dec_values,
+            batch_size_values,
+        )
+    )
+    print(f"Number of combinations: {len(combinations)}")
+    results = list(map(compute_result, combinations))
 
     # pickle results
     pickle_file_suffix = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
@@ -118,8 +127,8 @@ if __name__ == "__main__":
     save_results(
         initial_collateral_factors=[0.75],
         max_steps_values=[45],
-        lr_values=[0.05],
-        batch_size_values=[64],
+        lr_values=[0.05, 0.001, 0.005, 0.0001],
+        batch_size_values=[64, 128],
         n_games_values=[1_500],
         eps_dec_values=[5e-5],
         eps_end_values=[0.03],

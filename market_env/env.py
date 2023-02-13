@@ -7,7 +7,11 @@ from typing import Optional
 
 import numpy as np
 
-from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
+from market_env.constants import (
+    DEBT_TOKEN_PREFIX,
+    INTEREST_TOKEN_PREFIX,
+    PENALTY_REWARD,
+)
 from market_env.utils import PriceDict
 
 
@@ -67,7 +71,9 @@ class DefiEnv:
 
     def get_reward(self) -> float:
         return sum(
-            pool.get_reward() * self.prices[name]
+            reward
+            if (reward := pool.get_reward()) == PENALTY_REWARD
+            else reward * self.prices[name]
             for name, pool in self.plf_pools.items()
         )
 
@@ -464,7 +470,7 @@ class PlfPool:
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor < 0:
             self.update_market()
-            self.reward = -200
+            self.reward = PENALTY_REWARD
         else:
             self.collateral_factor = new_collateral_factor
             for user in self.env.users.values():
@@ -481,7 +487,7 @@ class PlfPool:
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor > 1:
             self.update_market()
-            self.reward = -200
+            self.reward = PENALTY_REWARD
         else:
             self.collateral_factor = new_collateral_factor
             # affect users who are supplying to this pool with higher exposure to default risk

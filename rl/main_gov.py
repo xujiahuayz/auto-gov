@@ -126,7 +126,9 @@ if __name__ == "__main__":
     )
     x = [i + 1 for i in range(N_GAMES)]
     filename = path.join(FIGURES_PATH, "defi.png")
-    plot_learning_curve(x, training_scores, training_eps_history, filename)
+    plot_learning_curve(
+        x, training_scores, training_eps_history, filename, "Learning Curve"
+    )
     plt.clf()
     for (
         asset,

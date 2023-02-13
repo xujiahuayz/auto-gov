@@ -7,3 +7,5 @@ FIGURES_PATH = path.join(PROJECT_ROOT, "figures")
 
 INTEREST_TOKEN_PREFIX = "interest-"
 DEBT_TOKEN_PREFIX = "debt-"
+
+PENALTY_REWARD = -200
