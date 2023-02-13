@@ -1,42 +1,26 @@
-<!-- https://github.com/danhper/danhper.github.io/blob/master/talks/2021/plfs/index.html -->
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>Auto.gov: Optimal On-chain Governance for DeFi</title>
-    <link rel="stylesheet" href="presentation.css" />
-    <link rel="stylesheet" href="presentation-fonts.css" />
-    <meta charset="utf-8" />
-    <style>
-      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
-      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
-      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
 
-      body {
-        font-family: "Droid Serif";
-      }
-      h1,
-      h2,
-      h3 {
-        font-family: "Yanone Kaffeesatz";
-        font-weight: normal;
-      }
-      .remark-code,
-      .remark-inline-code {
-        font-family: "Ubuntu Mono";
-      }
-    </style>
-  </head>
-  <body>
-    <textarea id="source">
+<head>
+  <title>Auto.gov: Optimal On-chain Governance for DeFi</title>
+  <link rel="stylesheet" href="presentation.css">
+  <link rel="stylesheet" href="presentation-fonts.css">
+  <meta charset="utf-8" />
+</head>
+
+<body>
+  <textarea id="source">
 
 class: center, middle
 
-# Auto.gov
+# Auto.gov: Optimal On-chain Governance for DeFi
 
 
 Daniel Perez, Jiahua Xu, and Benjamin Livshits
 
 ---
+
+class: center, middle
 
 # Background
 
@@ -63,6 +47,8 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 * *Collateral* Funds available to back a user's aggregate borrow positions.
 * *Locked funds* Funds remaining in the PLF smart contracts, equal to the difference between supplied and borrowed funds.
 
+---
+
 # Agents in the system
 
 * *Supplier* A user who deposits funds to a market.
@@ -82,16 +68,15 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 ---
 
 
-## Deep reinforcement learning
+# Deep reinforcement learning overview
 
-### Overview
 * A type of machine learning where an agent learns to make decisions by performing actions in an environment and receiving feedback in the form of rewards.
 * Combines the concepts of Reinforcement Learning with deep learning techniques.
 * Uses deep neural networks as function approximators to represent the policy, value function, or model of the environment.
 
+---
 
-
-### Components of Deep Reinforcement Learning
+# Components of Deep Reinforcement Learning
 
 * *Agent*: The agent takes actions in the environment.
 * *Environment*: The environment is the world in which the agent operates and receives rewards for its actions.
@@ -101,7 +86,7 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 
 ---
 
-## Empirical data
+class: center, middle
 
 .text-center[
 ![AAVE governance forum discussion](../assets/aave_desc_tbl.svg)
@@ -125,9 +110,9 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 
 ---
 
-## Modelling framework
+# Modelling framework
 
-### The deep reinforcement q-learning architecture
+## The deep reinforcement q-learning architecture
 
 .pull-left-50[
 ![RL architecture applied to DeFi environment](../assets/arc-rl-arc.drawio.svg)
@@ -141,28 +126,36 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 
 ---
 
-### A simplified DeFi environment for training
+# A simplified DeFi environment for training (1/2)
+
 * Three PLF pools
-      * WETH -- the numeraire for the protocol
-      * USDC -- a USD-pegged stablecoin
-      * TKN -- an arbitrary token
-* One aggregate market user
+      * WETH &ndash; the numeraire for the protocol
+      * USDC &ndash; a USD-pegged stablecoin
+      * TKN &ndash; an arbitrary token
 * One adjustable risk parameter: collateral factor
-* Pre-programmed user behavior reactive to market condition
-      * Motivated to deposit when collateral factor is low (safer market) and supply interest rate is high compared to competing rate; withdraw when the opposite is true
-      * Motivated to borrow when collateral factor is high, liquidation and collateral factor change do not occur often, and borrow interest rate is low compared to competing rate; repay when the opposite is true 
-      * Other action constraints apply (e.g. must have sufficient collateral to borrow, must have sufficient balance to withdraw, etc.)
+* One aggregate market user
 
 ---
 
-.text-center[
+# A simplified DeFi environment for training (2/2)
+
+Pre-programmed user behavior reactive to market condition
+
+* Motivated to deposit when collateral factor is low (safer market) and supply interest rate is high compared to competing rate; withdraw when the opposite is true
+* Motivated to borrow when collateral factor is high, liquidation and collateral factor change do not occur often, and borrow interest rate is low compared to competing rate; repay when the opposite is true 
+* Other action constraints apply (e.g. must have sufficient collateral to borrow, must have sufficient balance to withdraw, etc.)
+
+---
+
+# DeFi environment for training
+
+.center-block.width-50[
 ![Simplified DeFi environment](../assets/arc-protocol.drawio.svg)
-.caption[DeFi environment for training]
 ]
 
 ---
 
-## Preliminary training results
+# Preliminary training results
 
 .pull-left-50[
 ![Final collaterals of each game](../assets/end-collaterals.jpg)
@@ -176,6 +169,8 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 
 ---
 
+## Preliminary results
+
 ## Future direction
 
 ## Conclusion
@@ -185,11 +180,12 @@ Daniel Perez, Jiahua Xu, and Benjamin Livshits
 ## Bibliography
 
     </textarea>
-    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
-    <script>
-      var slideshow = remark.create({
-        ratio: "16:9",
-      });
-    </script>
-  </body>
+  <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+  <script>
+    var slideshow = remark.create({
+      ratio: "16:9",
+    });
+  </script>
+</body>
+
 </html>
