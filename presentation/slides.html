@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <title>Auto.gov: Optimal On-chain Governance for DeFi</title>
+    <link rel="stylesheet" href="presentation.css" />
+    <link rel="stylesheet" href="presentation-fonts.css" />
+    <meta charset="utf-8" />
+  </head>
 
-<head>
-  <title>Auto.gov: Optimal On-chain Governance for DeFi</title>
-  <link rel="stylesheet" href="presentation.css">
-  <link rel="stylesheet" href="presentation-fonts.css">
-  <meta charset="utf-8" />
-</head>
-
-<body>
-  <textarea id="source">
+  <body>
+    <textarea id="source">
 
 class: center, middle
 
@@ -175,17 +174,22 @@ Pre-programmed user behavior reactive to market condition
 
 ## Conclusion
 
+* We have developed a deep reinforcement q-learning framework for modelling the dynamics of a PLF market
+* The framework is able to learn the optimal policy for a simplified DeFi environment, and adjust collateral factor automatically to optimize the protocol
+* We are currently working on extending the framework to a more realistic DeFi environment
+* The learning result suggests that the optimal policy is to have the collateral factor highest for the least volatile asset, and lowest for the most volatile asset -- which is intuitive
+* The result in general aligns with the current AAVE governance mechanism; however, the framework is able to learn the optimal policy in a more efficient and automated way
+
 ---
 
 ## Bibliography
 
     </textarea>
-  <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
-  <script>
-    var slideshow = remark.create({
-      ratio: "16:9",
-    });
-  </script>
-</body>
-
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script>
+      var slideshow = remark.create({
+        ratio: "16:9",
+      });
+    </script>
+  </body>
 </html>
