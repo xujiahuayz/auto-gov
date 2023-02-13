@@ -47,7 +47,7 @@ class Agent:
         eps_dec: float = 5e-5,
         layer1_size: int = 36,
         layer2_size: int = 36,
-        target_update: int = 1000,
+        target_update: int = 200,
     ):
         self.gamma = gamma
         self.epsilon = epsilon
