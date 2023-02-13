@@ -154,7 +154,8 @@ class Agent:
         action_batch = self.action_memory[batch]
 
         q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
-        q_next = self.Q_target.forward(new_state_batch)
+        q_next = self.Q_eval.forward(new_state_batch)
+        # q_next = self.Q_target.forward(new_state_batch)
         q_next[terminal_batch] = 0.0
 
         q_target = reward_batch + self.gamma * T.max(q_next, dim=1)[0]
@@ -163,10 +164,10 @@ class Agent:
         loss.backward()
         self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
-        if self.update_counter % self.target_update == 0:
-            self.Q_target.load_state_dict(self.Q_eval.state_dict())
+        # if self.update_counter % self.target_update == 0:
+        #     self.Q_target.load_state_dict(self.Q_eval.state_dict())
 
-        self.update_counter += 1
+        # self.update_counter += 1
 
         self.epsilon = (
             self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
