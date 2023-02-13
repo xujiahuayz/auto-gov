@@ -47,6 +47,7 @@ class Agent:
         eps_dec: float = 5e-5,
         layer1_size: int = 36,
         layer2_size: int = 36,
+        target_update: int = 1000,
     ):
         self.gamma = gamma
         self.epsilon = epsilon
@@ -67,6 +68,17 @@ class Agent:
             fc1_dims=layer1_size,
             fc2_dims=layer2_size,
         )
+        self.Q_target = DQN(
+            self.lr,
+            n_actions=n_actions,
+            input_dims=input_dims,
+            fc1_dims=layer1_size,
+            fc2_dims=layer2_size,
+        )
+        self.Q_target.load_state_dict(self.Q_eval.state_dict())
+        self.Q_target.eval()
+        self.target_update = target_update
+        self.update_counter = 0
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
@@ -141,8 +153,7 @@ class Agent:
         action_batch = self.action_memory[batch]
 
         q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
-        # TODO: check why no target network
-        q_next = self.Q_eval.forward(new_state_batch)
+        q_next = self.Q_target.forward(new_state_batch)
         q_next[terminal_batch] = 0.0
 
         q_target = reward_batch + self.gamma * T.max(q_next, dim=1)[0]
@@ -150,6 +161,8 @@ class Agent:
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
         loss.backward()
         self.Q_eval.optimizer.step()
+        if self.update_counter % self.target_update == 0:
+            self.Q_target.load_state_dict(self.Q_eval.state_dict())
 
         self.epsilon = (
             self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
