@@ -85,6 +85,7 @@ class Agent:
         self.action_memory = np.zeros(self.mem_size, dtype=np.int32)
         self.reward_memory = np.zeros(self.mem_size, dtype=np.float32)
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
+        self.loss_list = []
 
     def store_transition(self, state, action, reward, state_, done: bool) -> None:
         index = self.mem_cntr % self.mem_size
@@ -160,6 +161,7 @@ class Agent:
 
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
         loss.backward()
+        self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
         if self.update_counter % self.target_update == 0:
             self.Q_target.load_state_dict(self.Q_eval.state_dict())
