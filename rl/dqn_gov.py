@@ -141,6 +141,7 @@ class Agent:
         action_batch = self.action_memory[batch]
 
         q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
+        # TODO: check why no target network
         q_next = self.Q_eval.forward(new_state_batch)
         q_next[terminal_batch] = 0.0
 
