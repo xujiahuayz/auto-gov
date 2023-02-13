@@ -15,13 +15,13 @@ from run_results.plotting import plot_learning_curve
 
 
 def save_results(
-    initial_collateral_factors: list[float] = [0.75],
-    max_steps_values: list[int] = [30, 60, 120],
-    lr_values: list[float] = [0.001, 0.05, 0.1],
-    batch_size_values: list[int] = [64, 128],
-    n_games_values: list[int] = [2_000],
-    eps_dec_values: list[float] = [1e-5, 5e-5],
-    eps_end_values: list[float] = [0.005, 0.01, 0.02],
+    initial_collateral_factors: list[float],
+    max_steps_values: list[int],
+    lr_values: list[float],
+    batch_size_values: list[int],
+    n_games_values: list[int],
+    eps_dec_values: list[float],
+    eps_end_values: list[float],
 ) -> list[dict]:
     # make combinations of different values of initial collateral factor and n_games
     results = []
@@ -33,7 +33,7 @@ def save_results(
                         for eps_dec in eps_dec_values:
                             for batch_size in batch_size_values:
                                 logging.info(
-                                    f"Training with initial_collateral_factor={icf}, max_steps={ms}, n_games={n_game}, lr={lr}"
+                                    f"Training with initial_collateral_factor={icf}, max_steps={ms}, n_games={n_game}, lr={lr}, eps_end={eps_end}, eps_dec={eps_dec}, batch_size={batch_size}"
                                 )
                                 (
                                     scores,
@@ -87,7 +87,10 @@ def plot_results(results: list[dict]) -> None:
         eps_end = result["eps_end"]
         training_collateral_factors = result["training_collateral_factors"]
 
-        filename = path.join(FIGURES_PATH, f"defi-{icf}-{ms}-{n_game}-{lr}.png")
+        filename = path.join(
+            FIGURES_PATH,
+            f"defi-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.png",
+        )
         x = [i + 1 for i in range(n_game)]
 
         for (
@@ -96,20 +99,31 @@ def plot_results(results: list[dict]) -> None:
         ) in training_collateral_factors.items():
             plt.plot(x, collateral_factors, label=asset, alpha=0.5)
         plt.legend()
-        plt.title(
-            f"max steps: {ms}, n_games: {n_game}, lr: {lr}, \n eps_end: {eps_end}, eps_dec: {eps_dec}, batch_size: {batch_size}"
-        )
+        title = f"Collateral factors for {n_game} games, initial collateral factor={icf}, max steps={ms}, lr={lr}, eps_end={eps_end}, eps_dec={eps_dec}, batch_size={batch_size}"
+        plt.title(title)
         plt.savefig(
-            path.join(FIGURES_PATH, f"collateral_factors-{icf}-{ms}-{n_game}-{lr}.png")
+            path.join(
+                FIGURES_PATH,
+                f"collateral_factors-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.png",
+            )
         )
+        plt.show()
         plt.close()
 
-        plot_learning_curve(x, scores, eps_history, filename)
+        plot_learning_curve(x, scores, eps_history, filename, title=title)
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    save_results()
+    save_results(
+        initial_collateral_factors=[0.75],
+        max_steps_values=[45],
+        lr_values=[0.05],
+        batch_size_values=[64],
+        n_games_values=[1_500],
+        eps_dec_values=[5e-5],
+        eps_end_values=[0.03],
+    )
     with open(path.join(DATA_PATH, "pickle_file_suffix.txt"), "r") as f:
         suffix = f.read()
     with open(path.join(DATA_PATH, f"results-{suffix}.pkl"), "rb") as f:

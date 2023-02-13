@@ -66,7 +66,10 @@ class DefiEnv:
                     plf.raise_collateral_factor()
 
     def get_reward(self) -> float:
-        return sum(self._apply_to_all_pools(PlfPool.get_reward))
+        return sum(
+            pool.get_reward() * self.prices[name]
+            for name, pool in self.plf_pools.items()
+        )
 
     def get_state(self) -> np.ndarray:
         return np.concatenate(self._apply_to_all_pools(PlfPool.get_state))
@@ -461,7 +464,7 @@ class PlfPool:
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor < 0:
             self.update_market()
-            self.reward = -90
+            self.reward = -200
         else:
             self.collateral_factor = new_collateral_factor
             for user in self.env.users.values():
@@ -478,7 +481,7 @@ class PlfPool:
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
         if new_collateral_factor > 1:
             self.update_market()
-            self.reward = -90
+            self.reward = -200
         else:
             self.collateral_factor = new_collateral_factor
             # affect users who are supplying to this pool with higher exposure to default risk

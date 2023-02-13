@@ -104,7 +104,7 @@ def training(
         eps_history.append(agent.epsilon)
 
         avg_score = np.mean(scores[-30:])
-        if i % 10 == 0:
+        if i % 50 == 0:
             logging.info(
                 f"{i} score {score:.2f} average score {avg_score:.2f} epsilon {agent.epsilon:.2f} collateral factor {next(iter(defi_env.plf_pools.values())).collateral_factor:.2f}"
             )

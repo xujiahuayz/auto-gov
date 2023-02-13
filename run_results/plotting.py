@@ -21,7 +21,9 @@ def plot_learning(scores, filename: str, x=Optional[int], window: int = 5):
     plt.savefig(filename)
 
 
-def plot_learning_curve(x, scores, epsilons, filename: str, lines=None) -> None:
+def plot_learning_curve(
+    x, scores, epsilons, filename: str, title: str, lines=None
+) -> None:
     fig = plt.figure()
     ax = fig.add_subplot(111, label="1")
     ax2 = fig.add_subplot(111, label="2", frame_on=False)
@@ -47,6 +49,8 @@ def plot_learning_curve(x, scores, epsilons, filename: str, lines=None) -> None:
     if lines is not None:
         for line in lines:
             plt.axvline(x=line)
+
+    plt.title(title)
 
     plt.savefig(filename)
     plt.show()
