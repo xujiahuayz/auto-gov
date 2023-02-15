@@ -45,8 +45,9 @@ class Agent:
         max_mem_size: int = 100_000,
         eps_end: float = 0.05,
         eps_dec: float = 5e-5,
-        layer1_size: int = 36,
-        layer2_size: int = 36,
+        layer1_size: int = 32,
+        layer2_size: int = 32,
+        target_net_enabled: bool = False,
         target_update: int = 200,
     ):
         self.gamma = gamma
@@ -68,17 +69,21 @@ class Agent:
             fc1_dims=layer1_size,
             fc2_dims=layer2_size,
         )
-        self.Q_target = DQN(
-            self.lr,
-            n_actions=n_actions,
-            input_dims=input_dims,
-            fc1_dims=layer1_size,
-            fc2_dims=layer2_size,
-        )
-        self.Q_target.load_state_dict(self.Q_eval.state_dict())
-        self.Q_target.eval()
-        self.target_update = target_update
-        self.update_counter = 0
+        
+        self.target_net_enabled = target_net_enabled
+        if self.target_net_enabled:
+            self.Q_target = DQN(
+                self.lr,
+                n_actions=n_actions,
+                input_dims=input_dims,
+                fc1_dims=layer1_size,
+                fc2_dims=layer2_size,
+            )
+
+            self.Q_target.load_state_dict(self.Q_eval.state_dict())
+            self.Q_target.eval()
+            self.target_update = target_update
+            self.update_counter = 0
 
         self.state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
         self.new_state_memory = np.zeros((self.mem_size, *input_dims), dtype=np.float32)
@@ -154,8 +159,11 @@ class Agent:
         action_batch = self.action_memory[batch]
 
         q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
-        q_next = self.Q_eval.forward(new_state_batch)
-        # q_next = self.Q_target.forward(new_state_batch)
+        # if self.target_net_enabled, Double DQN with target network enabled
+        if self.target_net_enabled:
+            q_next = self.Q_target.forward(new_state_batch)
+        else:
+            q_next = self.Q_eval.forward(new_state_batch)
         q_next[terminal_batch] = 0.0
 
         q_target = reward_batch + self.gamma * T.max(q_next, dim=1)[0]
@@ -164,10 +172,11 @@ class Agent:
         loss.backward()
         self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
-        # if self.update_counter % self.target_update == 0:
-        #     self.Q_target.load_state_dict(self.Q_eval.state_dict())
 
-        # self.update_counter += 1
+        if self.target_net_enabled:
+            self.update_counter += 1
+            if self.update_counter % self.target_update == 0:
+                self.Q_target.load_state_dict(self.Q_eval.state_dict())
 
         self.epsilon = (
             self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min

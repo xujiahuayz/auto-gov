@@ -1,11 +1,11 @@
 import gym
 import numpy as np
-from dqn_complicated import Agent
-from utils2 import plot_learning_curve
+from dqn_gov import Agent
+from playground.utils2 import plot_learning_curve
 
 if __name__ == "__main__":
-    # env = gym.make("LunarLander-v2")
-    env = gym.make("Acrobot-v1")
+    env = gym.make("LunarLander-v2")
+    # env = gym.make("Acrobot-v1")
     agent = Agent(
         gamma=0.99,
         epsilon=1.0,
@@ -15,15 +15,16 @@ if __name__ == "__main__":
         input_dims=env.observation_space.shape,
         # input_dims=[8],
         lr=0.003,
-        eps_dec=5e-4,
+        eps_dec=5e-5,
+        target_net_enabled=True,
     )
     scores, eps_history = [], []
-    n_games = 500
+    n_games = 1000
 
     for i in range(n_games):
         score = 0
         done = False
-        observation = env.reset(seed=42)[0]
+        observation = env.reset()[0]
         while not done:
             action = agent.choose_action(observation)
             observation_, reward, done, truncated, info = env.step(action)
