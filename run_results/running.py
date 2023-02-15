@@ -129,7 +129,7 @@ if __name__ == "__main__":
         max_steps_values=[45],
         lr_values=[0.01],
         batch_size_values=[64],
-        n_games_values=[1_500],
+        n_games_values=[15_000],
         eps_dec_values=[5e-5],
         eps_end_values=[0.03],
     )

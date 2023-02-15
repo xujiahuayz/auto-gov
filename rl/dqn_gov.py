@@ -45,10 +45,10 @@ class Agent:
         max_mem_size: int = 100_000,
         eps_end: float = 0.05,
         eps_dec: float = 5e-5,
-        layer1_size: int = 32,
-        layer2_size: int = 32,
-        target_net_enabled: bool = False,
-        target_update: int = 200,
+        layer1_size: int = 256,
+        layer2_size: int = 256,
+        target_net_enabled: bool = True,
+        target_update: int = 100,
     ):
         self.gamma = gamma
         self.epsilon = epsilon
@@ -69,7 +69,7 @@ class Agent:
             fc1_dims=layer1_size,
             fc2_dims=layer2_size,
         )
-        
+
         self.target_net_enabled = target_net_enabled
         if self.target_net_enabled:
             self.Q_target = DQN(
