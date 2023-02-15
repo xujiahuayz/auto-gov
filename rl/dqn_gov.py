@@ -47,7 +47,7 @@ class Agent:
         eps_dec: float = 5e-5,
         layer1_size: int = 256,
         layer2_size: int = 256,
-        target_net_enabled: bool = True,
+        target_net_enabled: bool = False,
         target_update: int = 100,
     ):
         self.gamma = gamma
