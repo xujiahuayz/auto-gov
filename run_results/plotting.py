@@ -24,15 +24,21 @@ def plot_learning(scores, filename: str, x=Optional[int], window: int = 5):
 def plot_learning_curve(
     x, scores, epsilons, filename: str, title: str, lines=None
 ) -> None:
-    fig = plt.figure()
+    fig = plt.figure(figsize=(6, 3.87))
     ax = fig.add_subplot(111, label="1")
     ax2 = fig.add_subplot(111, label="2", frame_on=False)
 
     ax.plot(x, epsilons, color="C0")
-    ax.set_xlabel("Training Steps", color="C0")
+    ax.set_xlabel("Training Steps", color="black")
+    # xlabel and ylabel font size
+    ax.xaxis.label.set_size(13)
+    ax.yaxis.label.set_size(13)
     ax.set_ylabel("Epsilon", color="C0")
-    ax.tick_params(axis="x", colors="C0")
+    ax.tick_params(axis="x", colors="black")
     ax.tick_params(axis="y", colors="C0")
+    # set x and y ticks font size
+    ax.xaxis.set_tick_params(labelsize=13)
+    ax.yaxis.set_tick_params(labelsize=13)
 
     N = len(scores)
     running_avg = np.empty(N)
@@ -42,7 +48,14 @@ def plot_learning_curve(
     ax2.scatter(x, running_avg, color="C1")
     ax2.axes.get_xaxis().set_visible(False)
     ax2.yaxis.tick_right()
+    # # tick rotation
+    # ax2.tick_params(axis="y", rotation=45)
     ax2.set_ylabel("Score", color="C1")
+    ax2.yaxis.label.set_size(13)
+    # set y ticks font size
+    ax2.yaxis.set_tick_params(labelsize=13)
+    # ticks format scientific notation
+    ax2.ticklabel_format(style="sci", scilimits=(0, 0), axis="y")
     ax2.yaxis.set_label_position("right")
     ax2.tick_params(axis="y", colors="C1")
 
@@ -50,8 +63,10 @@ def plot_learning_curve(
         for line in lines:
             plt.axvline(x=line)
 
-    plt.title(title)
-
+    # plt.title(title)
+    # # grid
+    # plt.grid()
+    plt.tight_layout()
     plt.savefig(filename)
     plt.show()
     plt.close()
