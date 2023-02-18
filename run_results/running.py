@@ -98,7 +98,7 @@ def plot_results(results: list[dict]) -> None:
 
         filename = path.join(
             FIGURES_PATH,
-            f"defi-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.png",
+            f"defi-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf",
         )
         x = [i + 1 for i in range(n_game)]
 
@@ -113,7 +113,7 @@ def plot_results(results: list[dict]) -> None:
         plt.savefig(
             path.join(
                 FIGURES_PATH,
-                f"collateral_factors-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.png",
+                f"collateral_factors-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf",
             )
         )
         plt.show()
@@ -129,7 +129,7 @@ if __name__ == "__main__":
         max_steps_values=[45],
         lr_values=[0.01],
         batch_size_values=[64],
-        n_games_values=[15_000],
+        n_games_values=[1_000],
         eps_dec_values=[5e-5],
         eps_end_values=[0.03],
     )
