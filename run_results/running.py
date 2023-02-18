@@ -12,7 +12,7 @@ from matplotlib import pyplot as plt
 
 from market_env.constants import DATA_PATH, FIGURES_PATH
 from rl.main_gov import training
-from run_results.plotting import plot_learning_curve
+from run_results.plotting import plot_learning_curve, plot_time_cdf
 
 
 def compute_result(params):

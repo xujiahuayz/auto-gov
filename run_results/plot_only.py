@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 
 from market_env.constants import DATA_PATH, FIGURES_PATH
 from rl.main_gov import training
-from run_results.plotting import plot_learning_curve
+from run_results.plotting import plot_learning_curve, plot_time_cdf
 
 
 def plot_results(results: list[dict]) -> None:
@@ -62,8 +62,24 @@ def plot_results(results: list[dict]) -> None:
         plot_learning_curve(x, scores, eps_history, filename, title=title)
 
 
+def draw_delay():
+    suffix1 = "2023-02-18-00-20-02"
+    suffix2 = "2023-02-18-00-21-19"
+    suffix3 = "2023-02-18-00-23-03"
+    with open(path.join(DATA_PATH, f"results-{suffix1}.pkl"), "rb") as f:
+        results1 = pickle.load(f)
+    with open(path.join(DATA_PATH, f"results-{suffix2}.pkl"), "rb") as f:
+        results2 = pickle.load(f)
+    with open(path.join(DATA_PATH, f"results-{suffix3}.pkl"), "rb") as f:
+        results3 = pickle.load(f)
+    for result in results1:
+        times1 = result["time_cost"]
+    for result in results2:
+        times2 = result["time_cost"]
+    for result in results3:
+        times3 = result["time_cost"]
+    plot_time_cdf(times1, times2, times3, 200, "time_cdf.pdf")
+
+
 if __name__ == "__main__":
-    suffix = "2023-02-13-12-26-44"
-    with open(path.join(DATA_PATH, f"results-{suffix}.pkl"), "rb") as f:
-        results = pickle.load(f)
-    plot_results(results)
+    draw_delay()

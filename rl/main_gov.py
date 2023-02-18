@@ -3,6 +3,7 @@ from os import path
 
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 from market_env.constants import FIGURES_PATH
 from market_env.env import DefiEnv, PlfPool, PriceDict, User
@@ -82,7 +83,7 @@ def training(
     )
     # agent = Agent(state_size, action_size)
 
-    scores, eps_history, collateral_factors = [], [], {}
+    scores, eps_history, collateral_factors, time_cost = [], [], {}, []
 
     plf_pools = defi_env.plf_pools.values()
     for plf in plf_pools:
@@ -92,6 +93,7 @@ def training(
         score = 0
         done = False
         observation = env.reset()
+        start_time = time.time()
         while not done:
             action = agent.choose_action(observation.astype(np.float32))
             # this checks done or not
@@ -100,6 +102,7 @@ def training(
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
             observation = observation_
+        time_cost.append(time.time() - start_time)
         scores.append(score)
         eps_history.append(agent.epsilon)
 
@@ -110,7 +113,7 @@ def training(
             )
         for plf in plf_pools:
             collateral_factors[plf.asset_name].append(plf.collateral_factor)
-    return scores, eps_history, collateral_factors
+    return scores, eps_history, collateral_factors, time_cost
 
 
 if __name__ == "__main__":
