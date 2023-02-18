@@ -20,11 +20,7 @@ def compute_result(params):
     logging.info(
         f"Training with initial_collateral_factor={icf}, max_steps={ms}, n_games={n_game}, lr={lr}, eps_end={eps_end}, eps_dec={eps_dec}, batch_size={batch_size}"
     )
-    (
-        scores,
-        eps_history,
-        training_collateral_factors,
-    ) = training(
+    (scores, eps_history, training_collateral_factors, time_cost) = training(
         initial_collateral_factor=icf,
         max_steps=ms,
         n_games=n_game,
@@ -45,6 +41,7 @@ def compute_result(params):
         "es_dec": eps_dec,
         "eps_end": eps_end,
         "batch_size": batch_size,
+        "time_cost": time_cost,
     }
 
 
@@ -95,6 +92,7 @@ def plot_results(results: list[dict]) -> None:
         eps_dec = result["es_dec"]
         eps_end = result["eps_end"]
         training_collateral_factors = result["training_collateral_factors"]
+        time_cost = result["time_cost"]
 
         filename = path.join(
             FIGURES_PATH,
