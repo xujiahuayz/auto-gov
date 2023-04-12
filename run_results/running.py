@@ -125,11 +125,11 @@ if __name__ == "__main__":
     save_results(
         initial_collateral_factors=[0.75],
         max_steps_values=[45],
-        lr_values=[0.01],
+        lr_values=[0.02],
         batch_size_values=[64],
         n_games_values=[1_000],
         eps_dec_values=[5e-5],
-        eps_end_values=[0.03],
+        eps_end_values=[0.02],
     )
     with open(path.join(DATA_PATH, "pickle_file_suffix.txt"), "r") as f:
         suffix = f.read()

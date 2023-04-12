@@ -34,7 +34,8 @@ class DefiEnv:
         self.users = users
         self.prices = prices
         self.plf_pools = plf_pools
-        self.step = 0
+        self.step: int = 0
+        self.bad_loan_expenses: float = 0.0
         self.max_steps = max_steps
         self.num_action_pool: int = 3  # lower, keep, raise
 
@@ -47,6 +48,13 @@ class DefiEnv:
         if not isinstance(value, PriceDict):
             raise TypeError("must use PriceDict type")
         self._prices = value
+
+    @property
+    def net_position(self) -> float:
+        total_reserve = sum(
+            (pool.reserve * self.prices[name]) for name, pool in self.plf_pools.items()
+        )
+        return total_reserve - self.bad_loan_expenses
 
     def update_collateral_factor(self, action: int) -> None:
         num_pools: int = len(self.plf_pools)
@@ -69,10 +77,13 @@ class DefiEnv:
                     plf.raise_collateral_factor()
 
     def get_reward(self) -> float:
+        if self.net_position < 0:
+            self.step = self.max_steps  # end the episode
+            return PENALTY_REWARD * len(self.plf_pools)
         return sum(
-            reward
-            if (reward := pool.get_reward()) == PENALTY_REWARD
-            else reward * self.prices[name]
+            pool_reward
+            if (pool_reward := pool.get_reward()) == PENALTY_REWARD
+            else pool_reward * self.prices[name]
             for name, pool in self.plf_pools.items()
         )
 
@@ -84,15 +95,19 @@ class DefiEnv:
         Returns True if step reaches max_steps, otherwise False
         """
         self.step += 1
+        self.bad_loan_expenses = 0  # reset bad loan expenses
         return self.step >= self.max_steps
 
-    def reset(self):
+    def reset(self) -> None:
         self.step = 0
+
+        # reset bad loan expenses, shouldn't be necessary but just in case
+        self.bad_loan_expenses = 0
         for user in self.users.values():
             user.reset()
         self._apply_to_all_pools(PlfPool.reset)
 
-    def _apply_to_all_pools(self, func):
+    def _apply_to_all_pools(self, func) -> list:
         return [func(pool) for pool in self.plf_pools.values()]
 
 
@@ -331,6 +346,10 @@ class User:
 
         else:  # unhealthy loan
             self.consecutive_good_borrows = 0
+            if self.existing_borrow_value >= self.existing_supply_value > 0:
+                # not worth repaying the loan, prefer defaulting
+                print("USER IS DEFAULTING!!! WRITING OFF LOAN")
+                self.env.bad_loan_expenses += self.existing_borrow_value
             for plf in self.env.plf_pools.values():
                 # repay as much as you can
                 self._borrow_repay(-self.funds_available[plf.asset_name], plf)
@@ -617,7 +636,7 @@ class PlfPool:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     # https://docs.aave.com/risk/v/aave-v2/asset-risk/risk-parameters
     # initialize environment
     defi_env = DefiEnv(prices=PriceDict({"tkn": 3, "usdc": 0.1, "weth": 1}))
