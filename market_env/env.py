@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import numpy as np
 
@@ -18,9 +17,9 @@ from market_env.utils import PriceDict
 class DefiEnv:
     def __init__(
         self,
-        users: Optional[dict[str, User]] = None,
-        prices: Optional[PriceDict] = None,
-        plf_pools: Optional[dict[str, PlfPool]] = None,
+        users: dict[str, User] | None = None,
+        prices: PriceDict | None = None,
+        plf_pools: dict[str, PlfPool] | None = None,
         max_steps: int = 30,
     ):
         if users is None:
@@ -104,7 +103,7 @@ class User:
         name: str,
         safety_borrow_margin=0.05,
         safety_supply_margin=0.05,
-        funds_available: Optional[dict] = None,
+        funds_available: dict[str, float] | None = None,
     ):
         assert name not in env.users, f"User {name} exists"
         self.env = env
