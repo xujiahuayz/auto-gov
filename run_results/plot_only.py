@@ -1,13 +1,9 @@
-import logging
 import pickle
-import time
 from os import path
-from itertools import product
 
 from matplotlib import pyplot as plt
 
 from market_env.constants import DATA_PATH, FIGURES_PATH
-from rl.main_gov import training
 from run_results.plotting import plot_learning_curve, plot_time_cdf
 
 
@@ -24,10 +20,11 @@ def plot_results(results: list[dict]) -> None:
         eps_end = result["eps_end"]
         training_collateral_factors = result["training_collateral_factors"]
 
-        filename = path.join(
-            FIGURES_PATH,
-            f"defi-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf",
+        filename = (
+            FIGURES_PATH
+            / f"defi-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf"
         )
+
         x = [i + 1 for i in range(n_game)]
 
         # set plt size
@@ -51,15 +48,13 @@ def plot_results(results: list[dict]) -> None:
         # plt.title(title)
         plt.tight_layout()
         plt.savefig(
-            path.join(
-                FIGURES_PATH,
-                f"collateral_factors-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf",
-            )
+            FIGURES_PATH
+            / f"collateral_factors-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf"
         )
         plt.show()
         plt.close()
 
-        plot_learning_curve(x, scores, eps_history, filename, title=title)
+        plot_learning_curve(x, scores, eps_history, filename)
 
 
 def draw_delay():

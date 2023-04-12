@@ -350,21 +350,22 @@ class User:
                 # not worth repaying the loan, prefer defaulting
                 print("USER IS DEFAULTING!!! WRITING OFF LOAN")
                 self.env.bad_loan_expenses += self.existing_borrow_value
-            for plf in self.env.plf_pools.values():
-                # repay as much as you can
-                self._borrow_repay(-self.funds_available[plf.asset_name], plf)
-
-                if self.existing_borrow_value > self.max_borrowable_value:
-                    self.safety_borrow_margin += 0.05
-                    # inject funds to the user to repay the loan
-                    self.funds_available[plf.asset_name] += (
-                        self.existing_borrow_value * 0.1
-                    )
+            else:
+                for plf in self.env.plf_pools.values():
+                    # repay as much as you can
                     self._borrow_repay(-self.funds_available[plf.asset_name], plf)
-                # if plf.total_b_tokens != 0:
-                #     assert (
-                #         plf.total_i_tokens > 0
-                #     ), f"total i tokens is {plf.total_i_tokens} when total b tokens is {plf.total_b_tokens}"
+
+                    if self.existing_borrow_value > self.max_borrowable_value:
+                        self.safety_borrow_margin += 0.05
+                        # inject funds to the user to repay the loan
+                        self.funds_available[plf.asset_name] += (
+                            self.existing_borrow_value * 0.1
+                        )
+                        self._borrow_repay(-self.funds_available[plf.asset_name], plf)
+                    # if plf.total_b_tokens != 0:
+                    #     assert (
+                    #         plf.total_i_tokens > 0
+                    #     ), f"total i tokens is {plf.total_i_tokens} when total b tokens is {plf.total_b_tokens}"
 
         if self.consecutive_good_borrows > 20 and self.safety_borrow_margin > 0.05:
             self.safety_borrow_margin -= 0.05

@@ -1,9 +1,8 @@
-from os import path
-
 from market_env.settings import PROJECT_ROOT
 
-DATA_PATH = path.join(PROJECT_ROOT, "data")
-FIGURES_PATH = path.join(PROJECT_ROOT, "figures")
+DATA_PATH = PROJECT_ROOT / "data"
+FIGURES_PATH = PROJECT_ROOT / "figures"
+CACHE_PATH = PROJECT_ROOT / ".cache"
 
 INTEREST_TOKEN_PREFIX = "interest-"
 DEBT_TOKEN_PREFIX = "debt-"

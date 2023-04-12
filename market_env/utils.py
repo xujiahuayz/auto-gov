@@ -1,17 +1,6 @@
-import numpy as np
-
 from collections.abc import MutableMapping
 
 from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
-
-# def brownian_motion_price(price_history, n_steps, dt, mu, sigma):
-#     """
-#     generate a brownian motion price path
-#     :param price_history: a list of prices
-#     :param n_steps: number of steps
-#     :param dt: time step
-#     :param mu: drift
-#     """
 
 
 class PriceDict(MutableMapping):

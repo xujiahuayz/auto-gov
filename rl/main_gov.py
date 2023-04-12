@@ -1,9 +1,9 @@
 import logging
+import time
 from os import path
 
-import matplotlib.pyplot as plt
 import numpy as np
-import time
+from market_env.caching import cache
 
 from market_env.constants import FIGURES_PATH
 from market_env.env import DefiEnv, PlfPool, PriceDict, User
@@ -12,24 +12,13 @@ from rl.rl_env import ProtocolEnv
 from run_results.plotting import plot_learning_curve
 
 
-def training(
-    # hyperparameters
+def init_env(
     max_steps: int = 30,
-    gamma: float = 0.99,
-    n_games: int = 2_000,
-    epsilon: float = 1,
-    eps_end: float = 0.01,
-    eps_dec: float = 5e-5,
-    batch_size: int = 128,
-    lr: float = 0.003,
-    # settings
     initial_collateral_factor: float = 0.8,
     tkn_volatility: float = 2,
     init_safety_borrow_margin: float = 0.5,
     init_safety_supply_margin: float = 0.5,
-) -> tuple[list[float], list[float], dict[str, list[float]]]:
-    # initialize environment
-
+) -> DefiEnv:
     defi_env = DefiEnv(
         prices=PriceDict({"tkn": 3, "usdc": 0.1, "weth": 1}), max_steps=max_steps
     )
@@ -67,7 +56,21 @@ def training(
         initial_asset_volatility=0,
         seed=9,
     )
+    return defi_env
 
+
+@cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
+def train_env(
+    defi_env: DefiEnv,
+    gamma: float = 0.99,
+    n_games: int = 2_000,
+    epsilon: float = 1,
+    eps_end: float = 0.01,
+    eps_dec: float = 5e-5,
+    batch_size: int = 128,
+    lr: float = 0.003,
+) -> tuple[list[float], list[float], list[dict[str, object]], list[float]]:
+    # initialize environment
     env = ProtocolEnv(defi_env)
 
     # initialize agent
@@ -83,11 +86,9 @@ def training(
     )
     # agent = Agent(state_size, action_size)
 
-    scores, eps_history, collateral_factors, time_cost = [], [], {}, []
+    scores, eps_history, time_cost, states = [], [], [], []
 
     plf_pools = defi_env.plf_pools.values()
-    for plf in plf_pools:
-        collateral_factors[plf.asset_name] = []
 
     for i in range(n_games):
         score = 0
@@ -95,6 +96,24 @@ def training(
         observation = env.reset()
         start_time = time.time()
         while not done:
+            # get states for plotting
+            states.append(
+                {
+                    "step": defi_env.step,
+                    "net_position": defi_env.net_position,
+                    "pools": {
+                        p.asset_name: {
+                            "collateral_factor": p.collateral_factor,
+                            "reserve": p.reserve,
+                            "borrow_apy": p.borrow_apy,
+                            "supply_apy": p.supply_apy,
+                            "utilization_ratio": p.utilization_ratio,
+                            "price": p.env.prices[p.asset_name],
+                        }
+                        for p in plf_pools
+                    },
+                }
+            )
             action = agent.choose_action(observation.astype(np.float32))
             # this checks done or not
             observation_, reward, done, _ = env.step(action)
@@ -109,22 +128,56 @@ def training(
         avg_score = np.mean(scores[-30:])
         if i % 50 == 0:
             logging.info(
-                f"{i} score {score:.2f} average score {avg_score:.2f} epsilon {agent.epsilon:.2f} collateral factor {next(iter(defi_env.plf_pools.values())).collateral_factor:.2f}"
+                "episode: {}, score: {:.2f}, average score: {:.2f}, epsilon: {:.2f}".format(
+                    i,
+                    score,
+                    avg_score,
+                    agent.epsilon,
+                )
             )
-        for plf in plf_pools:
-            collateral_factors[plf.asset_name].append(plf.collateral_factor)
-    return scores, eps_history, collateral_factors, time_cost
+    return scores, eps_history, states, time_cost
+
+
+def training(
+    gamma: float = 0.99,
+    n_games: int = 2_000,
+    epsilon: float = 1,
+    eps_end: float = 0.01,
+    eps_dec: float = 5e-5,
+    batch_size: int = 128,
+    lr: float = 0.003,
+    **kwargs,
+) -> tuple[list[float], list[float], list[dict[str, object]], list[float]]:
+    defi_env = init_env(**kwargs)
+    return train_env(
+        defi_env=defi_env,
+        gamma=gamma,
+        n_games=n_games,
+        epsilon=epsilon,
+        eps_end=eps_end,
+        eps_dec=eps_dec,
+        batch_size=batch_size,
+        lr=lr,
+    )
 
 
 if __name__ == "__main__":
     # show logging level at info
     logging.basicConfig(level=logging.INFO)
     N_GAMES = 1_200
-    training_scores, training_eps_history, training_collateral_factors = training(
-        n_games=N_GAMES,
-        eps_dec=0,
+    test_env = init_env(
         initial_collateral_factor=0.75,
         max_steps=30,
+    )
+    (
+        training_scores,
+        training_eps_history,
+        training_collateral_factors,
+        _,
+    ) = train_env(
+        defi_env=test_env,
+        n_games=N_GAMES,
+        eps_dec=0,
         lr=0.05,
     )
     x = [i + 1 for i in range(N_GAMES)]
@@ -132,10 +185,3 @@ if __name__ == "__main__":
     plot_learning_curve(
         x, training_scores, training_eps_history, filename, "Learning Curve"
     )
-    plt.clf()
-    for (
-        asset,
-        collateral_factors,
-    ) in training_collateral_factors.items():
-        plt.plot(x, collateral_factors, label=asset, alpha=0.5)
-    plt.savefig(path.join(FIGURES_PATH, "collateral_factors.png"))

@@ -1,3 +1,3 @@
-from os import path
+from pathlib import Path
 
-PROJECT_ROOT = path.dirname(path.dirname(__file__))
+PROJECT_ROOT = Path(__file__).parent.parent

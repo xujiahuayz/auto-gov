@@ -2,9 +2,11 @@
 Plotting results from training
 """
 
+from pathlib import Path
 from typing import Optional
-import numpy as np
+
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plot_learning(scores, filename: str, x=Optional[int], window: int = 5):
@@ -57,9 +59,7 @@ def plot_time_cdf(times1, times2, times3, bin, filename: str):
     plt.close()
 
 
-def plot_learning_curve(
-    x, scores, epsilons, filename: str, title: str, lines=None
-) -> None:
+def plot_learning_curve(x, scores, epsilons, filename: str | Path, lines=None) -> None:
     fig = plt.figure(figsize=(6, 3.87))
     ax = fig.add_subplot(111, label="1")
     ax2 = fig.add_subplot(111, label="2", frame_on=False)
@@ -99,9 +99,6 @@ def plot_learning_curve(
         for line in lines:
             plt.axvline(x=line)
 
-    # plt.title(title)
-    # # grid
-    # plt.grid()
     plt.tight_layout()
     plt.savefig(filename)
     plt.show()
