@@ -15,24 +15,24 @@ from run_results.plotting import plot_learning_curve
 def init_env(
     max_steps: int = 30,
     initial_collateral_factor: float = 0.8,
-    tkn_volatility: float = 2,
+    tkn_volatility: float = 1.5,
     init_safety_borrow_margin: float = 0.5,
     init_safety_supply_margin: float = 0.5,
 ) -> DefiEnv:
     defi_env = DefiEnv(
-        prices=PriceDict({"tkn": 3, "usdc": 0.1, "weth": 1}), max_steps=max_steps
+        prices=PriceDict({"tkn": 1, "usdc": 1, "weth": 1}), max_steps=max_steps
     )
     Alice = User(
         name="alice",
         env=defi_env,
-        funds_available={"tkn": 10_000, "usdc": 200_000, "weth": 20_000},
+        funds_available={"tkn": 20_000, "usdc": 20_000, "weth": 20_000},
         safety_borrow_margin=init_safety_borrow_margin,
         safety_supply_margin=init_safety_supply_margin,
     )
     tkn_plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        initial_starting_funds=5_000,
+        initial_starting_funds=15_000,
         asset_name="tkn",
         collateral_factor=initial_collateral_factor,
         initial_asset_volatility=tkn_volatility,
@@ -41,7 +41,7 @@ def init_env(
     usdc_plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        initial_starting_funds=150_000,
+        initial_starting_funds=15_000,
         asset_name="usdc",
         collateral_factor=initial_collateral_factor,
         initial_asset_volatility=0.1,
@@ -69,7 +69,7 @@ def train_env(
     eps_dec: float = 5e-5,
     batch_size: int = 128,
     lr: float = 0.003,
-) -> tuple[list[float], list[float], list[dict[str, object]], list[float]]:
+) -> tuple[list[float], list[float], list[list[dict[str, object]]], list[float]]:
     # initialize environment
     env = ProtocolEnv(defi_env)
 
@@ -91,13 +91,14 @@ def train_env(
     plf_pools = defi_env.plf_pools.values()
 
     for i in range(n_games):
+        state_this_game = []
         score = 0
         done = False
         observation = env.reset()
         start_time = time.time()
         while not done:
             # get states for plotting
-            states.append(
+            state_this_game.append(
                 {
                     "step": defi_env.step,
                     "net_position": defi_env.net_position,
@@ -124,6 +125,7 @@ def train_env(
         time_cost.append(time.time() - start_time)
         scores.append(score)
         eps_history.append(agent.epsilon)
+        states.append(state_this_game)
 
         avg_score = np.mean(scores[-30:])
         if i % 50 == 0:
@@ -147,7 +149,7 @@ def training(
     batch_size: int = 128,
     lr: float = 0.003,
     **kwargs,
-) -> tuple[list[float], list[float], list[dict[str, object]], list[float]]:
+) -> tuple[list[float], list[float], list[list[dict[str, object]]], list[float]]:
     defi_env = init_env(**kwargs)
     return train_env(
         defi_env=defi_env,
@@ -164,7 +166,7 @@ def training(
 if __name__ == "__main__":
     # show logging level at info
     logging.basicConfig(level=logging.INFO)
-    N_GAMES = 1_200
+    N_GAMES = 500
     test_env = init_env(
         initial_collateral_factor=0.75,
         max_steps=30,

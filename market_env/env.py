@@ -11,7 +11,7 @@ from market_env.constants import (
     INTEREST_TOKEN_PREFIX,
     PENALTY_REWARD,
 )
-from market_env.utils import PriceDict
+from market_env.utils import PriceDict, simulate_gbm
 
 
 class DefiEnv:
@@ -410,11 +410,18 @@ class PlfPool:
         self._initial_asset_volatility = initial_asset_volatility
         self._initial_asset_price = self.env.prices[self.asset_name]
         self.seed = seed
-        self.rng = np.random.RandomState(seed)
+        # deterministically generate price history
+        self.asset_price_history = simulate_gbm(
+            S0=self._initial_asset_price,
+            mu=0,
+            sigma=self._initial_asset_volatility,
+            T=1,
+            N=self.env.max_steps,
+            seed=self.seed,
+        )
         self.reset()
 
     def reset(self):
-        self.rng = np.random.RandomState(self.seed)
         self.env.plf_pools[self.asset_name] = self
         self.user_i_tokens: dict[str, float] = {
             self.initiator.name: self.initial_starting_funds
@@ -441,10 +448,8 @@ class PlfPool:
         self.initiator.funds_available[
             self.interest_token_name
         ] = self.initial_starting_funds
-
         self.initiator.funds_available[self.borrow_token_name] = 0
         self.env.prices[self.asset_name] = self._initial_asset_price
-        self.asset_price_history: list[float] = [self._initial_asset_price]
         self.asset_volatility: float = self._initial_asset_volatility
 
     def __repr__(self) -> str:
@@ -470,15 +475,10 @@ class PlfPool:
             raise ValueError("collateral factor must be between 0 and 1")
         self._collateral_factor = value
 
-    def update_asset_price(self):
-        ph = self.asset_price_history
-        # asset price follows brownian motion with 0 drift and volatility of self.asset_volatility
-        # the wiener process follows a normal distribution with mean 0 and variance 1 (1 because it is a single time step)
-        new_price = ph[-1] * np.exp(self.asset_volatility * self.rng.normal(0, 1))
-
+    def update_asset_price(self) -> None:
+        new_price = self.asset_price_history[self.env.step]
         assert new_price > 0, "asset price cannot be negative"
-        self.env.prices[self.asset_name] = new_price  # type: ignore
-        ph.append(new_price)  # type: ignore
+        self.env.prices[self.asset_name] = new_price
 
     # actions
     def lower_collateral_factor(self) -> None:
