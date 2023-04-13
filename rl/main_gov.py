@@ -58,6 +58,21 @@ def init_env(
     return defi_env
 
 
+def bench_env(defi_env: DefiEnv) -> list[list[dict]]:
+    env = ProtocolEnv(defi_env)
+    state_this_game = []
+    score = 0
+    done = False
+    env.reset()
+    while not done:
+        # get states for plotting
+        state_this_game.append(defi_env.state_summary)
+        # never change collateral factor
+        _, reward, done, _ = env.step(0)
+        score += reward
+    return state_this_game
+
+
 @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
 def train_env(
     defi_env: DefiEnv,
@@ -87,8 +102,6 @@ def train_env(
 
     scores, eps_history, time_cost, states = [], [], [], []
 
-    plf_pools = defi_env.plf_pools.values()
-
     for i in range(n_games):
         state_this_game = []
         score = 0
@@ -97,23 +110,7 @@ def train_env(
         start_time = time.time()
         while not done:
             # get states for plotting
-            state_this_game.append(
-                {
-                    "step": defi_env.step,
-                    "net_position": defi_env.net_position,
-                    "pools": {
-                        p.asset_name: {
-                            "collateral_factor": p.collateral_factor,
-                            "reserve": p.reserve,
-                            "borrow_apy": p.borrow_apy,
-                            "supply_apy": p.supply_apy,
-                            "utilization_ratio": p.utilization_ratio,
-                            "price": p.env.prices[p.asset_name],
-                        }
-                        for p in plf_pools
-                    },
-                }
-            )
+            state_this_game.append(defi_env.state_summary)
             action = agent.choose_action(observation.astype(np.float32))
             # this checks done or not
             observation_, reward, done, _ = env.step(action)

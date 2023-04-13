@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 import numpy as np
 
@@ -55,6 +56,27 @@ class DefiEnv:
             (pool.reserve * self.prices[name]) for name, pool in self.plf_pools.items()
         )
         return total_reserve - self.bad_loan_expenses
+
+    @property
+    def state_summary(self) -> dict[str, Any]:
+        return {
+            "step": self.step,
+            "net_position": self.net_position,
+            "pools": {
+                name: {
+                    "collateral_factor": p.collateral_factor,
+                    "reserve": p.reserve,
+                    "borrow_apy": p.borrow_apy,
+                    "supply_apy": p.supply_apy,
+                    "utilization_ratio": p.utilization_ratio,
+                    "price": p.env.prices[name],
+                }
+                for name, p in self.plf_pools.items()
+            },
+        }
+
+    def __repr__(self) -> str:
+        return f"DefiEnv({self.state_summary})"
 
     def update_collateral_factor(self, action: int) -> None:
         num_pools: int = len(self.plf_pools)

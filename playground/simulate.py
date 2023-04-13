@@ -1,18 +1,18 @@
 import logging
 from market_env.constants import FIGURES_PATH
-from rl.main_gov import init_env, train_env
+from rl.main_gov import bench_env, init_env, train_env
 from run_results.plotting import plot_learning_curve
 
 
 logging.basicConfig(level=logging.INFO)
 
 sim_env = init_env(
-    max_steps=60,
+    max_steps=360,
     initial_collateral_factor=0.7,
     tkn_volatility=15,
 )
 
-number_games = 1_800
+number_games = 2_500
 scores, eps_history, states, time_cost = train_env(
     defi_env=sim_env,
     gamma=0.99,
@@ -107,10 +107,28 @@ ax.set_ylabel("reserve")
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
 # calculate the env's total net position over time
-total_net_position = [state["net_position"] for state in states[-1]]
+total_net_position = [state["net_position"] for state in example_state]
 
 # plot the total net position
 fig, ax = plt.subplots()
 ax.plot(total_net_position)
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
+# title
+ax.set_title("total net position over time: RL")
+
+# plot the benchmark case
+states_benchmark = bench_env(
+    defi_env=init_env(
+        max_steps=360,
+        initial_collateral_factor=0.7,
+        tkn_volatility=15,
+    )
+)
+
+fig, ax = plt.subplots()
+ax.plot([state["net_position"] for state in states_benchmark])
+ax.set_xlabel("time")
+ax.set_ylabel("total net position")
+# title
+ax.set_title("total net position over time: benchmark")
