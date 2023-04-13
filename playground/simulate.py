@@ -1,20 +1,28 @@
 import logging
-from rl.main_gov import training
+from rl.main_gov import init_env, train_env
 from run_results.plotting import plot_learning_curve
 
 
 logging.basicConfig(level=logging.INFO)
 
-scores, eps_history, states, time_cost = training(
+sim_env = init_env(
+    max_steps=60,
     initial_collateral_factor=0.7,
-    max_steps=30,
-    n_games=1_200,
-    lr=0.02,
-    eps_end=0.01,
-    eps_dec=1e-4,
-    batch_size=64,
-    tkn_volatility=3,
+    tkn_volatility=5,
 )
+
+
+scores, eps_history, states, time_cost = train_env(
+    defi_env=sim_env,
+    gamma=0.99,
+    epsilon=1.0,
+    n_games=1_000,
+    lr=0.001,
+    eps_end=0.01,
+    eps_dec=0.999,
+    batch_size=64,
+)
+
 
 plot_learning_curve(
     x=range(len(scores)), scores=scores, epsilons=eps_history, filename="test.png"

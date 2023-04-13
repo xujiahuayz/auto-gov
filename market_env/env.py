@@ -11,7 +11,7 @@ from market_env.constants import (
     INTEREST_TOKEN_PREFIX,
     PENALTY_REWARD,
 )
-from market_env.utils import PriceDict, simulate_gbm
+from market_env.utils import PriceDict, borrow_lend_rates, simulate_gbm
 
 
 class DefiEnv:
@@ -322,22 +322,40 @@ class User:
 
         if self.existing_borrow_value < self.max_borrowable_value:  # healthy loan
             for plf in self.env.plf_pools.values():
-                if plf.borrow_apy < plf.competing_borrow_apy - 0.005:
+                borrow_apy_advantage = plf.competing_borrow_apy + 0.01 - plf.borrow_apy
+                if borrow_apy_advantage > 0:
                     self.consecutive_good_borrows += 1
-                    # borrow as much as you can - note that the borrow function checks loan health
-                    self._borrow_repay(plf.total_available_funds, plf)
-                if plf.borrow_apy > plf.competing_borrow_apy + 0.005:
-                    # repay as much as you can
-                    self._borrow_repay(-self.funds_available[plf.asset_name], plf)
+                    # the bigger advantage, the higher the borrow amount
+                    self._borrow_repay(
+                        plf.total_available_funds * (1 - np.exp(-borrow_apy_advantage)),
+                        plf,
+                    )
+                else:
+                    # the bigger |borrow_apy_advantage|, the more you repay
+                    self._borrow_repay(
+                        -self.funds_available[plf.asset_name]
+                        * (1 - np.exp(borrow_apy_advantage)),
+                        plf,
+                    )
 
-                if plf.supply_apy < plf.competing_supply_apy - 0.005:
+                # set APY thresholds -- below withdraw, above supply
+                supply_apy_advantage = plf.supply_apy - plf.competing_supply_apy + 0.01
+                if supply_apy_advantage < 0:
                     self.consecutive_good_supplies = 0
-                    # withdraw as much as you can - note that the supply function checks loan health
-                    self._supply_withdraw(-plf.user_i_tokens[self.name], plf)
-                if plf.supply_apy > plf.competing_supply_apy + 0.005:
+                    # withdraw, the bigger |supply_apy_margin|, the more you withdraw
+                    self._supply_withdraw(
+                        -plf.user_i_tokens[self.name]
+                        * (1 - np.exp(supply_apy_advantage)),
+                        plf,
+                    )
+                else:
                     self.consecutive_good_supplies += 1
                     # supply as much as you can
-                    self._supply_withdraw(self.funds_available[plf.asset_name], plf)
+                    self._supply_withdraw(
+                        self.funds_available[plf.asset_name]
+                        * (1 - np.exp(-supply_apy_advantage)),
+                        plf,
+                    )
 
                 # if plf.total_b_tokens != 0:
                 #     assert (
@@ -557,12 +575,12 @@ class PlfPool:
 
     @property
     def supply_apy(self) -> float:
-        _, rs = self.borrow_lend_rates(util_rate=self.utilization_ratio)
+        _, rs = borrow_lend_rates(util_rate=self.utilization_ratio)
         return rs
 
     @property
     def borrow_apy(self) -> float:
-        rb, _ = self.borrow_lend_rates(util_rate=self.utilization_ratio)
+        rb, _ = borrow_lend_rates(util_rate=self.utilization_ratio)
         return rb
 
     @property
@@ -598,21 +616,17 @@ class PlfPool:
         """
         # theoretically unnecessary, but to avoid floating point errors
         if util_rate == 0:
-            return 0.06, 0.03
+            return 0, 0
 
         assert (
             -1e-9 < util_rate
         ), f"utilization ratio must be non-negative, but got {util_rate}"
         constrained_util_rate = max(0, min(util_rate, 0.97))
 
-        # if we don't initiate a positive borrow rate, then nobody will use the protocol
-        # TODO: check if ok
-        borrow_rate = (
-            constrained_util_rate / (rb_factor * (1 - constrained_util_rate)) + 0.06
-        )
+        borrow_rate = constrained_util_rate / (rb_factor * (1 - constrained_util_rate))
         daily_borrow_interest = (1 + borrow_rate) ** (1 / 365) - 1
         daily_supply_interest = daily_borrow_interest * constrained_util_rate
-        supply_rate = ((1 + daily_supply_interest) ** 365 - 1) * (1 - spread) + 0.03
+        supply_rate = ((1 + daily_supply_interest) ** 365 - 1) * (1 - spread)
 
         return borrow_rate, supply_rate
 

@@ -79,6 +79,34 @@ def simulate_gbm(S0, mu, sigma, T, N, seed=None):
     return S
 
 
+def borrow_lend_rates(
+    util_rate: float,
+    spread: float = 0.2,
+    rb_factor: float = 20,
+) -> tuple[float, float]:
+    # TODO: check where to put the factors
+    """
+    calculate borrow and supply rates based on utilization ratio
+    with an arbitrarily-set shape
+    """
+    # theoretically unnecessary, but to avoid floating point errors
+    if util_rate == 0:
+        return 0, 0
+
+    assert (
+        -1e-9 < util_rate
+    ), f"utilization ratio must be non-negative, but got {util_rate}"
+    constrained_util_rate = max(0, min(util_rate, 0.97))
+
+    borrow_rate = constrained_util_rate / (rb_factor * (1 - constrained_util_rate))
+    daily_borrow_interest = (1 + borrow_rate) ** (1 / 365) - 1
+    # this is to make sure that the borrow rate income is able to cover the supply interest expenses
+    daily_supply_interest = daily_borrow_interest * constrained_util_rate
+    supply_rate = ((1 + daily_supply_interest) ** 365 - 1) * (1 - spread)
+
+    return borrow_rate, supply_rate
+
+
 if __name__ == "__main__":
     # plot the time series
     import matplotlib.pyplot as plt
@@ -90,4 +118,15 @@ if __name__ == "__main__":
     plt.title("Geometric Brownian Motion Simulation")
     plt.xlabel("Time Step")
     plt.ylabel("Price")
+    plt.show()
+
+    # test borrow_lend_rates by plotting the rates
+    util_rates = np.linspace(0, 1, 100)
+    borrow_rates, supply_rates = zip(*[borrow_lend_rates(u) for u in util_rates])
+    plt.plot(util_rates, borrow_rates, label="borrow rate")
+    plt.plot(util_rates, supply_rates, label="supply rate")
+    plt.title("Borrow and Supply Rates")
+    plt.xlabel("Utilization Ratio")
+    plt.ylabel("Interest Rate")
+    plt.legend()
     plt.show()
