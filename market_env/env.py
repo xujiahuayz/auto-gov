@@ -238,6 +238,9 @@ class User:
             withdraw_limit = (
                 self.funds_available[plf.interest_token_name] - minimum_supply
             )
+            if withdraw_limit <= 0:
+                # handle some funky rounding errors
+                return
             log_text = f"withdrawing {-amount} {plf.asset_name} when pool has {plf.total_available_funds} {plf.asset_name} at limit {withdraw_limit}"
             amount = max(amount, -withdraw_limit, -plf.total_available_funds)
 

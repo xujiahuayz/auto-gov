@@ -125,7 +125,6 @@ if __name__ == "__main__":
     borrow_rates, supply_rates = zip(*[borrow_lend_rates(u) for u in util_rates])
     plt.plot(util_rates, borrow_rates, label="borrow rate")
     plt.plot(util_rates, supply_rates, label="supply rate")
-    plt.title("Borrow and Supply Rates")
     plt.xlabel("Utilization Ratio")
     plt.ylabel("Interest Rate")
     plt.legend()

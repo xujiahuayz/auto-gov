@@ -12,12 +12,12 @@ sim_env = init_env(
     tkn_volatility=15,
 )
 
-
+number_games = 1_800
 scores, eps_history, states, time_cost = train_env(
     defi_env=sim_env,
     gamma=0.99,
     epsilon=1.0,
-    n_games=1_000,
+    n_games=number_games,
     lr=0.002,
     eps_end=0.01,
     eps_dec=1e-5,
@@ -31,6 +31,7 @@ plot_learning_curve(
     epsilons=eps_history,
     filename=FIGURES_PATH / "test.png",
 )
+
 # plot time series of collateral factor.
 import matplotlib.pyplot as plt
 
@@ -41,20 +42,30 @@ ASSET_COLORS = {
     "usdc": "tab:green",
 }
 
+stable_start = int(0.9 * number_games)
+
+stable_scores = scores[stable_start:]
+# find out the position or index of the median score
+median_score = sorted(stable_scores)[len(stable_scores) // 2]
+# find out the index of the median score
+median_score_index = stable_scores.index(median_score)
+
+example_state = states[stable_start:][median_score_index]
+
 # create a figure with two axes
 fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
 for asset in ["tkn", "weth", "usdc"]:
     # plot the collateral factor on the left axis
     ax1.plot(
-        [state["pools"][asset]["collateral_factor"] for state in states[-1]],
+        [state["pools"][asset]["collateral_factor"] for state in example_state],
         color=ASSET_COLORS[asset],
         label=asset,
     )
     # plot the price on the right axis
 
     ax2.plot(
-        [state["pools"][asset]["price"] for state in states[-1]],
+        [state["pools"][asset]["price"] for state in example_state],
         color=ASSET_COLORS[asset],
         linestyle="dashed",
     )
@@ -74,22 +85,18 @@ for asset in ["tkn", "weth", "usdc"]:
     # plot reserves of each asset in area plot with semi-transparent fill
     ax.fill_between(
         range(len(states[-1])),
-        [state["pools"][asset]["reserve"] for state in states[-1]],
+        [state["pools"][asset]["reserve"] for state in example_state],
         alpha=0.5,
         label=asset,
         color=ASSET_COLORS[asset],
     )
-    # plot total_i_token in line plot
+    # plot utilization ratio
     ax3.plot(
-        [state["pools"][asset]["borrow_apy"] for state in states[-1]],
-        color=ASSET_COLORS[asset],
-        linestyle="dashed",
-    )
-    ax3.plot(
-        [state["pools"][asset]["supply_apy"] for state in states[-1]],
+        [state["pools"][asset]["utilization_ratio"] for state in example_state],
         color=ASSET_COLORS[asset],
         linestyle="dotted",
     )
+    ax3.set_ylabel("utilization ratio")
 
 
 # set the labels
@@ -98,3 +105,12 @@ ax.set_ylabel("reserve")
 
 # set the legend outside the plot
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+# calculate the env's total net position over time
+total_net_position = [state["net_position"] for state in states[-1]]
+
+# plot the total net position
+fig, ax = plt.subplots()
+ax.plot(total_net_position)
+ax.set_xlabel("time")
+ax.set_ylabel("total net position")
