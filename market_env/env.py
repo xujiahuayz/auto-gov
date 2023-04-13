@@ -138,8 +138,8 @@ class User:
         self.funds_available = self._initial_funds_available.copy()
         self.consecutive_good_borrows = 0
         self.consecutive_good_supplies = 0
-        self.safety_borrow_margin = self._initial_safety_borrow_margin
-        self.safety_supply_margin = self._initial_safety_supply_margin
+        self.safety_borrow_buffer = self._initial_safety_borrow_margin
+        self.safety_supply_buffer = self._initial_safety_supply_margin
 
     @property
     def wealth(self) -> float:
@@ -211,7 +211,7 @@ class User:
             # will never supply EVERYTHING - always leave some safety margin
             amount = min(
                 amount,
-                self.funds_available[plf.asset_name] / (1 + self.safety_supply_margin),
+                self.funds_available[plf.asset_name] / (1 + self.safety_supply_buffer),
             )
             if 0 <= amount < 1e-9:
                 return
@@ -256,7 +256,10 @@ class User:
 
         assert (
             self.funds_available[plf.asset_name] >= 0
-        ), "user cannot have negative asset balance"
+        ), "user cannot have negative asset balance but has %s of %s" % (
+            self.funds_available[plf.asset_name],
+            plf.asset_name,
+        )
 
         if plf.total_available_funds < 0:
             raise ValueError("total available funds cannot be negative at \n %s" % plf)
@@ -274,7 +277,7 @@ class User:
             # will never borrow EVERYTHING - always leave some safety margin
             additional_borrowable_amount = (
                 self.max_borrowable_value
-                - self.existing_borrow_value * (1 + self.safety_borrow_margin)
+                - self.existing_borrow_value * (1 + self.safety_borrow_buffer)
             ) / self.env.prices[plf.asset_name]
             amount = max(
                 min(
@@ -369,26 +372,53 @@ class User:
                 print("USER IS DEFAULTING!!! WRITING OFF LOAN")
                 self.env.bad_loan_expenses += self.existing_borrow_value
             else:
-                for plf in self.env.plf_pools.values():
-                    # repay as much as you can
-                    self._borrow_repay(-self.funds_available[plf.asset_name], plf)
+                # start repaying from the one with the highest borrow APY
+                # sort the pools by borrow APY
+                sorted_plf_pools = sorted(
+                    self.env.plf_pools.values(),
+                    key=lambda x: x.borrow_apy,
+                    reverse=True,
+                )
 
-                    if self.existing_borrow_value > self.max_borrowable_value:
-                        self.safety_borrow_margin += 0.05
-                        # inject funds to the user to repay the loan
-                        self.funds_available[plf.asset_name] += (
-                            self.existing_borrow_value * 0.1
-                        )
-                        self._borrow_repay(-self.funds_available[plf.asset_name], plf)
+                while (self.existing_borrow_value > self.max_borrowable_value) and (
+                    sorted_plf_pools
+                ):
+                    plf = sorted_plf_pools.pop(0)
+                    self._borrow_repay(
+                        -(self.existing_borrow_value - self.max_borrowable_value)
+                        * 1.1
+                        / plf.env.prices[plf.asset_name],
+                        plf,
+                    )
+
+                # second round: if repaying does not suffice, inject capital to repay more, note that this will hurt the user's confidence
+                sorted_plf_pools = sorted(
+                    self.env.plf_pools.values(),
+                    key=lambda x: x.borrow_apy,
+                    reverse=True,
+                )
+                while (
+                    self.existing_borrow_value > self.max_borrowable_value
+                ) and sorted_plf_pools:
+                    self.safety_borrow_buffer += 0.1
+                    # inject funds to the user to repay the loan
+                    plf = sorted_plf_pools.pop(0)
+                    self.funds_available[plf.asset_name] += min(
+                        (self.existing_borrow_value - self.max_borrowable_value)
+                        * 1.1
+                        / plf.env.prices[plf.asset_name],
+                        self.funds_available[plf.borrow_token_name],
+                    )
+                    self._borrow_repay(-self.funds_available[plf.asset_name], plf)
                     # if plf.total_b_tokens != 0:
                     #     assert (
                     #         plf.total_i_tokens > 0
                     #     ), f"total i tokens is {plf.total_i_tokens} when total b tokens is {plf.total_b_tokens}"
 
-        if self.consecutive_good_borrows > 20 and self.safety_borrow_margin > 0.05:
-            self.safety_borrow_margin -= 0.05
-        if self.consecutive_good_supplies > 20 and self.safety_supply_margin > 0.05:
-            self.safety_supply_margin -= 0.05
+        if self.consecutive_good_borrows > 20 and self.safety_borrow_buffer > 0.05:
+            self.safety_borrow_buffer -= 0.05
+        if self.consecutive_good_supplies > 20 and self.safety_supply_buffer > 0.05:
+            self.safety_supply_buffer -= 0.05
 
 
 class PlfPool:
@@ -511,7 +541,7 @@ class PlfPool:
         else:
             self.collateral_factor = new_collateral_factor
             for user in self.env.users.values():
-                user.safety_borrow_margin += 0.05
+                user.safety_borrow_buffer += 0.05
             self.update_market()
 
     def keep_collateral_factor(self) -> None:
@@ -529,7 +559,7 @@ class PlfPool:
             self.collateral_factor = new_collateral_factor
             # affect users who are supplying to this pool with higher exposure to default risk
             for user in self.env.users.values():
-                user.safety_supply_margin += 0.05
+                user.safety_supply_buffer += 0.05
             self.update_market()
 
     def update_market(self) -> None:

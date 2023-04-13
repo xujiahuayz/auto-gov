@@ -35,7 +35,7 @@ def init_env(
         asset_name="tkn",
         collateral_factor=initial_collateral_factor,
         initial_asset_volatility=tkn_volatility,
-        seed=42,
+        seed=5,
     )
     usdc_plf = PlfPool(
         env=defi_env,
@@ -44,7 +44,7 @@ def init_env(
         asset_name="usdc",
         collateral_factor=initial_collateral_factor,
         initial_asset_volatility=0.1,
-        seed=3,
+        seed=5,
     )
     weth_plf = PlfPool(
         env=defi_env,
@@ -53,7 +53,7 @@ def init_env(
         asset_name="weth",
         collateral_factor=initial_collateral_factor,
         initial_asset_volatility=0,
-        seed=9,
+        seed=5,
     )
     return defi_env
 
@@ -68,7 +68,7 @@ def train_env(
     eps_dec: float = 5e-5,
     batch_size: int = 128,
     lr: float = 0.003,
-) -> tuple[list[float], list[float], list[list[dict[str, object]]], list[float]]:
+) -> tuple[list[float], list[float], list[list[dict]], list[float]]:
     # initialize environment
     env = ProtocolEnv(defi_env)
 
@@ -148,7 +148,7 @@ def training(
     batch_size: int = 128,
     lr: float = 0.003,
     **kwargs,
-) -> tuple[list[float], list[float], list[list[dict[str, object]]], list[float]]:
+) -> tuple[list[float], list[float], list[list[dict]], list[float]]:
     defi_env = init_env(**kwargs)
     return train_env(
         defi_env=defi_env,
