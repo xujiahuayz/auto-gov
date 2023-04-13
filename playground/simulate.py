@@ -7,13 +7,13 @@ logging.basicConfig(level=logging.INFO)
 
 scores, eps_history, states, time_cost = training(
     initial_collateral_factor=0.7,
-    max_steps=60,
-    n_games=1_500,
+    max_steps=30,
+    n_games=1_200,
     lr=0.02,
     eps_end=0.01,
     eps_dec=1e-4,
     batch_size=64,
-    tkn_volatility=5,
+    tkn_volatility=3,
 )
 
 plot_learning_curve(
@@ -53,3 +53,36 @@ ax2.set_ylabel("price")
 
 # set the legend outside the plot
 ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+
+# initialize the figure
+fig, ax = plt.subplots()
+ax3 = ax.twinx()
+for asset in ["tkn", "weth", "usdc"]:
+    # plot reserves of each asset in area plot with semi-transparent fill
+    ax.fill_between(
+        range(len(states[-1])),
+        [state["pools"][asset]["reserve"] for state in states[-1]],
+        alpha=0.5,
+        label=asset,
+        color=ASSET_COLORS[asset],
+    )
+    # plot total_i_token in line plot
+    ax3.plot(
+        [state["pools"][asset]["borrow_apy"] for state in states[-1]],
+        color=ASSET_COLORS[asset],
+        linestyle="dashed",
+    )
+    ax3.plot(
+        [state["pools"][asset]["supply_apy"] for state in states[-1]],
+        color=ASSET_COLORS[asset],
+        linestyle="dotted",
+    )
+
+
+# set the labels
+ax.set_xlabel("time")
+ax.set_ylabel("reserve")
+
+# set the legend outside the plot
+ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)

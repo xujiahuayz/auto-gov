@@ -598,17 +598,21 @@ class PlfPool:
         """
         # theoretically unnecessary, but to avoid floating point errors
         if util_rate == 0:
-            return 0, 0
+            return 0.06, 0.03
 
         assert (
             -1e-9 < util_rate
         ), f"utilization ratio must be non-negative, but got {util_rate}"
         constrained_util_rate = max(0, min(util_rate, 0.97))
 
-        borrow_rate = constrained_util_rate / (rb_factor * (1 - constrained_util_rate))
+        # if we don't initiate a positive borrow rate, then nobody will use the protocol
+        # TODO: check if ok
+        borrow_rate = (
+            constrained_util_rate / (rb_factor * (1 - constrained_util_rate)) + 0.06
+        )
         daily_borrow_interest = (1 + borrow_rate) ** (1 / 365) - 1
         daily_supply_interest = daily_borrow_interest * constrained_util_rate
-        supply_rate = ((1 + daily_supply_interest) ** 365 - 1) * (1 - spread)
+        supply_rate = ((1 + daily_supply_interest) ** 365 - 1) * (1 - spread) + 0.03
 
         return borrow_rate, supply_rate
 
