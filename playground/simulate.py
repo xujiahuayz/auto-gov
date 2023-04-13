@@ -1,4 +1,5 @@
 import logging
+from market_env.constants import FIGURES_PATH
 from rl.main_gov import init_env, train_env
 from run_results.plotting import plot_learning_curve
 
@@ -8,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 sim_env = init_env(
     max_steps=60,
     initial_collateral_factor=0.7,
-    tkn_volatility=5,
+    tkn_volatility=15,
 )
 
 
@@ -16,18 +17,21 @@ scores, eps_history, states, time_cost = train_env(
     defi_env=sim_env,
     gamma=0.99,
     epsilon=1.0,
-    n_games=1_000,
-    lr=0.001,
+    n_games=1_200,
+    lr=0.002,
     eps_end=0.01,
-    eps_dec=0.999,
+    eps_dec=1e-5,
     batch_size=64,
 )
 
 
 plot_learning_curve(
-    x=range(len(scores)), scores=scores, epsilons=eps_history, filename="test.png"
+    x=range(len(scores)),
+    scores=scores,
+    epsilons=eps_history,
+    filename=FIGURES_PATH / "test.png",
 )
-# plot time series of collateral factor
+# plot time series of collateral factor.
 import matplotlib.pyplot as plt
 
 # color scheme for the three assets

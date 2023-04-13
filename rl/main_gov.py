@@ -1,6 +1,5 @@
 import logging
 import time
-from os import path
 
 import numpy as np
 from market_env.caching import cache
@@ -183,7 +182,10 @@ if __name__ == "__main__":
         lr=0.05,
     )
     x = [i + 1 for i in range(N_GAMES)]
-    filename = path.join(FIGURES_PATH, "defi.png")
     plot_learning_curve(
-        x, training_scores, training_eps_history, filename, "Learning Curve"
+        x,
+        training_scores,
+        training_eps_history,
+        FIGURES_PATH / "test.pdf",
+        "Learning Curve",
     )
