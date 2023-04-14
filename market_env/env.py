@@ -12,11 +12,7 @@ from market_env.constants import (
     INTEREST_TOKEN_PREFIX,
     PENALTY_REWARD,
 )
-from market_env.utils import (
-    PriceDict,
-    borrow_lend_rates,
-    generate_price_series,
-)
+from market_env.utils import PriceDict, borrow_lend_rates
 
 
 class DefiEnv:
@@ -455,14 +451,15 @@ class PlfPool:
         self,
         env: DefiEnv,
         initiator: User,
+        price_trend_func: Callable[
+            [int, int | None], np.ndarray
+        ] = lambda x, y: np.ones(x),
         initial_starting_funds: float = 1000,
         collateral_factor: float = 0.85,
         asset_name: str = "dai",
         competing_supply_apy: float = 0.05,
         competing_borrow_apy: float = 0.15,
-        volatility_func: Callable = lambda x: 0,
-        mu_func: Callable = lambda x: 0,
-        seed: int = 0,
+        seed: int | None = 0,
     ) -> None:
         """
         :param env: the environment in which the liquidity pool is operating
@@ -486,29 +483,17 @@ class PlfPool:
         self.competing_borrow_apy = competing_borrow_apy
         self._initial_collar_factor = collateral_factor
         self._initial_asset_price = self.env.prices[self.asset_name]
-        self.volatility_func = volatility_func
-        self.mu_func = mu_func
         self.seed = seed
         # deterministically generate price history
-        self.asset_price_history = self._initial_asset_price * generate_price_series(
-            mu=mu_func,
-            volatility_func=volatility_func,
-            time_steps=self.env.max_steps,
-            seed=self.seed,
-        )
+        self.price_trend_func = price_trend_func
 
-        # simulate_gbm(
-        #     S0=self._initial_asset_price,
-        #     mu=0,
-        #     sigma=self._initial_asset_volatility,
-        #     T=1,
-        #     N=self.env.max_steps,
-        #     seed=self.seed,
-        # )
         self.reset()
 
     def reset(self):
         self.env.plf_pools[self.asset_name] = self
+        self.asset_price_history = self._initial_asset_price * self.price_trend_func(
+            self.env.max_steps, self.seed
+        )
         self.user_i_tokens: dict[str, float] = {
             self.initiator.name: self.initial_starting_funds
         }

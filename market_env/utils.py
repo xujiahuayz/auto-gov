@@ -43,8 +43,8 @@ class PriceDict(MutableMapping):
 
 
 def generate_price_series(
-    mu: Callable,
-    volatility_func: Callable,
+    mu_func: Callable,
+    sigma_func: Callable,
     time_steps: int,
     seed: int | None = None,
 ) -> np.ndarray:
@@ -71,8 +71,8 @@ def generate_price_series(
     W = np.random.standard_normal(size=time_steps + 1)
     W[0] = 0
     W = np.cumsum(W)
-    sigmas = np.array([volatility_func(t) for t in range(time_steps + 1)])
-    mus = np.array([mu(t) for t in range(time_steps + 1)])
+    sigmas = np.array([sigma_func(t) for t in range(time_steps + 1)])
+    mus = np.array([mu_func(t) for t in range(time_steps + 1)])
 
     drifts = (mus - 0.5 * sigmas**2) * time_array
     diffusion = sigmas * W
@@ -113,8 +113,8 @@ if __name__ == "__main__":
 
     # Generate the price series
     price_series = generate_price_series(
-        mu=lambda t: 0.01 * t / 20,
-        volatility_func=lambda t: 0.2 * t**1.5 / 1000,
+        mu_func=lambda t: 0.01 * t / 20,
+        sigma_func=lambda t: 0.2 * t**1.5 / 1000,
         time_steps=365,
         seed=42,
     )

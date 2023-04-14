@@ -1,15 +1,18 @@
 import logging
+
+import numpy as np
+
 from market_env.constants import FIGURES_PATH
+from market_env.utils import generate_price_series
 from rl.main_gov import bench_env, init_env, train_env
 from run_results.plotting import plot_learning_curve
-
 
 logging.basicConfig(level=logging.INFO)
 
 
 number_steps = 360
 EPSILON_END = 1e-3
-EPSILON_DECAY = 4e-6
+EPSILON_DECAY = 3e-6
 batch_size = 64
 EPSILON_START = 1.0
 number_games = int(
@@ -17,11 +20,29 @@ number_games = int(
 )
 
 
+def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
+    series = generate_price_series(
+        time_steps=time_steps,
+        mu_func=lambda t: 0.01,
+        sigma_func=lambda t: 0.1,
+        seed=seed,
+    )
+    return series
+
+
+states_benchmark = bench_env(
+    defi_env=init_env(
+        max_steps=number_steps,
+        initial_collateral_factor=0.7,
+        tkn_price_trend_func=lambda x, y: tkn_prices(time_steps=x, seed=y),
+    )
+)
+
+
 sim_env = init_env(
     max_steps=number_steps,
     initial_collateral_factor=0.7,
-    tkn_vol_func=lambda t: 0.2 * t**1.5 / 1000,
-    tkn_mu_func=lambda t: 0.01 * t / 20,
+    tkn_price_trend_func=tkn_prices,
 )
 
 
@@ -131,15 +152,6 @@ ax.set_ylabel("total net position")
 ax.set_title("total net position over time: RL")
 
 # plot the benchmark case
-states_benchmark = bench_env(
-    defi_env=init_env(
-        max_steps=number_steps,
-        initial_collateral_factor=0.7,
-        tkn_vol_func=lambda t: 0.2 * t**1.5 / 1000,
-        tkn_mu_func=lambda t: 0.01 * t / 20,
-    )
-)
-
 fig, ax = plt.subplots()
 ax.plot([state["net_position"] for state in states_benchmark])
 ax.set_xlabel("time")

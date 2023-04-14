@@ -7,6 +7,7 @@ from market_env.caching import cache
 
 from market_env.constants import FIGURES_PATH
 from market_env.env import DefiEnv, PlfPool, PriceDict, User
+from market_env.utils import generate_price_series
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from run_results.plotting import plot_learning_curve
@@ -17,8 +18,9 @@ def init_env(
     initial_collateral_factor: float = 0.8,
     init_safety_borrow_margin: float = 0.5,
     init_safety_supply_margin: float = 0.5,
-    tkn_vol_func: Callable = lambda x: 0.1 * x,
-    tkn_mu_func: Callable = lambda x: 0.01 * x,
+    tkn_price_trend_func: Callable[
+        [int, int | None], np.ndarray
+    ] = lambda x, y: np.ones(x),
 ) -> DefiEnv:
     defi_env = DefiEnv(
         prices=PriceDict({"tkn": 1, "usdc": 1, "weth": 1}), max_steps=max_steps
@@ -33,32 +35,30 @@ def init_env(
     tkn_plf = PlfPool(
         env=defi_env,
         initiator=Alice,
+        price_trend_func=tkn_price_trend_func,
         initial_starting_funds=15_000,
         asset_name="tkn",
         collateral_factor=initial_collateral_factor,
-        volatility_func=tkn_vol_func,
-        mu_func=tkn_mu_func,
         seed=5,
     )
     usdc_plf = PlfPool(
         env=defi_env,
         initiator=Alice,
+        price_trend_func=lambda x, y: generate_price_series(
+            time_steps=x, mu_func=lambda t: 0.01, sigma_func=lambda t: 0.1
+        ),
         initial_starting_funds=15_000,
         asset_name="usdc",
         collateral_factor=initial_collateral_factor,
-        volatility_func=lambda x: 0.5,
-        mu_func=lambda x: 0.01,
         seed=5,
     )
     weth_plf = PlfPool(
         env=defi_env,
         initiator=Alice,
+        price_trend_func=lambda x, y: np.ones(x),
         initial_starting_funds=15_000,
         asset_name="weth",
         collateral_factor=initial_collateral_factor,
-        volatility_func=lambda x: 0,
-        mu_func=lambda x: 0.0,
-        seed=5,
     )
     return defi_env
 
