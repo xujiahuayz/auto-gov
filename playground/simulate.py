@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.INFO)
 
 number_steps = 360
 EPSILON_END = 1e-3
-EPSILON_DECAY = 5e-5
+EPSILON_DECAY = 4e-6
 batch_size = 64
 EPSILON_START = 1.0
 number_games = int(
@@ -34,7 +34,7 @@ scores, eps_history, states, time_cost = train_env(
     eps_end=EPSILON_END,
     eps_dec=EPSILON_DECAY,
     batch_size=batch_size,
-    target_net_enabled=True,
+    # target_net_enabled=True,
 )
 
 
@@ -133,9 +133,10 @@ ax.set_title("total net position over time: RL")
 # plot the benchmark case
 states_benchmark = bench_env(
     defi_env=init_env(
-        max_steps=360,
+        max_steps=number_steps,
         initial_collateral_factor=0.7,
-        tkn_volatility=15,
+        tkn_vol_func=lambda t: 0.2 * t**1.5 / 1000,
+        tkn_mu_func=lambda t: 0.01 * t / 20,
     )
 )
 
