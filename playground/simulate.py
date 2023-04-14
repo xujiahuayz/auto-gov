@@ -12,11 +12,11 @@ logging.basicConfig(level=logging.INFO)
 
 number_steps = 360
 EPSILON_END = 1e-3
-EPSILON_DECAY = 3e-6
+EPSILON_DECAY = 2e-6
 batch_size = 64
 EPSILON_START = 1.0
 number_games = int(
-    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100
+    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 2 // 100 * 100
 )
 
 
@@ -28,7 +28,7 @@ def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
         seed=seed,
     )
     # inject sudden price drop
-    series[10] = 0.00001
+    series[10] = 0.000001
     # inject sudden price rise
     series[20] = 20
     return series
@@ -59,7 +59,7 @@ scores, eps_history, states, time_cost = train_env(
     eps_end=EPSILON_END,
     eps_dec=EPSILON_DECAY,
     batch_size=batch_size,
-    # target_net_enabled=True,
+    target_net_enabled=True,
 )
 
 
