@@ -27,6 +27,10 @@ def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
         sigma_func=lambda t: 0.1,
         seed=seed,
     )
+    # inject sudden price drop
+    series[10] = 0.00001
+    # inject sudden price rise
+    series[20] = 20
     return series
 
 
@@ -145,16 +149,14 @@ total_net_position = [state["net_position"] for state in example_state]
 
 # plot the total net position
 fig, ax = plt.subplots()
-ax.plot(total_net_position)
+ax.plot(total_net_position, label="RL")
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
-# title
-ax.set_title("total net position over time: RL")
+
 
 # plot the benchmark case
-fig, ax = plt.subplots()
-ax.plot([state["net_position"] for state in states_benchmark])
+ax.plot([state["net_position"] for state in states_benchmark], label="benchmark")
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
-# title
-ax.set_title("total net position over time: benchmark")
+# legend outside the plot
+ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
