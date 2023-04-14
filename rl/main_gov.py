@@ -78,7 +78,7 @@ def bench_env(defi_env: DefiEnv) -> list[list[dict]]:
     return state_this_game
 
 
-# @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
+@cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
 def train_env(
     defi_env: DefiEnv,
     gamma: float = 0.99,

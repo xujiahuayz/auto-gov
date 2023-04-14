@@ -6,6 +6,14 @@ from run_results.plotting import plot_learning_curve
 
 logging.basicConfig(level=logging.INFO)
 
+
+number_steps = 360
+EPSILON_END = 1e-3
+EPSILON_DECAY = 5e-5
+batch_size = 64
+number_games = int((1 - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100)
+
+
 sim_env = init_env(
     max_steps=360,
     initial_collateral_factor=0.7,
@@ -13,15 +21,13 @@ sim_env = init_env(
     tkn_mu_func=lambda t: 0.01 * t / 20,
 )
 
-EPSILON_END = 1e-3
-EPSILON_DECAY = 1e-5
-number_games = int((1 - EPSILON_END) / EPSILON_DECAY * 1.5 // 100 * 100)
+
 scores, eps_history, states, time_cost = train_env(
     defi_env=sim_env,
     gamma=0.99,
     epsilon=1.0,
     n_games=number_games,
-    lr=0.002,
+    lr=0.001,
     eps_end=EPSILON_END,
     eps_dec=EPSILON_DECAY,
     batch_size=64,
@@ -45,11 +51,11 @@ ASSET_COLORS = {
     "usdc": "tab:green",
 }
 
-stable_start = int(0.9 * number_games)
+stable_start = int(0 * number_games)
 
 stable_scores = scores[stable_start:]
 # find out the position or index of the median score
-median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 5]
+median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 5000]
 # find out the index of the median score
 median_score_index = stable_scores.index(median_score)
 
