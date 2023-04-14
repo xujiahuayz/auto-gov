@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 
@@ -12,7 +12,11 @@ from market_env.constants import (
     INTEREST_TOKEN_PREFIX,
     PENALTY_REWARD,
 )
-from market_env.utils import PriceDict, borrow_lend_rates, simulate_gbm
+from market_env.utils import (
+    PriceDict,
+    borrow_lend_rates,
+    generate_price_series,
+)
 
 
 class DefiEnv:
@@ -456,7 +460,8 @@ class PlfPool:
         asset_name: str = "dai",
         competing_supply_apy: float = 0.05,
         competing_borrow_apy: float = 0.15,
-        initial_asset_volatility: float = 0.1,
+        volatility_func: Callable = lambda x: 0,
+        mu_func: Callable = lambda x: 0,
         seed: int = 0,
     ) -> None:
         """
@@ -480,18 +485,26 @@ class PlfPool:
         self.competing_supply_apy = competing_supply_apy
         self.competing_borrow_apy = competing_borrow_apy
         self._initial_collar_factor = collateral_factor
-        self._initial_asset_volatility = initial_asset_volatility
         self._initial_asset_price = self.env.prices[self.asset_name]
+        self.volatility_func = volatility_func
+        self.mu_func = mu_func
         self.seed = seed
         # deterministically generate price history
-        self.asset_price_history = simulate_gbm(
-            S0=self._initial_asset_price,
-            mu=0,
-            sigma=self._initial_asset_volatility,
-            T=1,
-            N=self.env.max_steps,
+        self.asset_price_history = self._initial_asset_price * generate_price_series(
+            mu=mu_func,
+            volatility_func=volatility_func,
+            time_steps=self.env.max_steps,
             seed=self.seed,
         )
+
+        # simulate_gbm(
+        #     S0=self._initial_asset_price,
+        #     mu=0,
+        #     sigma=self._initial_asset_volatility,
+        #     T=1,
+        #     N=self.env.max_steps,
+        #     seed=self.seed,
+        # )
         self.reset()
 
     def reset(self):
@@ -523,7 +536,6 @@ class PlfPool:
         ] = self.initial_starting_funds
         self.initiator.funds_available[self.borrow_token_name] = 0
         self.env.prices[self.asset_name] = self._initial_asset_price
-        self.asset_volatility: float = self._initial_asset_volatility
 
     def __repr__(self) -> str:
         return (

@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Callable
 
 import numpy as np
 from market_env.caching import cache
@@ -14,9 +15,10 @@ from run_results.plotting import plot_learning_curve
 def init_env(
     max_steps: int = 30,
     initial_collateral_factor: float = 0.8,
-    tkn_volatility: float = 1.5,
     init_safety_borrow_margin: float = 0.5,
     init_safety_supply_margin: float = 0.5,
+    tkn_vol_func: Callable = lambda x: 0.1 * x,
+    tkn_mu_func: Callable = lambda x: 0.01 * x,
 ) -> DefiEnv:
     defi_env = DefiEnv(
         prices=PriceDict({"tkn": 1, "usdc": 1, "weth": 1}), max_steps=max_steps
@@ -34,7 +36,8 @@ def init_env(
         initial_starting_funds=15_000,
         asset_name="tkn",
         collateral_factor=initial_collateral_factor,
-        initial_asset_volatility=tkn_volatility,
+        volatility_func=tkn_vol_func,
+        mu_func=tkn_mu_func,
         seed=5,
     )
     usdc_plf = PlfPool(
@@ -43,7 +46,8 @@ def init_env(
         initial_starting_funds=15_000,
         asset_name="usdc",
         collateral_factor=initial_collateral_factor,
-        initial_asset_volatility=0.1,
+        volatility_func=lambda x: 0.5,
+        mu_func=lambda x: 0.01,
         seed=5,
     )
     weth_plf = PlfPool(
@@ -52,7 +56,8 @@ def init_env(
         initial_starting_funds=15_000,
         asset_name="weth",
         collateral_factor=initial_collateral_factor,
-        initial_asset_volatility=0,
+        volatility_func=lambda x: 0,
+        mu_func=lambda x: 0.0,
         seed=5,
     )
     return defi_env
@@ -73,7 +78,7 @@ def bench_env(defi_env: DefiEnv) -> list[list[dict]]:
     return state_this_game
 
 
-@cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
+# @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
 def train_env(
     defi_env: DefiEnv,
     gamma: float = 0.99,

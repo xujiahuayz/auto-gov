@@ -1,3 +1,4 @@
+from typing import Callable
 import numpy as np
 from collections.abc import MutableMapping
 
@@ -41,42 +42,41 @@ class PriceDict(MutableMapping):
         return f"{self.__dict__}"
 
 
-def simulate_gbm(S0, mu, sigma, T, N, seed=None):
-    """Simulate a time series of prices that follow geometric Brownian motion.
-
-    Parameters
-    ----------
-    S0 : float
-        The initial price of the asset.
-    mu : float
-        The drift coefficient of the asset.
-    sigma : float
-        The volatility coefficient of the asset.
-    T : float
-        The time horizon of the simulation, in years.
-    N : int
-        The number of time steps in the simulation.
-    seed : int, optional
-        Seed for the random number generator. Default is None.
-
-    Returns
-    -------
-    ndarray
-        A 1-dimensional array of length N+1 that contains the simulated prices.
-
+def generate_price_series(
+    mu: Callable,
+    volatility_func: Callable,
+    time_steps: int,
+    seed: int | None = None,
+) -> np.ndarray:
     """
+    Generates a time series of prices following geometric Brownian motion
+    with time-variant volatility.
+
+    Args:
+    drift (float): The constant drift rate of the asset.
+    volatility_func (function): A function that takes in time and returns the
+        volatility of the asset at that time.
+    time_steps (int): The number of time steps to simulate.
+    time_horizon (float): The total time horizon of the simulation.
+
+    Returns:
+    numpy.ndarray: A numpy array of shape (time_steps,) containing the simulated
+    price series.
+    """
+
     if seed is not None:
         np.random.seed(seed)
+    time_array = np.linspace(0, time_steps, time_steps + 1)
 
-    dt = T / N
-    t = np.linspace(0, T, N + 1)
-    W = np.random.standard_normal(size=N + 1)
+    W = np.random.standard_normal(size=time_steps + 1)
     W[0] = 0
-    W = np.cumsum(W) * np.sqrt(dt)
-    drift = (mu - 0.5 * sigma**2) * t
-    diffusion = sigma * W
-    S = S0 * np.exp(drift + diffusion)
-    return S
+    W = np.cumsum(W)
+    sigmas = np.array([volatility_func(t) for t in range(time_steps + 1)])
+    mus = np.array([mu(t) for t in range(time_steps + 1)])
+
+    drifts = (mus - 0.5 * sigmas**2) * time_array
+    diffusion = sigmas * W
+    return np.exp(drifts + diffusion)
 
 
 def borrow_lend_rates(
@@ -111,13 +111,24 @@ if __name__ == "__main__":
     # plot the time series
     import matplotlib.pyplot as plt
 
-    plt.plot(simulate_gbm(S0=1, mu=0.05, sigma=0.2, T=1, N=1000, seed=42))
-    plt.plot(simulate_gbm(S0=1, mu=0.05, sigma=0, T=1, N=1000, seed=42))
-    plt.plot(simulate_gbm(S0=1, mu=0, sigma=0.2, T=1, N=1000, seed=42))
-    plt.plot(simulate_gbm(S0=1, mu=0, sigma=1, T=1, N=1000, seed=42))
-    plt.title("Geometric Brownian Motion Simulation")
-    plt.xlabel("Time Step")
+    # Generate the price series
+    price_series = generate_price_series(
+        mu=lambda t: 0.01 * t / 20,
+        volatility_func=lambda t: 0.2 * t**1.5 / 1000,
+        time_steps=365,
+        seed=42,
+    )
+
+    # Plot the price series
+    plt.plot(price_series)
+    plt.xlabel("Time")
     plt.ylabel("Price")
+    plt.show()
+
+    # plot daily log return of the price series
+    plt.plot(np.diff(np.log(price_series)))
+    plt.xlabel("Time")
+    plt.ylabel("Daily Log Return")
     plt.show()
 
     # test borrow_lend_rates by plotting the rates
