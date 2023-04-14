@@ -88,6 +88,7 @@ def train_env(
     eps_dec: float = 5e-5,
     batch_size: int = 128,
     lr: float = 0.003,
+    target_net_enabled: bool = False,
 ) -> tuple[list[float], list[float], list[list[dict]], list[float]]:
     # initialize environment
     env = ProtocolEnv(defi_env)
@@ -102,6 +103,7 @@ def train_env(
         input_dims=env.observation_space.shape,
         lr=lr,
         eps_dec=eps_dec,
+        target_net_enabled=target_net_enabled,
     )
     # agent = Agent(state_size, action_size)
 

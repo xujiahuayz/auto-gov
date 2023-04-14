@@ -25,6 +25,7 @@ scores, eps_history, states, time_cost = train_env(
     eps_end=EPSILON_END,
     eps_dec=EPSILON_DECAY,
     batch_size=64,
+    target_net_enabled=True,
 )
 
 
