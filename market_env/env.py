@@ -98,14 +98,17 @@ class DefiEnv:
                 case 2:
                     plf.raise_collateral_factor()
 
+        for user in self.users.values():
+            user.reactive_action()
+
     def get_reward(self) -> float:
         if self.net_position < 0:
             self.step = self.max_steps  # end the episode
             return PENALTY_REWARD * len(self.plf_pools)
         return sum(
-            pool_reward
-            if (pool_reward := pool.get_reward()) == PENALTY_REWARD
-            else pool_reward * self.prices[name]
+            pool.reward
+            if pool.reward == PENALTY_REWARD
+            else pool.get_profit() * self.prices[name]
             for name, pool in self.plf_pools.items()
         )
 
@@ -184,9 +187,8 @@ class User:
     @property
     def existing_supply_value(self) -> float:
         return sum(
-            self.funds_available[plf.interest_token_name]
-            * self.env.prices[plf.asset_name]
-            for plf in self.env.plf_pools.values()
+            self.funds_available[plf.interest_token_name] * self.env.prices[name]
+            for name, plf in self.env.plf_pools.items()
         )
 
     @property
@@ -347,7 +349,8 @@ class User:
         """
         supply funds to the liquidity pool in response to market conditions
         """
-
+        for name, plf in self.env.plf_pools.items():
+            assert self.env.prices[name] == plf.asset_price_history[self.env.step]
         if self.existing_borrow_value < self.max_borrowable_value:  # healthy loan
             for plf in self.env.plf_pools.values():
                 borrow_apy_advantage = plf.competing_borrow_apy + 0.01 - plf.borrow_apy
@@ -587,15 +590,14 @@ class PlfPool:
     def update_market(self) -> None:
         self.accrue_daily_interest()
         self.update_asset_price()
-        for user in self.env.users.values():
-            user.reactive_action()
-        self.reward = self.get_profit()
+        self.reward = 0  # reset reward
 
-    def get_reward(self) -> float:
-        """
-        get the difference between the profit gained from this episode and the profit gained from the previous episode
-        """
-        return self.reward
+    # def get_reward(self) -> float:
+    #     """
+    #     get the difference between the profit gained from this episode and the profit gained from the previous episode
+    #     """
+    #     # self.reward = self.get_profit()
+    #     return self.reward
 
     def get_state(self) -> np.ndarray:
         return np.array(

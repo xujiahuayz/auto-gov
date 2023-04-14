@@ -1,5 +1,9 @@
 import logging
 
+# plot time series of collateral factor.
+import matplotlib.pyplot as plt
+
+
 import numpy as np
 
 from market_env.constants import FIGURES_PATH
@@ -10,9 +14,9 @@ from run_results.plotting import plot_learning_curve
 logging.basicConfig(level=logging.INFO)
 
 
-number_steps = 360
+number_steps = 360 * 2
 EPSILON_END = 1e-3
-EPSILON_DECAY = 2e-6
+EPSILON_DECAY = 3e-6
 batch_size = 64
 EPSILON_START = 1.0
 number_games = int(
@@ -24,13 +28,14 @@ def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     series = generate_price_series(
         time_steps=time_steps,
         mu_func=lambda t: 0.01,
-        sigma_func=lambda t: 0.1,
+        sigma_func=lambda t: 0.01,
         seed=seed,
     )
     # inject sudden price drop
-    series[10] = 0.000001
+    for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
+        series[i] = 0.000001
     # inject sudden price rise
-    series[20] = 20
+    series[20] = 90
     return series
 
 
@@ -38,7 +43,7 @@ states_benchmark = bench_env(
     defi_env=init_env(
         max_steps=number_steps,
         initial_collateral_factor=0.7,
-        tkn_price_trend_func=lambda x, y: tkn_prices(time_steps=x, seed=y),
+        tkn_price_trend_func=tkn_prices,
     )
 )
 
@@ -69,9 +74,6 @@ plot_learning_curve(
     epsilons=eps_history,
     filename=FIGURES_PATH / "test.pdf",
 )
-
-# plot time series of collateral factor.
-import matplotlib.pyplot as plt
 
 # color scheme for the three assets
 ASSET_COLORS = {
@@ -149,10 +151,6 @@ total_net_position = [state["net_position"] for state in example_state]
 
 # plot the total net position
 fig, ax = plt.subplots()
-ax.plot(total_net_position, label="RL")
-ax.set_xlabel("time")
-ax.set_ylabel("total net position")
-
 
 # plot the benchmark case
 ax.plot([state["net_position"] for state in states_benchmark], label="benchmark")
@@ -160,3 +158,7 @@ ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # legend outside the plot
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+ax.plot(total_net_position, label="RL")
+ax.set_xlabel("time")
+ax.set_ylabel("total net position")
