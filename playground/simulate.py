@@ -11,11 +11,14 @@ number_steps = 360
 EPSILON_END = 1e-3
 EPSILON_DECAY = 5e-5
 batch_size = 64
-number_games = int((1 - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100)
+EPSILON_START = 1.0
+number_games = int(
+    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100
+)
 
 
 sim_env = init_env(
-    max_steps=360,
+    max_steps=number_steps,
     initial_collateral_factor=0.7,
     tkn_vol_func=lambda t: 0.2 * t**1.5 / 1000,
     tkn_mu_func=lambda t: 0.01 * t / 20,
@@ -25,12 +28,12 @@ sim_env = init_env(
 scores, eps_history, states, time_cost = train_env(
     defi_env=sim_env,
     gamma=0.99,
-    epsilon=1.0,
+    epsilon=EPSILON_START,
     n_games=number_games,
-    lr=0.001,
+    lr=0.0015,
     eps_end=EPSILON_END,
     eps_dec=EPSILON_DECAY,
-    batch_size=64,
+    batch_size=batch_size,
     target_net_enabled=True,
 )
 
