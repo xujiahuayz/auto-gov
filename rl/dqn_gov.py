@@ -22,6 +22,8 @@ class DQN(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
+
+        # if there is a GPU, use it, otherwise use CPU
         self.device = T.device("cuda:0" if T.cuda.is_available() else "cpu")
         self.to(self.device)
 
