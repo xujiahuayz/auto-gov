@@ -2,15 +2,11 @@ import logging
 
 # plot time series of collateral factor.
 import matplotlib.pyplot as plt
-
-
 import numpy as np
 
-from market_env.constants import FIGURES_PATH
 from market_env.utils import generate_price_series
 from rl.main_gov import train_env
 
-# from run_results.plotting import plot_learning_curve
 
 logging.basicConfig(level=logging.INFO)
 
@@ -56,7 +52,17 @@ scores, eps_history, states, time_cost, bench_rewards, bench_states = train_env(
     tkn_price_trend_func=tkn_prices,
 )
 
+# plot scores on the left axis and epsilons on the right axis
+fig, ax1 = plt.subplots()
+ax2 = ax1.twinx()
+ax1.plot(range(len(scores)), scores, color="tab:blue")
+ax2.plot(range(len(eps_history)), eps_history, color="tab:orange")
+# label axes
+ax1.set_xlabel("Game")
+ax1.set_ylabel("Score", color="tab:blue")
+ax2.set_ylabel("Epsilon", color="tab:orange")
 
+plt.show()
 # plot_learning_curve(
 #     x=range(len(scores)),
 #     scores=scores,
@@ -131,10 +137,6 @@ for asset in ["tkn", "weth", "usdc"]:
 # set the labels
 ax.set_xlabel("time")
 ax.set_ylabel("reserve")
-
-# set the legend outside the plot
-ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
-
 # calculate the env's total net position over time
 total_net_position = [state["net_position"] for state in example_state]
 
@@ -142,7 +144,7 @@ total_net_position = [state["net_position"] for state in example_state]
 fig, ax = plt.subplots()
 
 # plot the benchmark case
-ax.plot([state["net_position"] for state in states_benchmark], label="benchmark")
+ax.plot([state["net_position"] for state in bench_states], label="benchmark")
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # legend outside the plot
@@ -151,3 +153,5 @@ ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 ax.plot(total_net_position, label="RL")
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
+# set the legend outside the plot
+ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)

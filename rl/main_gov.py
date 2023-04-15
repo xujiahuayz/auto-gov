@@ -90,7 +90,7 @@ def train_env(
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
             observation = observation_
-            state_this_game.append(env.defi_env.state_summary)
+            state_this_game.append(defi_env.state_summary)
         time_cost.append(time.time() - start_time)
         scores.append(score)
         eps_history.append(agent.epsilon)

@@ -232,7 +232,7 @@ class User:
             self.funds_available[plf.interest_token_name] >= 0
         ), "user cannot have negative interest-bearing asset balance"
 
-        assert plf.reserve >= 0, "reserve cannot be negative"
+        assert plf.reserve >= -1e-9, "reserve cannot be negative"
 
         if amount >= 0:  # supply
             # will never supply EVERYTHING - always leave some safety margin

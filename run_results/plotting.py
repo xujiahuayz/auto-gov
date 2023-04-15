@@ -2,14 +2,12 @@
 Plotting results from training
 """
 
-from pathlib import Path
-from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_learning(scores, filename: str, x=Optional[int], window: int = 5):
+def plot_learning(scores, filename: str, x=int | None, window: int = 5):
     # for policy gradient algorithms
     N = len(scores)
     running_avg = np.empty(N)
@@ -58,59 +56,6 @@ def plot_time_cdf(times1, times2, times3, bin, filename: str):
     plt.show()
     plt.close()
 
-    # scores=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    # epsilons=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    # filename="test.png",
-
-
-def plot_learning_curve(
-    scores: list[float], epsilons: list[float], filename: str | Path, lines=None
-) -> None:
-    fig = plt.figure(figsize=(6, 3.87))
-    ax = fig.add_subplot(111, label="1")
-    ax2 = fig.add_subplot(111, label="2", frame_on=False)
-    x = len(scores)
-    ax.plot(epsilons, color="C0")
-    ax.set_xlabel("Training Steps", color="black")
-    # xlabel and ylabel font size
-    ax.xaxis.label.set_size(13)
-    ax.yaxis.label.set_size(13)
-    ax.set_ylabel("Epsilon", color="C0")
-    ax.tick_params(axis="x", colors="black")
-    ax.tick_params(axis="y", colors="C0")
-    # set x and y ticks font size
-    ax.xaxis.set_tick_params(labelsize=13)
-    ax.yaxis.set_tick_params(labelsize=13)
-
-    running_avg = np.empty(x)
-    for t in range(x):
-        running_avg[t] = np.mean(scores[max(0, t - 50) : (t + 1)])
-
-    ax2.scatter(running_avg, color="C1")
-    ax2.axes.get_xaxis().set_visible(False)
-    ax2.yaxis.tick_right()
-    ax2.set_ylabel("Score", color="C1")
-    ax2.yaxis.label.set_size(13)
-    # set y ticks font size
-    ax2.yaxis.set_tick_params(labelsize=13)
-    # ticks format scientific notation
-    ax2.ticklabel_format(style="sci", scilimits=(0, 0), axis="y")
-    ax2.yaxis.set_label_position("right")
-    ax2.tick_params(axis="y", colors="C1")
-
-    if lines is not None:
-        for line in lines:
-            plt.axvline(x=line)
-
-    plt.tight_layout()
-    plt.savefig(filename)
-    plt.show()
-    plt.close()
-
 
 if __name__ == "__main__":
     pass
-
-    # plot_learning_curve(
-
-    # )

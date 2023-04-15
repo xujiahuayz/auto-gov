@@ -7,8 +7,9 @@ from itertools import product
 
 
 from market_env.constants import FIGURES_PATH
-from rl.main_gov import training
-from run_results.plotting import plot_learning_curve
+from rl.main_gov import train_env
+
+# from run_results.plotting import plot_learning_curve
 
 
 def compute_result(params):
@@ -16,7 +17,7 @@ def compute_result(params):
     logging.info(
         f"Training with initial_collateral_factor={icf}, max_steps={ms}, n_games={n_game}, lr={lr}, eps_end={eps_end}, eps_dec={eps_dec}, batch_size={batch_size}"
     )
-    (scores, eps_history, states, time_cost) = training(
+    (scores, eps_history, states, time_cost, _, _) = train_env(
         initial_collateral_factor=icf,
         max_steps=ms,
         n_games=n_game,
@@ -68,25 +69,25 @@ def save_results(
     return results
 
 
-def plot_results(results: list[dict]) -> None:
-    for result in results:
-        ms = result["max_steps"]
-        icf = result["initial_collateral_factor"]
-        n_game = result["n_games"]
-        lr = result["lr"]
-        scores = result["scores"]
-        eps_history = result["eps_history"]
-        batch_size = result["batch_size"]
-        eps_dec = result["es_dec"]
-        eps_end = result["eps_end"]
+# def plot_results(results: list[dict]) -> None:
+#     for result in results:
+#         ms = result["max_steps"]
+#         icf = result["initial_collateral_factor"]
+#         n_game = result["n_games"]
+#         lr = result["lr"]
+#         scores = result["scores"]
+#         eps_history = result["eps_history"]
+#         batch_size = result["batch_size"]
+#         eps_dec = result["es_dec"]
+#         eps_end = result["eps_end"]
 
-        filename = (
-            FIGURES_PATH
-            / f"defi-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf"
-        )
-        x = [i + 1 for i in range(n_game)]
+#         filename = (
+#             FIGURES_PATH
+#             / f"defi-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf"
+#         )
+#         x = [i + 1 for i in range(n_game)]
 
-        plot_learning_curve(x, scores, eps_history, filename)
+#         plot_learning_curve(x, scores, eps_history, filename)
 
 
 if __name__ == "__main__":
