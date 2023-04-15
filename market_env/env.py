@@ -102,8 +102,9 @@ class DefiEnv:
             user.reactive_action()
 
     def get_reward(self) -> float:
-        if self.net_position < 0:
+        if self.net_position < -1e-9:
             self.step = self.max_steps  # end the episode
+            print("BANKRUPTCY! GAME OVER!")
             return PENALTY_REWARD * len(self.plf_pools)
         return sum(
             pool.reward
@@ -230,6 +231,8 @@ class User:
         assert (
             self.funds_available[plf.interest_token_name] >= 0
         ), "user cannot have negative interest-bearing asset balance"
+
+        assert plf.reserve >= 0, "reserve cannot be negative"
 
         if amount >= 0:  # supply
             # will never supply EVERYTHING - always leave some safety margin
@@ -589,6 +592,7 @@ class PlfPool:
 
     def update_market(self) -> None:
         self.accrue_daily_interest()
+        # TODO: check when to update the price
         self.update_asset_price()
         self.reward = 0  # reset reward
 
@@ -689,6 +693,9 @@ class PlfPool:
         accrue interest to all users in the pool
         record profit
         """
+        assert (
+            self.reserve >= -1e-9
+        ), f"reserve cannot be negative before accrual, but got {self.reserve}"
         for user_name in self.user_i_tokens:
             user_funds = self.env.users[user_name].funds_available
 
@@ -706,6 +713,9 @@ class PlfPool:
 
             # update b token register
             self.user_b_tokens[user_name] = user_funds[self.borrow_token_name]
+        assert (
+            self.reserve >= -1e-9
+        ), f"reserve cannot be negative solely due to accrual, but got {self.reserve}"
 
 
 if __name__ == "__main__":

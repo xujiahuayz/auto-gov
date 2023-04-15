@@ -58,13 +58,19 @@ def plot_time_cdf(times1, times2, times3, bin, filename: str):
     plt.show()
     plt.close()
 
+    # scores=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    # epsilons=[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    # filename="test.png",
 
-def plot_learning_curve(x, scores, epsilons, filename: str | Path, lines=None) -> None:
+
+def plot_learning_curve(
+    scores: list[float], epsilons: list[float], filename: str | Path, lines=None
+) -> None:
     fig = plt.figure(figsize=(6, 3.87))
     ax = fig.add_subplot(111, label="1")
     ax2 = fig.add_subplot(111, label="2", frame_on=False)
-
-    ax.plot(x, epsilons, color="C0")
+    x = len(scores)
+    ax.plot(epsilons, color="C0")
     ax.set_xlabel("Training Steps", color="black")
     # xlabel and ylabel font size
     ax.xaxis.label.set_size(13)
@@ -76,16 +82,13 @@ def plot_learning_curve(x, scores, epsilons, filename: str | Path, lines=None) -
     ax.xaxis.set_tick_params(labelsize=13)
     ax.yaxis.set_tick_params(labelsize=13)
 
-    N = len(scores)
-    running_avg = np.empty(N)
-    for t in range(N):
+    running_avg = np.empty(x)
+    for t in range(x):
         running_avg[t] = np.mean(scores[max(0, t - 50) : (t + 1)])
 
-    ax2.scatter(x, running_avg, color="C1")
+    ax2.scatter(running_avg, color="C1")
     ax2.axes.get_xaxis().set_visible(False)
     ax2.yaxis.tick_right()
-    # # tick rotation
-    # ax2.tick_params(axis="y", rotation=45)
     ax2.set_ylabel("Score", color="C1")
     ax2.yaxis.label.set_size(13)
     # set y ticks font size
@@ -107,3 +110,7 @@ def plot_learning_curve(x, scores, epsilons, filename: str | Path, lines=None) -
 
 if __name__ == "__main__":
     pass
+
+    # plot_learning_curve(
+
+    # )

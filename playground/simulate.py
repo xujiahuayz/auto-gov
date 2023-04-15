@@ -8,8 +8,9 @@ import numpy as np
 
 from market_env.constants import FIGURES_PATH
 from market_env.utils import generate_price_series
-from rl.main_gov import bench_env, init_env, train_env
-from run_results.plotting import plot_learning_curve
+from rl.main_gov import train_env
+
+# from run_results.plotting import plot_learning_curve
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,24 +40,7 @@ def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     return series
 
 
-states_benchmark = bench_env(
-    defi_env=init_env(
-        max_steps=number_steps,
-        initial_collateral_factor=0.7,
-        tkn_price_trend_func=tkn_prices,
-    )
-)
-
-
-sim_env = init_env(
-    max_steps=number_steps,
-    initial_collateral_factor=0.7,
-    tkn_price_trend_func=tkn_prices,
-)
-
-
-scores, eps_history, states, time_cost = train_env(
-    defi_env=sim_env,
+scores, eps_history, states, time_cost, bench_rewards, bench_states = train_env(
     gamma=0.99,
     epsilon=EPSILON_START,
     n_games=number_games,
@@ -65,15 +49,20 @@ scores, eps_history, states, time_cost = train_env(
     eps_dec=EPSILON_DECAY,
     batch_size=batch_size,
     target_net_enabled=True,
+    compared_to_benchmark=True,
+    # args for init_env
+    max_steps=number_steps,
+    initial_collateral_factor=0.7,
+    tkn_price_trend_func=tkn_prices,
 )
 
 
-plot_learning_curve(
-    x=range(len(scores)),
-    scores=scores,
-    epsilons=eps_history,
-    filename=FIGURES_PATH / "test.pdf",
-)
+# plot_learning_curve(
+#     x=range(len(scores)),
+#     scores=scores,
+#     epsilons=eps_history,
+#     filename=FIGURES_PATH / "test.pdf",
+# )
 
 # color scheme for the three assets
 ASSET_COLORS = {

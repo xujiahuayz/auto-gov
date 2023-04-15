@@ -1,87 +1,56 @@
-import collections
+from typing import Any, Callable
 
-import cv2
-import gym
 import numpy as np
 
-
-class RepeatActionAndMaxFrame(gym.Wrapper):
-    def __init__(
-        self, env=None, repeat=4, clip_reward=True, no_ops=0, fire_first=False
-    ):
-        super(RepeatActionAndMaxFrame, self).__init__(env)
-        self.repeat = repeat
-        self.shape = env.observation_space.low.shape
-        self.frame_buffer = np.zeros_like((2, self.shape))
-        self.clip_reward = clip_reward
-        self.no_ops = no_ops
-        self.fire_first = fire_first
-
-    def step(self, action):
-        t_reward = 0.0
-        done = False
-        for i in range(self.repeat):
-            obs, reward, done, info = self.env.step(action)
-            if self.clip_reward:
-                reward = np.clip(np.array([reward]), -1, 1)[0]
-            t_reward += reward
-            idx = i % 2
-            self.frame_buffer[idx] = obs
-            if done:
-                break
-        max_frame = np.maximum(self.frame_buffer[0], self.frame_buffer[1])
-        return max_frame, t_reward, done, info
-
-    def reset(self):
-        obs = self.env.reset()
-        no_ops = np.random.randint(self.no_ops) + 1 if self.no_ops > 0 else 0
-        for _ in range(no_ops):
-            _, _, done, _ = self.env.step(0)
-            if done:
-                self.env.reset()
-        if self.fire_first:
-            assert self.env.unwrapped.get_action_meanings()[1] == "FIRE"
-            obs, _, _, _ = self.env.step(1)
-        self.frame_buffer = np.zeros_like((2, self.shape))
-        self.frame_buffer[0] = obs
-        return obs
+from market_env.env import DefiEnv, PlfPool, User
+from market_env.utils import PriceDict, generate_price_series
 
 
-class PreprocessFrame(gym.ObservationWrapper):
-    def __init__(self, shape, env=None):
-        super(PreprocessFrame, self).__init__(env)
-        self.shape = (shape[2], shape[0], shape[1])
-        self.observation_space = gym.spaces.Box(
-            low=0.0, high=1.0, shape=self.shape, dtype=np.float32
-        )
-
-    def observation(self, obs):
-        new_frame = cv2.cvtColor(obs, cv2.COLOR_RGB2GRAY)
-        resized_screen = cv2.resize(
-            new_frame, self.shape[1:], interpolation=cv2.INTER_AREA
-        )
-        new_obs = np.array(resized_screen, dtype=np.uint8).reshape(self.shape)
-        new_obs = new_obs / 255.0
-        return new_obs
-
-
-class StackFrames(gym.ObservationWrapper):
-    def __init__(self, env, repeat):
-        super(StackFrames, self).__init__(env)
-        self.observation_space = gym.spaces.Box(
-            env.observation_space.low.repeat(repeat, axis=0),
-            env.observation_space.high.repeat(repeat, axis=0),
-            dtype=np.float32,
-        )
-        self.stack = collections.deque(maxlen=repeat)
-
-    def reset(self):
-        self.stack.clear()
-        observation = self.env.reset()
-        for _ in range(self.stack.maxlen):
-            self.stack.append(observation)
-        return np.array(self.stack).reshape(self.observation_space.low.shape)
-
-    def observation(self, observation):
-        self.stack.append(observation)
-        return np.array(self.stack).reshape(self.observation_space.low.shape)
+def init_env(
+    max_steps: int = 30,
+    initial_collateral_factor: float = 0.8,
+    init_safety_borrow_margin: float = 0.5,
+    init_safety_supply_margin: float = 0.5,
+    tkn_price_trend_func: Callable[
+        [int, int | None], np.ndarray
+    ] = lambda x, y: np.ones(x),
+) -> DefiEnv:
+    defi_env = DefiEnv(
+        prices=PriceDict({"tkn": 1, "usdc": 1, "weth": 1}), max_steps=max_steps
+    )
+    Alice = User(
+        name="alice",
+        env=defi_env,
+        funds_available={"tkn": 20_000, "usdc": 20_000, "weth": 20_000},
+        safety_borrow_margin=init_safety_borrow_margin,
+        safety_supply_margin=init_safety_supply_margin,
+    )
+    tkn_plf = PlfPool(
+        env=defi_env,
+        initiator=Alice,
+        price_trend_func=tkn_price_trend_func,
+        initial_starting_funds=15_000,
+        asset_name="tkn",
+        collateral_factor=initial_collateral_factor,
+        seed=5,
+    )
+    usdc_plf = PlfPool(
+        env=defi_env,
+        initiator=Alice,
+        price_trend_func=lambda x, y: generate_price_series(
+            time_steps=x, mu_func=lambda t: 0.01, sigma_func=lambda t: 0.1
+        ),
+        initial_starting_funds=15_000,
+        asset_name="usdc",
+        collateral_factor=initial_collateral_factor,
+        seed=5,
+    )
+    weth_plf = PlfPool(
+        env=defi_env,
+        initiator=Alice,
+        price_trend_func=lambda x, y: np.ones(x),
+        initial_starting_funds=15_000,
+        asset_name="weth",
+        collateral_factor=initial_collateral_factor,
+    )
+    return defi_env

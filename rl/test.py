@@ -86,23 +86,23 @@ class DQNAgent(nn.Module):
 if __name__ == "__main__":
     # initialize market and environment
     market = TestMarket()
-    env = ProtocolEnv(market)
+    _env = ProtocolEnv(market)
 
     # initialize agent
-    state_size = env.observation_space.shape[0]
-    action_size = env.action_space.n
+    state_size = _env.observation_space.shape[0]
+    action_size = _env.action_space.n
     agent = DQNAgent(state_size, action_size)
 
     num_episodes = 10000
     batch_size = 128
 
     for episode in range(num_episodes):
-        state = env.reset()
+        state = _env.reset()
         total_reward = 0
         done = False
         while not done:
             action = agent.act(state)
-            next_state, reward, done, _ = env.step(action)
+            next_state, reward, done, _ = _env.step(action)
             agent.learn(state, action, reward, next_state, done)
             state = next_state
             total_reward += reward

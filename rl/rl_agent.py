@@ -100,11 +100,11 @@ class DQN_Agent:
 if __name__ == "__main__":
     # initialize market and environment
     market = TestMarket()
-    env = ProtocolEnv(market)
+    _env = ProtocolEnv(market)
 
     # initialize agent
-    input_dim = env.observation_space.shape[0]
-    output_dim = env.action_space.n
+    input_dim = _env.observation_space.shape[0]
+    output_dim = _env.action_space.n
     exp_replay_size = 1000
     agent = DQN_Agent(
         seed=1423,
@@ -117,11 +117,11 @@ if __name__ == "__main__":
     # initialize experience replay
     Index = 0
     for i in range(exp_replay_size):
-        obs = env.reset()
+        obs = _env.reset()
         done = False
         while done != False:
-            A = agent.get_action(obs, env.action_space.n, epsilon=1)
-            obs_next, reward, done, _ = env.step(A.item())
+            A = agent.get_action(obs, _env.action_space.n, epsilon=1)
+            obs_next, reward, done, _ = _env.step(A.item())
             agent.collect_experience([obs, A.item(), reward, obs_next])
             obs = obs_next
             index += 1
@@ -135,11 +135,11 @@ if __name__ == "__main__":
     epsilon = 0.4
 
     for i in tqdm(range(episodes)):
-        obs, done, losses, ep_len, rew = env.reset(), False, 0, 0, 0
+        obs, done, losses, ep_len, rew = _env.reset(), False, 0, 0, 0
         while done != True:
             ep_len += 1
-            A = agent.get_action(obs, env.action_space.n, epsilon)
-            obs_next, reward, done, _ = env.step(A.item())
+            A = agent.get_action(obs, _env.action_space.n, epsilon)
+            obs_next, reward, done, _ = _env.step(A.item())
             agent.collect_experience([obs, A.item(), reward, obs_next])
 
             obs = obs_next
