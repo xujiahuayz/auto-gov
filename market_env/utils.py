@@ -43,8 +43,8 @@ class PriceDict(MutableMapping):
 
 
 def generate_price_series(
-    mu_func: Callable,
-    sigma_func: Callable,
+    mu_func: Callable[[float], float],
+    sigma_func: Callable[[float], float],
     time_steps: int,
     seed: int | None = None,
 ) -> np.ndarray:

@@ -21,20 +21,32 @@ number_games = int(
 )
 
 
-def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
+def tkn_prices(time_steps: int, seed: int | None = None, **kwargs) -> np.ndarray:
     series = generate_price_series(
         time_steps=time_steps,
-        mu_func=lambda t: 0.01,
-        sigma_func=lambda t: 0.01,
         seed=seed,
+        **kwargs,
     )
-    # inject sudden price drop
-    for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
-        series[i] = 0.000001
+    # # inject sudden price drop
+    # for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
+    #     series[i] = 0.01
     # inject sudden price rise
-    series[20] = 90
+    # series[20] = 90
     return series
 
+
+series = tkn_prices(
+    time_steps=number_steps,
+    seed=None,
+    mu_func=lambda t: 0.0001,
+    sigma_func=lambda t: 0.05 + ((t - 200) ** 2) ** 0.01 / 20,
+)
+
+# plot tkn price series
+plt.plot(series)
+# plt.plot([0.05 + ((t - 200) ** 2) ** 0.1 / 10 for t in range(300)])
+# fix y range from 0 to 20
+# plt.ylim(0, 15)
 
 scores, eps_history, states, time_cost, bench_rewards, bench_states = train_env(
     gamma=0.99,
@@ -49,7 +61,18 @@ scores, eps_history, states, time_cost, bench_rewards, bench_states = train_env(
     # args for init_env
     max_steps=number_steps,
     initial_collateral_factor=0.7,
-    tkn_price_trend_func=tkn_prices,
+    tkn_price_trend_func=lambda time_steps, _: tkn_prices(
+        time_steps=time_steps,
+        seed=None,
+        mu_func=lambda t: 0.0001,
+        sigma_func=lambda t: 0.05 + ((t - 200) ** 2) ** 0.01 / 20,
+    ),
+    usdc_price_trend_func=lambda time_steps, _: generate_price_series(
+        time_steps=time_steps,
+        seed=None,
+        mu_func=lambda t: 0.0001,
+        sigma_func=lambda t: 0.05,
+    ),
 )
 
 # plot scores on the left axis and epsilons on the right axis

@@ -3,7 +3,7 @@ from typing import Callable
 import numpy as np
 
 from market_env.env import DefiEnv, PlfPool, User
-from market_env.utils import PriceDict, generate_price_series
+from market_env.utils import PriceDict
 
 
 def init_env(
@@ -14,6 +14,11 @@ def init_env(
     tkn_price_trend_func: Callable[
         [int, int | None], np.ndarray
     ] = lambda x, y: np.ones(x),
+    usdc_price_trend_func: Callable[
+        [int, int | None], np.ndarray
+    ] = lambda x, y: np.ones(x),
+    tkn_seed: int | None = None,
+    usdc_seed: int | None = None,
 ) -> DefiEnv:
     defi_env = DefiEnv(
         prices=PriceDict({"tkn": 1, "usdc": 1, "weth": 1}), max_steps=max_steps
@@ -32,18 +37,16 @@ def init_env(
         initial_starting_funds=15_000,
         asset_name="tkn",
         collateral_factor=initial_collateral_factor,
-        seed=5,
+        seed=tkn_seed,
     )
     usdc_plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        price_trend_func=lambda x, y: generate_price_series(
-            time_steps=x, mu_func=lambda t: 0.01, sigma_func=lambda t: 0.1
-        ),
+        price_trend_func=usdc_price_trend_func,
         initial_starting_funds=15_000,
         asset_name="usdc",
         collateral_factor=initial_collateral_factor,
-        seed=5,
+        seed=usdc_seed,
     )
     weth_plf = PlfPool(
         env=defi_env,
