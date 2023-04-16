@@ -1,3 +1,4 @@
+import os
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
@@ -183,3 +184,21 @@ class Agent:
         self.epsilon = (
             self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
         )
+
+
+def save_trained_model(agent: Agent, model_dir: str, model_name: str = "trained_model.pt") -> None:
+    """
+    Save the trained model.
+
+    Args:
+        agent (Agent): The trained DQN agent.
+        model_dir (str): The directory to save the model in.
+        model_name (str, optional): The filename for the saved model. Defaults to "trained_model.pt".
+    """
+    # Ensure the model directory exists
+    os.makedirs(model_dir, exist_ok=True)
+
+    # Save the Q-network's state_dict
+    model_path = os.path.join(model_dir, model_name)
+    T.save(agent.Q_eval.state_dict(), model_path)
+    print(f"Trained model saved to {model_path}")

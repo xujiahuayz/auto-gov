@@ -8,6 +8,7 @@ from market_env.caching import cache
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
+from rl.dqn_gov import save_trained_model
 
 
 def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
@@ -106,8 +107,13 @@ def train_env(
                     agent.epsilon,
                 )
             )
-    return scores, eps_history, states, time_cost, bench_rewards, bench_states
+        
+        # save the trained model
+        model_name = "trained_model.pt" # change to your own name
+        model_dir = "models" # change to your own directory
+        save_trained_model(agent, model_name, model_dir)
 
+    return scores, eps_history, states, time_cost, bench_rewards, bench_states
 
 if __name__ == "__main__":
     # show logging level at info
