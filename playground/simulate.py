@@ -56,23 +56,12 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     return series
 
 
-series = tkn_prices(
-    time_steps=number_steps,
-    seed=None,
-)
-
-# plot tkn price series
-plt.plot(series)
-# plt.plot([0.05 + ((t - 200) ** 2) ** 0.1 / 10 for t in range(300)])
-# fix y range from 0 to 20
-# plt.ylim(0, 15)
-
 (
     scores,
     eps_history,
     states,
     time_cost,
-    bench_states_this_game,
+    bench_states,
     trained_models,
 ) = train_env(
     n_games=number_games,
@@ -85,6 +74,12 @@ plt.plot(series)
     usdc_price_trend_func=usdc_prices,
 )
 
+
+# # check whether the prices are the same
+# tkn_prices = [state["pools"]["tkn"]["price"] for state in bench_states[-1]]
+
+# tkn_prices_2 = [state["pools"]["tkn"]["price"] for state in states[-1]]
+
 # plot scores on the left axis and epsilons on the right axis
 fig, ax1 = plt.subplots()
 ax2 = ax1.twinx()
@@ -96,12 +91,6 @@ ax1.set_ylabel("Score", color="tab:blue")
 ax2.set_ylabel("Epsilon", color="tab:orange")
 
 plt.show()
-# plot_learning_curve(
-#     x=range(len(scores)),
-#     scores=scores,
-#     epsilons=eps_history,
-#     filename=FIGURES_PATH / "test.pdf",
-# )
 
 # color scheme for the three assets
 ASSET_COLORS = {
@@ -110,15 +99,8 @@ ASSET_COLORS = {
     "usdc": "tab:green",
 }
 
-stable_start = int(0 * number_games)
 
-stable_scores = scores[stable_start:]
-# find out the position or index of the median score
-median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 5000]
-# find out the index of the median score
-median_score_index = stable_scores.index(median_score)
-
-example_state = states[stable_start:][median_score_index]
+example_state = states[-1]
 
 # create a figure with two axes
 fig, ax1 = plt.subplots()
@@ -171,13 +153,13 @@ for asset in ["tkn", "weth", "usdc"]:
 ax.set_xlabel("time")
 ax.set_ylabel("reserve")
 # calculate the env's total net position over time
-total_net_position = [state["net_position"] for state in example_state]
+total_net_position = [state["net_position"] for state in states[0]]
 
 # plot the total net position
 fig, ax = plt.subplots()
 
 # plot the benchmark case
-ax.plot([state["net_position"] for state in bench_states_this_game], label="benchmark")
+ax.plot([state["net_position"] for state in bench_states[0]], label="benchmark")
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # legend outside the plot
