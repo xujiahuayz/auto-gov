@@ -202,3 +202,16 @@ def save_trained_model(agent: Agent, model_dir: str, model_name: str = "trained_
     model_path = os.path.join(model_dir, model_name)
     T.save(agent.Q_eval.state_dict(), model_path)
     print(f"Trained model saved to {model_path}")
+
+
+def load_trained_model(agent: Agent, model_path: str) -> None:
+    """
+    Load the trained model.
+
+    Args:
+        agent (Agent): The DQN agent to load the model into.
+        model_path (str): The path to the saved model.
+    """
+    agent.Q_eval.load_state_dict(T.load(model_path))
+    agent.Q_eval.eval()
+    print(f"Trained model loaded from {model_path}")
