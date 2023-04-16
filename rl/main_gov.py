@@ -5,11 +5,9 @@ from typing import Any
 import numpy as np
 
 from market_env.caching import cache
-from rl.dqn_gov import Agent
+from rl.dqn_gov import Agent, load_trained_model, save_trained_model
 from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
-from rl.dqn_gov import save_trained_model
-from rl.dqn_gov import load_trained_model
 
 
 def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
@@ -32,7 +30,7 @@ def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
     return rewards, state_this_game
 
 
-# @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
+@cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
 def train_env(
     gamma: float = 0.99,
     n_games: int = 2_000,
@@ -108,15 +106,18 @@ def train_env(
                     agent.epsilon,
                 )
             )
-        
+
         # save the trained model
-        model_name = "trained_model.pt" # change to your own name
-        model_dir = "models" # change to your own directory
+        model_name = "trained_model.pt"  # change to your own name
+        model_dir = "models"  # change to your own directory
         save_trained_model(agent, model_name, model_dir)
 
     return scores, eps_history, states, time_cost, bench_rewards, bench_states
 
-def inference_with_trained_model(model_path, env: ProtocolEnv, num_episodes: int = 1) -> None:
+
+def inference_with_trained_model(
+    model_path, env: ProtocolEnv, num_episodes: int = 1
+) -> None:
     """
     Interact with the environment using the loaded model.
 
@@ -153,7 +154,7 @@ def inference_with_trained_model(model_path, env: ProtocolEnv, num_episodes: int
             total_reward += reward
 
         print(f"Episode {episode + 1}, Total Reward: {total_reward}")
-        
+
 
 if __name__ == "__main__":
     # show logging level at info

@@ -1,9 +1,10 @@
 import os
+
+import numpy as np
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import numpy as np
 
 
 class DQN(nn.Module):
@@ -186,7 +187,9 @@ class Agent:
         )
 
 
-def save_trained_model(agent: Agent, model_dir: str, model_name: str = "trained_model.pt") -> None:
+def save_trained_model(
+    agent: Agent, model_dir: str, model_name: str = "trained_model.pt"
+) -> None:
     """
     Save the trained model.
 
