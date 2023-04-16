@@ -153,13 +153,13 @@ for asset in ["tkn", "weth", "usdc"]:
 ax.set_xlabel("time")
 ax.set_ylabel("reserve")
 # calculate the env's total net position over time
-total_net_position = [state["net_position"] for state in states[0]]
+total_net_position = [state["net_position"] for state in states[2]]
 
 # plot the total net position
 fig, ax = plt.subplots()
 
 # plot the benchmark case
-ax.plot([state["net_position"] for state in bench_states[0]], label="benchmark")
+ax.plot([state["net_position"] for state in bench_states[2]], label="benchmark")
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # legend outside the plot

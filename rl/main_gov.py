@@ -64,7 +64,8 @@ def train_env(
         **agent_args,
     )
 
-    scores, eps_history, time_cost, states, trained_model, bench_states = (
+    scores, eps_history, time_cost, states, trained_model, bench_states, policies = (
+        [],
         [],
         [],
         [],
@@ -94,6 +95,7 @@ def train_env(
         state_this_game = []
         score = 0
         done = False
+        policy = []
         observation = env.reset()
         start_time = time.time()
         state_this_game.append(defi_env.state_summary)
@@ -107,10 +109,12 @@ def train_env(
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
             score += reward
+            policy.append(action)
             observation = observation_
             state_this_game.append(defi_env.state_summary)
         time_cost.append(time.time() - start_time)
         scores.append(score)
+        policies.append(policy)
         eps_history.append(agent.epsilon)
         states.append(state_this_game)
         trained_model.append(agent.Q_eval.state_dict())
