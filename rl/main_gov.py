@@ -161,6 +161,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     N_GAMES = 20
 
+    def tkn_price_trend_func(x, y):
+        return np.array(range(x + 1))
+
     (
         training_scores,
         training_eps_history,
@@ -176,4 +179,5 @@ if __name__ == "__main__":
         max_steps=30,
         target_net_enabled=True,
         compared_to_benchmark=True,
+        tkn_price_trend_func=tkn_price_trend_func,
     )

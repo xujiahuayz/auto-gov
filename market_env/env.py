@@ -553,7 +553,7 @@ class PlfPool:
 
     def update_asset_price(self) -> None:
         new_price = self.asset_price_history[self.env.step]
-        assert new_price > 0, "asset price cannot be negative"
+        assert new_price >= 0, "asset price cannot be negative"
         self.env.prices[self.asset_name] = new_price
 
     # actions
