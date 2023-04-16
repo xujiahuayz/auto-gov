@@ -12,12 +12,12 @@ logging.basicConfig(level=logging.INFO)
 
 
 number_steps = 360 * 2
-EPSILON_END = 1e-3
+EPSILON_END = 1e-4
 EPSILON_DECAY = 3e-6
 batch_size = 64
 EPSILON_START = 1.0
 number_games = int(
-    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 2 // 100 * 100
+    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100
 )
 
 agent_vars = {
@@ -27,7 +27,7 @@ agent_vars = {
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,
-    "target_net_enabled": True,
+    "target_net_enabled": False,
 }
 
 
@@ -60,6 +60,7 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     scores,
     eps_history,
     states,
+    rewards,
     time_cost,
     bench_states,
     trained_models,
@@ -108,14 +109,14 @@ ax2 = ax1.twinx()
 for asset in ["tkn", "weth", "usdc"]:
     # plot the collateral factor on the left axis
     ax1.plot(
-        [state["pools"][asset]["collateral_factor"] for state in example_state],
+        [state["pools"][asset]["collateral_factor"] for state in states[-10]],
         color=ASSET_COLORS[asset],
         label=asset,
     )
     # plot the price on the right axis
 
     ax2.plot(
-        [state["pools"][asset]["price"] for state in example_state],
+        [state["pools"][asset]["price"] for state in states[-10]],
         color=ASSET_COLORS[asset],
         linestyle="dashed",
     )
@@ -153,13 +154,13 @@ for asset in ["tkn", "weth", "usdc"]:
 ax.set_xlabel("time")
 ax.set_ylabel("reserve")
 # calculate the env's total net position over time
-total_net_position = [state["net_position"] for state in states[2]]
+total_net_position = [state["net_position"] for state in states[-1]]
 
 # plot the total net position
 fig, ax = plt.subplots()
 
 # plot the benchmark case
-ax.plot([state["net_position"] for state in bench_states[2]], label="benchmark")
+ax.plot([state["net_position"] for state in bench_states[-1]], label="benchmark")
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # legend outside the plot

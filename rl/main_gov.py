@@ -48,6 +48,7 @@ def train_env(
     list[float],
     list[float],
     list[list[dict[str, Any]]],
+    list[list[float]],
     list[float],
     list[list[dict[str, Any]]],
     list[dict[str, Any]],
@@ -64,7 +65,17 @@ def train_env(
         **agent_args,
     )
 
-    scores, eps_history, time_cost, states, trained_model, bench_states, policies = (
+    (
+        scores,
+        eps_history,
+        time_cost,
+        states,
+        trained_model,
+        bench_states,
+        policies,
+        rewards,
+    ) = (
+        [],
         [],
         [],
         [],
@@ -96,6 +107,7 @@ def train_env(
         score = 0
         done = False
         policy = []
+        reward_this_game = []
         observation = env.reset()
         start_time = time.time()
         state_this_game.append(defi_env.state_summary)
@@ -110,6 +122,7 @@ def train_env(
             agent.learn()
             score += reward
             policy.append(action)
+            reward_this_game.append(reward)
             observation = observation_
             state_this_game.append(defi_env.state_summary)
         time_cost.append(time.time() - start_time)
@@ -117,6 +130,7 @@ def train_env(
         policies.append(policy)
         eps_history.append(agent.epsilon)
         states.append(state_this_game)
+        rewards.append(reward_this_game)
         trained_model.append(agent.Q_eval.state_dict())
 
         chunk_size = 50
@@ -137,6 +151,7 @@ def train_env(
         scores,
         eps_history,
         states,
+        rewards,
         time_cost,
         bench_states,
         trained_model,
