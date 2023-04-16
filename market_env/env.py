@@ -109,8 +109,8 @@ class DefiEnv:
         return sum(
             pool.reward
             if pool.reward == PENALTY_REWARD
-            else pool.get_profit() * self.prices[name]
-            for name, pool in self.plf_pools.items()
+            else pool.get_profit()  # profit is already in monetary value * self.prices[name]
+            for _, pool in self.plf_pools.items()
         )
 
     def get_state(self) -> np.ndarray:
@@ -619,9 +619,16 @@ class PlfPool:
         )
 
     def get_profit(self) -> float:
+        current_time = self.env.step
+        if current_time == 0:
+            return 0
         previous_reserve = self.previous_reserve
         self.previous_reserve = self.reserve
-        return self.reserve - previous_reserve
+        # NOTE: we factor in the price change
+        return (
+            self.reserve * self.asset_price_history[current_time]
+            - previous_reserve * self.asset_price_history[current_time - 1]
+        )
 
     @property
     def utilization_ratio(self) -> float:

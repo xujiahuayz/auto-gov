@@ -20,6 +20,16 @@ number_games = int(
     (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 2 // 100 * 100
 )
 
+agent_vars = {
+    "gamma": 0.99,
+    "epsilon": EPSILON_START,
+    "lr": 0.0015,
+    "eps_end": EPSILON_END,
+    "eps_dec": EPSILON_DECAY,
+    "batch_size": batch_size,
+    "target_net_enabled": True,
+}
+
 
 def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     series = generate_price_series(
@@ -57,16 +67,17 @@ plt.plot(series)
 # fix y range from 0 to 20
 # plt.ylim(0, 15)
 
-scores, eps_history, states, time_cost, bench_rewards, bench_states = train_env(
-    gamma=0.99,
-    epsilon=EPSILON_START,
+(
+    scores,
+    eps_history,
+    states,
+    time_cost,
+    bench_states_this_game,
+    trained_models,
+) = train_env(
     n_games=number_games,
-    lr=0.0015,
-    eps_end=EPSILON_END,
-    eps_dec=EPSILON_DECAY,
-    batch_size=batch_size,
-    target_net_enabled=True,
     compared_to_benchmark=True,
+    agent_args=agent_vars,
     # args for init_env
     max_steps=number_steps,
     initial_collateral_factor=0.7,
@@ -166,7 +177,7 @@ total_net_position = [state["net_position"] for state in example_state]
 fig, ax = plt.subplots()
 
 # plot the benchmark case
-ax.plot([state["net_position"] for state in bench_states], label="benchmark")
+ax.plot([state["net_position"] for state in bench_states_this_game], label="benchmark")
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # legend outside the plot

@@ -1,11 +1,11 @@
 import logging
 import time
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 
 from market_env.caching import cache
-from rl.dqn_gov import Agent, load_trained_model, save_trained_model
+from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
 
@@ -32,46 +32,65 @@ def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
 
 @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
 def train_env(
-    gamma: float = 0.99,
+    agent_args: dict[str, Any],
     n_games: int = 2_000,
-    epsilon: float = 1,
-    eps_end: float = 0.01,
-    eps_dec: float = 5e-5,
-    batch_size: int = 128,
-    lr: float = 0.003,
-    target_net_enabled: bool = False,
     compared_to_benchmark: bool = True,
-    **kwargs,
+    tkn_price_trend_func: Callable[
+        [int, int | None], np.ndarray
+    ] = lambda x, y: np.ones(x),
+    usdc_price_trend_func: Callable[
+        [int, int | None], np.ndarray
+    ] = lambda x, y: np.ones(x),
+    tkn_seed: int | None = None,
+    usdc_seed: int | None = None,
+    **add_env_kwargs,
 ) -> tuple[
     list[float],
     list[float],
-    list[list[dict]],
+    list[list[dict[str, Any]]],
     list[float],
-    list[float],
+    list[list[dict[str, Any]]],
     list[dict[str, Any]],
 ]:
     # initialize environment
-    defi_env = init_env(**kwargs)
+    defi_env = init_env(**add_env_kwargs)
     env = ProtocolEnv(defi_env)
 
-    bench_rewards, bench_states = bench_env(**kwargs)
+    agent_args["n_actions"] = env.action_space.n
+    agent_args["input_dims"] = env.observation_space.shape
 
     # initialize agent
     agent = Agent(
-        gamma=gamma,
-        epsilon=epsilon,
-        batch_size=batch_size,
-        n_actions=env.action_space.n,
-        eps_end=eps_end,
-        input_dims=env.observation_space.shape,
-        lr=lr,
-        eps_dec=eps_dec,
-        target_net_enabled=target_net_enabled,
+        **agent_args,
     )
 
-    scores, eps_history, time_cost, states = [], [], [], []
+    scores, eps_history, time_cost, states, trained_model, bench_states = (
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
 
     for i in range(n_games):
+        # pre-generate price trend to make sure that the same price trend is used for both envs
+        tkn_price_trend_this_game = tkn_price_trend_func(defi_env.max_steps, tkn_seed)
+        usdc_price_trend_this_game = usdc_price_trend_func(
+            defi_env.max_steps, usdc_seed
+        )
+        bench_rewards, bench_states_this_game = bench_env(
+            tkn_price_trend_func=lambda t, s: tkn_price_trend_this_game,
+            usdc_price_trend_func=lambda t, s: usdc_price_trend_this_game,
+            **add_env_kwargs,
+        )
+        bench_states.append(bench_states_this_game)
+        defi_env.plf_pools[
+            "tkn"
+        ].price_trend_func = lambda t, s: tkn_price_trend_this_game
+        defi_env.plf_pools[
+            "usdc"
+        ].price_trend_func = lambda t, s: usdc_price_trend_this_game
         state_this_game = []
         score = 0
         done = False
@@ -84,39 +103,47 @@ def train_env(
             # this checks done or not
 
             observation_, reward, done, _ = env.step(action)
-            score += reward - (
-                bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
-            )
+            reward -= bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
+            score += reward
             observation = observation_
             state_this_game.append(defi_env.state_summary)
         time_cost.append(time.time() - start_time)
         scores.append(score)
         eps_history.append(agent.epsilon)
         states.append(state_this_game)
+        trained_model.append(agent.Q_eval.state_dict())
 
-        avg_score = np.mean(scores[-30:])
-        if i % 50 == 0:
+        chunk_size = 50
+
+        avg_score = np.mean(scores[-chunk_size:])
+        if i % chunk_size == 0:
             logging.info(
-                "episode: {}, score: {:.2f}, average score: {:.2f}, epsilon: {:.2f}".format(
+                "episode: {}, score: {:.2f}, average last {} scores : {:.2f}, epsilon: {:.2f}".format(
                     i,
+                    chunk_size,
                     score,
                     avg_score,
                     agent.epsilon,
                 )
             )
 
-        # save the trained model
-        model_name = "trained_model.pt"  # change to your own name
-        model_dir = "models"  # change to your own directory
-        save_trained_model(agent, model_name, model_dir)
-
-    return scores, eps_history, states, time_cost, bench_rewards, bench_states
+    return (
+        scores,
+        eps_history,
+        states,
+        time_cost,
+        bench_states,
+        trained_model,
+    )
 
 
 def inference_with_trained_model(
-    model_path, env: ProtocolEnv, num_episodes: int = 1
+    model: dict[str, Any],
+    env: ProtocolEnv,
+    agent_args: dict[str, Any],
+    num_test_episodes: int = 1,
 ) -> None:
     """
     Interact with the environment using the loaded model.
@@ -127,33 +154,23 @@ def inference_with_trained_model(
         num_episodes (int, optional): The number of episodes to run. Defaults to 1.
     """
     # Create an agent with the same settings as during training
-    agent = Agent(
-        gamma=0.99,
-        epsilon=0,
-        batch_size=128,
-        n_actions=env.action_space.n,
-        input_dims=env.observation_space.shape,
-        lr=0.003,
-    )
-
-    # Load the trained model into the agent
-    load_trained_model(agent, model_path)
-
-    # Switch the model to evaluation mode
-    agent.Q_eval.eval()
+    agent_args["n_actions"] = env.action_space.n
+    agent_args["input_dims"] = env.observation_space.shape
+    agent = Agent(**agent_args)
+    agent.Q_eval.load_state_dict(model)
 
     # Run the specified number of episodes
-    for episode in range(num_episodes):
+    for episode in range(num_test_episodes):
         observation = env.reset()
         done = False
-        total_reward = 0
+        score = 0
 
         while not done:
             action = agent.choose_action(observation.astype(np.float32))
             observation, reward, done, _ = env.step(action)
-            total_reward += reward
+            score += reward
 
-        print(f"Episode {episode + 1}, Total Reward: {total_reward}")
+        print(f"Episode {episode + 1}, score of this episode: {score}")
 
 
 if __name__ == "__main__":
@@ -164,20 +181,43 @@ if __name__ == "__main__":
     def tkn_price_trend_func(x, y):
         return np.array(range(x + 1))
 
+    agent_vars = {
+        "eps_dec": 0,
+        "eps_end": 0.01,
+        "lr": 0.05,
+        "gamma": 0.99,
+        "epsilon": 1,
+        "batch_size": 128,
+        "target_net_enabled": True,
+    }
+
     (
         training_scores,
         training_eps_history,
         training_states,
         training_time_cost,
-        training_bench_rewards,
         training_bench_states,
+        training_models,
     ) = train_env(
+        agent_args=agent_vars,
         n_games=N_GAMES,
-        eps_dec=0,
-        lr=0.05,
         initial_collateral_factor=0.75,
         max_steps=30,
-        target_net_enabled=True,
         compared_to_benchmark=True,
         tkn_price_trend_func=tkn_price_trend_func,
+    )
+
+    test_env = init_env(
+        initial_collateral_factor=0.75,
+        max_steps=20,
+        tkn_price_trend_func=tkn_price_trend_func,
+    )
+
+    test_protocol_env = ProtocolEnv(test_env)
+
+    inference_with_trained_model(
+        model=training_models[-1],
+        env=test_protocol_env,
+        agent_args=agent_vars,
+        num_test_episodes=3,
     )
