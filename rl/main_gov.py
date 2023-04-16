@@ -120,10 +120,10 @@ def train_env(
         avg_score = np.mean(scores[-chunk_size:])
         if i % chunk_size == 0:
             logging.info(
-                "episode: {}, score: {:.2f}, average last {} scores : {:.2f}, epsilon: {:.2f}".format(
+                "episode: {}, score: {:.2f}, average last {} scores: {:.2f}, epsilon: {:.2f}".format(
                     i,
-                    chunk_size,
                     score,
+                    chunk_size,
                     avg_score,
                     agent.epsilon,
                 )
