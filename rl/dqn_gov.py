@@ -112,8 +112,8 @@ class Agent:
 
         self.mem_cntr += 1
 
-    def choose_action(self, observation) -> int:
-        if np.random.random() > self.epsilon:
+    def choose_action(self, observation, evaluate=False) -> int:
+        if np.random.random() > self.epsilon or evaluate:
             state = T.tensor(np.array([observation])).to(self.Q_eval.device)
             actions = self.Q_eval.forward(state)
             action = int(T.argmax(actions).item())

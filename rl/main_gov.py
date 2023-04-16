@@ -9,6 +9,7 @@ from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
 from rl.dqn_gov import save_trained_model
+from rl.dqn_gov import load_trained_model
 
 
 def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
@@ -114,6 +115,45 @@ def train_env(
         save_trained_model(agent, model_name, model_dir)
 
     return scores, eps_history, states, time_cost, bench_rewards, bench_states
+
+def inference_with_trained_model(model_path, env: ProtocolEnv, num_episodes: int = 1) -> None:
+    """
+    Interact with the environment using the loaded model.
+
+    Args:
+        model_path: The path of the saved model.
+        env (ProtocolEnv): The environment to interact with.
+        num_episodes (int, optional): The number of episodes to run. Defaults to 1.
+    """
+    # Create an agent with the same settings as during training
+    agent = Agent(
+        gamma=0.99,
+        epsilon=0,
+        batch_size=128,
+        n_actions=env.action_space.n,
+        input_dims=env.observation_space.shape,
+        lr=0.003,
+    )
+
+    # Load the trained model into the agent
+    load_trained_model(agent, model_path)
+
+    # Switch the model to evaluation mode
+    agent.Q_eval.eval()
+
+    # Run the specified number of episodes
+    for episode in range(num_episodes):
+        observation = env.reset()
+        done = False
+        total_reward = 0
+
+        while not done:
+            action = agent.choose_action(observation.astype(np.float32))
+            observation, reward, done, _ = env.step(action)
+            total_reward += reward
+
+        print(f"Episode {episode + 1}, Total Reward: {total_reward}")
+        
 
 if __name__ == "__main__":
     # show logging level at info
