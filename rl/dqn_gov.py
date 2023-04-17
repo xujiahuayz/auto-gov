@@ -194,7 +194,7 @@ class Agent:
         self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
 
-        if self.target_net_enabled:
+        if self.target_switch_on:
             self.update_counter += 1
             if self.update_counter % self.target_update == 0:
                 self.Q_target.load_state_dict(self.Q_eval.state_dict())
