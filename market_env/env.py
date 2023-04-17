@@ -360,9 +360,9 @@ class User:
 
         if self.existing_borrow_value >= self.existing_supply_value > 0:
             # not worth repaying the loan, prefer defaulting
-            print("USER IS DEFAULTING!!! WRITING OFF LOAN")
+            logging.debug("USER IS DEFAULTING!!! WRITING OFF LOAN")
             self.env.bad_loan_expenses += self.existing_borrow_value
-            return [("default", 0)]
+            return [("default", 0, "all")]
 
         user_funds = self.funds_available
 

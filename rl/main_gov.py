@@ -96,6 +96,9 @@ def train_env(
             usdc_price_trend_func=lambda t, s: usdc_price_trend_this_game,
             **add_env_kwargs,
         )
+
+        # extend bench_rewards with 0 to match the length of the game (max_steps)
+        bench_rewards.extend([0.0] * (defi_env.max_steps + 1 - len(bench_rewards)))
         bench_states.append(bench_states_this_game)
         defi_env.plf_pools[
             "tkn"
@@ -117,7 +120,7 @@ def train_env(
             # this checks done or not
 
             observation_, reward, done, _ = env.step(action)
-            reward -= bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
+            reward -= bench_rewards[defi_env.step] if compared_to_benchmark else 0
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
             score += reward
