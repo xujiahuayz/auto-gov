@@ -140,14 +140,18 @@ class Agent:
         return action
 
     def learn(self) -> None:
+        # if there is not enough memory, do not learn
         if self.mem_cntr < self.batch_size:
             return
 
+        # set the gradients of all the model parameters (weights and biases) in the Q_eval network to zero.
         self.Q_eval.optimizer.zero_grad()
 
+        # sample a batch of transitions
         max_mem = min(self.mem_cntr, self.mem_size)
         batch = np.random.choice(max_mem, self.batch_size, replace=False)
 
+        # create an index for each element of the current batch
         batch_index = np.arange(self.batch_size, dtype=np.int32)
 
         # # print("=====")
@@ -176,6 +180,7 @@ class Agent:
 
         q_target = reward_batch + self.gamma * T.max(q_next, dim=1)[0]
 
+        # calculate the loss
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
         loss.backward()
         self.loss_list.append(loss.item())
@@ -186,6 +191,7 @@ class Agent:
             if self.update_counter % self.target_update == 0:
                 self.Q_target.load_state_dict(self.Q_eval.state_dict())
 
+        # update epsilon
         self.epsilon = (
             self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
         )
