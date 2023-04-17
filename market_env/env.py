@@ -377,8 +377,10 @@ class User:
             supply_advantage_multiplier = (
                 2 / (1 + np.exp(-supply_apy_advantage * 5))
             ) - 1
-            collateral_factor_multiplier = (
-                2 * collateral_factor_advantage / (1 - plf.competing_borrow_apy) - 1
+            collateral_factor_multiplier = collateral_factor_advantage / (
+                plf.competing_collateral_factor
+                if collateral_factor_advantage < 0
+                else (1 - plf.competing_collateral_factor)
             )
 
             agg_advantage_multiplier = (
@@ -528,6 +530,7 @@ class PlfPool:
         self._collateral_factor: float = self._initial_collar_factor
         self.previous_reserve: float = 0.0
         self.previous_profit: float = 0.0
+        self.previous_profit: float = 0.0
         self.reward: float = 0.0
 
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
@@ -639,17 +642,25 @@ class PlfPool:
             ]
         )
 
-    def get_profit(self) -> float:
+    def get_one_step_profit(self) -> float:
         current_time = self.env.step
         if current_time == 0:
             return 0
         previous_reserve = self.previous_reserve
         self.previous_reserve = self.reserve
-        # NOTE: we factor in the price change
         return (
             self.reserve * self.asset_price_history[current_time]
             - previous_reserve * self.asset_price_history[current_time - 1]
         )
+
+    def get_profit(self) -> float:
+        current_time = self.env.step
+        if current_time == 0:
+            return 0
+        current_profit = self.get_one_step_profit()
+        profit_diff = current_profit - self.previous_profit
+        self.previous_profit = current_profit
+        return profit_diff
 
     @property
     def utilization_ratio(self) -> float:

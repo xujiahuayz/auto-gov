@@ -12,7 +12,7 @@ def init_env(
     init_safety_borrow_margin: float = 0.5,
     init_safety_supply_margin: float = 0.5,
     tkn_price_trend_func: Callable[
-        [int, int | None], np.ndarray
+        [float, int | None], np.ndarray
     ] = lambda x, y: np.ones(x),
     usdc_price_trend_func: Callable[
         [int, int | None], np.ndarray
