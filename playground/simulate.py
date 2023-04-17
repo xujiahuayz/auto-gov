@@ -117,14 +117,17 @@ ax2 = ax1.twinx()
 for asset in ["tkn", "weth", "usdc"]:
     # plot the collateral factor on the left axis
     ax1.plot(
-        [state["pools"][asset]["collateral_factor"] for state in states[-10]],
+        [
+            state["pools"][asset]["collateral_factor"]
+            for state in states[median_score_index]
+        ],
         color=ASSET_COLORS[asset],
         label=asset,
     )
     # plot the price on the right axis
 
     ax2.plot(
-        [state["pools"][asset]["price"] for state in states[-10]],
+        [state["pools"][asset]["price"] for state in states[median_score_index]],
         color=ASSET_COLORS[asset],
         linestyle="dashed",
     )

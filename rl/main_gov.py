@@ -218,7 +218,7 @@ if __name__ == "__main__":
         "gamma": 0.99,
         "epsilon": 1,
         "batch_size": 128,
-        "target_net_enabled": True,
+        # "target_switch_on": 0.9,
     }
 
     (

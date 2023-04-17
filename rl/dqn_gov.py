@@ -51,7 +51,7 @@ class Agent:
         eps_dec: float = 5e-5,
         layer1_size: int = 256,
         layer2_size: int = 256,
-        target_net_enabled: bool = False,
+        target_switch_on: int | None = None,
         target_update: int = 100,
     ):
         self.gamma = gamma
@@ -75,7 +75,8 @@ class Agent:
             fc2_dims=layer2_size,
         )
 
-        self.target_net_enabled = target_net_enabled
+        self.target_switch_on = target_switch_on
+
         if self.target_net_enabled:
             self.Q_target = DQN(
                 self.lr,
@@ -96,6 +97,16 @@ class Agent:
         self.reward_memory = np.zeros(self.mem_size, dtype=np.float32)
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
         self.loss_list = []
+
+    @property
+    def target_net_enabled(self) -> bool:
+        if self.target_switch_on:
+            return (
+                self.epsilon
+                < self.epsilon_start
+                - (self.epsilon_start - self.eps_min) * self.target_switch_on
+            )
+        return False
 
     def store_transition(self, state, action, reward, state_, done: bool) -> None:
         index = self.mem_cntr % self.mem_size
@@ -170,10 +181,7 @@ class Agent:
         q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
         # if self.target_net_enabled, Double DQN with target network enabled
         if self.target_net_enabled:
-            if self.target_net_judgement():
-                q_next = self.Q_target.forward(new_state_batch)
-            else:
-                q_next = self.Q_eval.forward(new_state_batch)
+            q_next = self.Q_target.forward(new_state_batch)
         else:
             q_next = self.Q_eval.forward(new_state_batch)
         q_next[terminal_batch] = 0.0
@@ -195,15 +203,6 @@ class Agent:
         self.epsilon = (
             self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
         )
-
-    def target_net_judgement(self) -> bool:
-        if (
-            self.epsilon
-            < self.epsilon_start - (self.epsilon_start - self.eps_min) * 0.8
-        ):
-            return True
-        else:
-            return False
 
 
 def save_trained_model(
