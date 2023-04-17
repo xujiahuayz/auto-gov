@@ -56,6 +56,7 @@ class Agent:
     ):
         self.gamma = gamma
         self.epsilon = epsilon
+        self.epsilon_start = epsilon
         self.eps_min = eps_end
         self.eps_dec = eps_dec
         self.input_dims = input_dims
@@ -165,7 +166,10 @@ class Agent:
         q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
         # if self.target_net_enabled, Double DQN with target network enabled
         if self.target_net_enabled:
-            q_next = self.Q_target.forward(new_state_batch)
+            if self.target_net_judgement():
+                q_next = self.Q_target.forward(new_state_batch)
+            else:
+                q_next = self.Q_eval.forward(new_state_batch)
         else:
             q_next = self.Q_eval.forward(new_state_batch)
         q_next[terminal_batch] = 0.0
@@ -185,6 +189,15 @@ class Agent:
         self.epsilon = (
             self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
         )
+
+    def target_net_judgement(self) -> bool:
+        if (
+            self.epsilon
+            < self.epsilon_start - (self.epsilon_start - self.eps_min) * 0.8
+        ):
+            return True
+        else:
+            return False
 
 
 def save_trained_model(
