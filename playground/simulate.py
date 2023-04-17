@@ -13,11 +13,11 @@ logging.basicConfig(level=logging.INFO)
 
 number_steps = 360 * 2
 EPSILON_END = 1e-4
-EPSILON_DECAY = 3e-6
+EPSILON_DECAY = 1e-6
 batch_size = 64
 EPSILON_START = 1.0
 number_games = int(
-    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100
+    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 5 // 100 * 100
 )
 
 agent_vars = {
@@ -27,7 +27,7 @@ agent_vars = {
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,
-    "target_net_enabled": False,
+    "target_net_enabled": True,
 }
 
 
@@ -101,7 +101,15 @@ ASSET_COLORS = {
 }
 
 
-example_state = states[-1]
+stable_start = int(0 * number_games)
+
+stable_scores = scores[stable_start:]
+# find out the position or index of the median score
+median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 50000]
+# find out the index of the median score
+median_score_index = stable_scores.index(median_score)
+
+example_state = states[stable_start:][median_score_index]
 
 # create a figure with two axes
 fig, ax1 = plt.subplots()
@@ -154,13 +162,17 @@ for asset in ["tkn", "weth", "usdc"]:
 ax.set_xlabel("time")
 ax.set_ylabel("reserve")
 # calculate the env's total net position over time
-total_net_position = [state["net_position"] for state in states[-1]]
+total_net_position = [state["net_position"] for state in states[median_score_index]]
 
 # plot the total net position
 fig, ax = plt.subplots()
 
 # plot the benchmark case
-ax.plot([state["net_position"] for state in bench_states[-1]], label="benchmark")
+ax.plot(
+    [state["net_position"] for state in bench_states[median_score_index]],
+    label="benchmark",
+)
+
 ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # legend outside the plot

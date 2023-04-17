@@ -130,8 +130,16 @@ def train_env(
         policies.append(policy)
         eps_history.append(agent.epsilon)
         states.append(state_this_game)
+        # if score is the highest, save the model
+        if score >= max(scores) or (i + 1) % 100 == 0:
+            trained_model.append(
+                {
+                    "episode": i,
+                    "score": score,
+                    "model": agent.Q_eval.state_dict(),
+                }
+            )
         rewards.append(reward_this_game)
-        trained_model.append(agent.Q_eval.state_dict())
 
         chunk_size = 50
 
@@ -214,6 +222,7 @@ if __name__ == "__main__":
         training_scores,
         training_eps_history,
         training_states,
+        training_rewards,
         training_time_cost,
         training_bench_states,
         training_models,

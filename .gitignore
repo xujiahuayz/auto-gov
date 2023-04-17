@@ -149,3 +149,5 @@ data/
 .vescode/
 
 figures/
+
+**/**/.DS_Store

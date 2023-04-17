@@ -220,7 +220,7 @@ class User:
     def __repr__(self) -> str:
         return f"name: {self.name}, funds available: {self.funds_available}, initial funds: {self._initial_funds_available}, wealth: {self.wealth}"
 
-    def _supply_withdraw(self, amount: float, plf: PlfPool) -> None:
+    def _supply_withdraw(self, amount: float, plf: PlfPool) -> float:
         """
         Supply (amount > 0) or withdraw (amount < 0) funds to the liquidity pool
         """
@@ -241,7 +241,7 @@ class User:
                 self.funds_available[plf.asset_name] / (1 + self.safety_supply_buffer),
             )
             if 0 <= amount < 1e-9:
-                return
+                return 0
             log_text = f"supplying {amount} {plf.asset_name}"
 
         else:  # withdraw
@@ -267,7 +267,7 @@ class User:
             )
             if withdraw_limit <= 0:
                 # handle some funky rounding errors
-                return
+                return 0
             log_text = f"withdrawing {-amount} {plf.asset_name} when pool has {plf.total_available_funds} {plf.asset_name} at limit {withdraw_limit}"
             amount = max(amount, -withdraw_limit, -plf.total_available_funds)
 
@@ -293,8 +293,9 @@ class User:
 
         if plf.total_available_funds < 0:
             raise ValueError("total available funds cannot be negative at \n %s" % plf)
+        return amount
 
-    def _borrow_repay(self, amount: float, plf: PlfPool) -> None:
+    def _borrow_repay(self, amount: float, plf: PlfPool) -> float:
         # set default values for user_b_tokens and funds_available if they don't exist
 
         plf.user_b_tokens.setdefault(self.name, 0)
@@ -318,7 +319,7 @@ class User:
                 0,
             )
             if 0 <= amount < 1e-9:  # if amount is too small,
-                return
+                return 0
         else:
             # repay case
             amount = max(
@@ -348,108 +349,126 @@ class User:
             "total available funds cannot be negative at \n %s" % plf
         )
 
-    def reactive_action(self) -> None:
+        return amount
+
+    def reactive_action(self) -> list[tuple[str, float, str]]:
         """
         supply funds to the liquidity pool in response to market conditions
         """
-        for name, plf in self.env.plf_pools.items():
-            assert self.env.prices[name] == plf.asset_price_history[self.env.step]
+        for plf_name, plf in self.env.plf_pools.items():
+            assert self.env.prices[plf_name] == plf.asset_price_history[self.env.step]
+
+        if self.existing_borrow_value >= self.existing_supply_value > 0:
+            # not worth repaying the loan, prefer defaulting
+            print("USER IS DEFAULTING!!! WRITING OFF LOAN")
+            self.env.bad_loan_expenses += self.existing_borrow_value
+            return [("default", 0)]
+
+        user_funds = self.funds_available
+
+        user_actions = []
+
+        # deposit / withdraw funds to the liquidity pool based on market conditions
+        for plf_name, plf in self.env.plf_pools.items():
+            supply_apy_advantage = plf.supply_apy - plf.competing_supply_apy
+            collateral_factor_advantage = (
+                plf.collateral_factor - plf.competing_collateral_factor
+            )
+            supply_advantage_multiplier = (
+                2 / (1 + np.exp(-supply_apy_advantage * 5))
+            ) - 1
+            collateral_factor_multiplier = (
+                2 * collateral_factor_advantage / (1 - plf.competing_borrow_apy) - 1
+            )
+
+            agg_advantage_multiplier = (
+                supply_advantage_multiplier + collateral_factor_multiplier
+            ) / 2
+
+            base_amount = (
+                user_funds[plf.asset_name]
+                if agg_advantage_multiplier > 0
+                else user_funds[plf.interest_token_name]
+            )
+
+            supply_repay_amount = self._supply_withdraw(
+                base_amount * agg_advantage_multiplier, plf
+            )
+            if supply_repay_amount > 0:
+                self.consecutive_good_supplies += 1
+                user_actions.append(("supply", supply_repay_amount, plf_name))
+            else:
+                user_actions.append(("withdraw", -supply_repay_amount, plf_name))
+
         if self.existing_borrow_value < self.max_borrowable_value:  # healthy loan
-            for plf in self.env.plf_pools.values():
-                borrow_apy_advantage = plf.competing_borrow_apy + 0.01 - plf.borrow_apy
-                if borrow_apy_advantage > 0:
+            for plf_name, plf in self.env.plf_pools.items():
+                borrow_apy_advantage = plf.competing_borrow_apy - plf.borrow_apy
+                borrow_advantage_multiplier = (
+                    2 / (1 + np.exp(-borrow_apy_advantage * 5))
+                ) - 1
+                base_amount = (
+                    plf.total_available_funds
+                    if borrow_advantage_multiplier > 0
+                    else plf.user_b_tokens[self.name]
+                )
+                borrow_repay_amount = self._borrow_repay(
+                    base_amount * borrow_advantage_multiplier, plf
+                )
+                if borrow_repay_amount > 0:
                     self.consecutive_good_borrows += 1
-                    # the bigger advantage, the higher the borrow amount
-                    self._borrow_repay(
-                        plf.total_available_funds * (1 - np.exp(-borrow_apy_advantage)),
-                        plf,
-                    )
+                    user_actions.append(("borrow", borrow_repay_amount, plf_name))
                 else:
-                    # the bigger |borrow_apy_advantage|, the more you repay
-                    self._borrow_repay(
-                        -self.funds_available[plf.asset_name]
-                        * (1 - np.exp(borrow_apy_advantage)),
-                        plf,
-                    )
-
-                # set APY thresholds -- below withdraw, above supply
-                supply_apy_advantage = plf.supply_apy - plf.competing_supply_apy + 0.01
-                if supply_apy_advantage < 0:
-                    self.consecutive_good_supplies = 0
-                    # withdraw, the bigger |supply_apy_margin|, the more you withdraw
-                    self._supply_withdraw(
-                        -plf.user_i_tokens[self.name]
-                        * (1 - np.exp(supply_apy_advantage)),
-                        plf,
-                    )
-                else:
-                    self.consecutive_good_supplies += 1
-                    # supply as much as you can
-                    self._supply_withdraw(
-                        self.funds_available[plf.asset_name]
-                        * (1 - np.exp(-supply_apy_advantage)),
-                        plf,
-                    )
-
-                # if plf.total_b_tokens != 0:
-                #     assert (
-                #         plf.total_i_tokens > 0
-                #     ), f"total i tokens is {plf.total_i_tokens} when total b tokens is {plf.total_b_tokens}"
+                    user_actions.append(("repay", -borrow_repay_amount, plf_name))
 
         else:  # unhealthy loan
             self.consecutive_good_borrows = 0
-            if self.existing_borrow_value >= self.existing_supply_value > 0:
-                # not worth repaying the loan, prefer defaulting
-                print("USER IS DEFAULTING!!! WRITING OFF LOAN")
-                self.env.bad_loan_expenses += self.existing_borrow_value
-            else:
-                # start repaying from the one with the highest borrow APY
-                # sort the pools by borrow APY
-                sorted_plf_pools = sorted(
-                    self.env.plf_pools.values(),
-                    key=lambda x: x.borrow_apy,
-                    reverse=True,
-                )
 
-                while (self.existing_borrow_value > self.max_borrowable_value) and (
-                    sorted_plf_pools
-                ):
-                    plf = sorted_plf_pools.pop(0)
-                    self._borrow_repay(
-                        -(self.existing_borrow_value - self.max_borrowable_value)
-                        * 1.1
-                        / plf.env.prices[plf.asset_name],
-                        plf,
-                    )
+            sorted_plf_pools = sorted(
+                self.env.plf_pools.values(),
+                key=lambda x: x.borrow_apy,
+                reverse=True,
+            )
 
-                # second round: if repaying does not suffice, inject capital to repay more, note that this will hurt the user's confidence
-                sorted_plf_pools = sorted(
-                    self.env.plf_pools.values(),
-                    key=lambda x: x.borrow_apy,
-                    reverse=True,
+            while (self.existing_borrow_value > self.max_borrowable_value) and (
+                sorted_plf_pools
+            ):
+                plf = sorted_plf_pools.pop(0)
+                borrow_repay_amount = self._borrow_repay(
+                    -(self.existing_borrow_value - self.max_borrowable_value)
+                    * 1.1
+                    / plf.env.prices[plf.asset_name],
+                    plf,
                 )
-                while (
-                    self.existing_borrow_value > self.max_borrowable_value
-                ) and sorted_plf_pools:
-                    self.safety_borrow_buffer += 0.1
-                    # inject funds to the user to repay the loan
-                    plf = sorted_plf_pools.pop(0)
-                    self.funds_available[plf.asset_name] += min(
-                        (self.existing_borrow_value - self.max_borrowable_value)
-                        * 1.1
-                        / plf.env.prices[plf.asset_name],
-                        self.funds_available[plf.borrow_token_name],
-                    )
-                    self._borrow_repay(-self.funds_available[plf.asset_name], plf)
-                    # if plf.total_b_tokens != 0:
-                    #     assert (
-                    #         plf.total_i_tokens > 0
-                    #     ), f"total i tokens is {plf.total_i_tokens} when total b tokens is {plf.total_b_tokens}"
+                user_actions.append(("repay", -borrow_repay_amount, plf.asset_name))
+
+            # second round: if repaying does not suffice, inject capital to repay more, note that this will hurt the user's confidence
+            sorted_plf_pools = sorted(
+                self.env.plf_pools.values(),
+                key=lambda x: x.borrow_apy,
+                reverse=True,
+            )
+            while (
+                self.existing_borrow_value > self.max_borrowable_value
+            ) and sorted_plf_pools:
+                self.safety_borrow_buffer += 0.1
+                # inject funds to the user to repay the loan
+                plf = sorted_plf_pools.pop(0)
+                self.funds_available[plf.asset_name] += min(
+                    (self.existing_borrow_value - self.max_borrowable_value)
+                    * 1.1
+                    / plf.env.prices[plf.asset_name],
+                    self.funds_available[plf.borrow_token_name],
+                )
+                borrow_repay_amount = self._borrow_repay(
+                    -self.funds_available[plf.asset_name], plf
+                )
+                user_actions.append(("repay", borrow_repay_amount, plf.asset_name))
 
         if self.consecutive_good_borrows > 20 and self.safety_borrow_buffer > 0.05:
             self.safety_borrow_buffer -= 0.05
         if self.consecutive_good_supplies > 20 and self.safety_supply_buffer > 0.05:
             self.safety_supply_buffer -= 0.05
+        return user_actions
 
 
 class PlfPool:
@@ -465,6 +484,7 @@ class PlfPool:
         asset_name: str = "dai",
         competing_supply_apy: float = 0.05,
         competing_borrow_apy: float = 0.15,
+        competing_collateral_factor: float = 0.75,
         seed: int | None = 0,
     ) -> None:
         """
@@ -487,6 +507,7 @@ class PlfPool:
         self.asset_name = asset_name
         self.competing_supply_apy = competing_supply_apy
         self.competing_borrow_apy = competing_borrow_apy
+        self.competing_collateral_factor = competing_collateral_factor
         self._initial_collar_factor = collateral_factor
         self._initial_asset_price = self.env.prices[self.asset_name]
         self.seed = seed

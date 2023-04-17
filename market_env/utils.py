@@ -107,9 +107,29 @@ def borrow_lend_rates(
     return borrow_rate, supply_rate
 
 
+def advantage_factor(advantage: float, multiplier: float = 1) -> float:
+    """
+    calculate the advantage factor based on the advantage
+    """
+    return (2 / (1 + np.exp(-advantage * multiplier))) - 1
+    if advantage > 0:
+        factor = 1 - np.exp(-advantage)
+    else:
+        factor = np.exp(advantage) - 1
+    return factor
+
+
 if __name__ == "__main__":
     # plot the time series
     import matplotlib.pyplot as plt
+
+    # test advantage_factor
+    advantage = np.linspace(-1, 1, 100)
+    factor = [advantage_factor(a, 5) for a in advantage]
+    plt.plot(advantage, factor)
+    plt.xlabel("Advantage")
+    plt.ylabel("Advantage Factor")
+    plt.show()
 
     # Generate the price series
     price_series = generate_price_series(
