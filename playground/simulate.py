@@ -17,7 +17,7 @@ EPSILON_DECAY = 1e-6
 batch_size = 64
 EPSILON_START = 1.0
 number_games = int(
-    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 5 // 100 * 100
+    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100
 )
 
 agent_vars = {
@@ -27,7 +27,7 @@ agent_vars = {
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,
-    "target_net_enabled": True,
+    "target_net_enabled": False,
 }
 
 

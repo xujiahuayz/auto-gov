@@ -103,7 +103,7 @@ class DefiEnv:
 
     def get_reward(self) -> float:
         if self.net_position < -1e-9:
-            self.step = self.max_steps  # end the episode
+            self.step = self.max_steps - 1  # end the episode
             print("BANKRUPTCY! GAME OVER!")
             return PENALTY_REWARD * len(self.plf_pools)
         return sum(
