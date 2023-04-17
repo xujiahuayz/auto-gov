@@ -120,12 +120,6 @@ def train_env(
             # this checks done or not
 
             observation_, reward, done, _ = env.step(action)
-            # catch index error
-            assert defi_env.step < len(
-                bench_rewards
-            ), "index out of range, step: {}, len(bench_rewards): {}".format(
-                defi_env.step, len(bench_rewards)
-            )
             reward -= bench_rewards[defi_env.step] if compared_to_benchmark else 0
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()

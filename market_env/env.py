@@ -484,7 +484,7 @@ class PlfPool:
         asset_name: str = "dai",
         competing_supply_apy: float = 0.05,
         competing_borrow_apy: float = 0.15,
-        competing_collateral_factor: float = 0.75,
+        competing_collateral_factor: float = 0.70,
         seed: int | None = 0,
     ) -> None:
         """

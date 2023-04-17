@@ -144,14 +144,20 @@ for asset in ["tkn", "weth", "usdc"]:
     # plot reserves of each asset in area plot with semi-transparent fill
     ax.fill_between(
         range(len(states[-1])),
-        [state["pools"][asset]["reserve"] for state in example_state],
+        [
+            state["pools"][asset]["reserve"]
+            for state in bench_states[median_score_index]
+        ],
         alpha=0.5,
         label=asset,
         color=ASSET_COLORS[asset],
     )
     # plot utilization ratio
     ax3.plot(
-        [state["pools"][asset]["utilization_ratio"] for state in example_state],
+        [
+            state["pools"][asset]["utilization_ratio"]
+            for state in bench_states[median_score_index]
+        ],
         color=ASSET_COLORS[asset],
         linestyle="dotted",
     )
