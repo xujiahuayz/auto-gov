@@ -187,7 +187,8 @@ def inference_with_trained_model(
     agent_args["n_actions"] = env.action_space.n
     agent_args["input_dims"] = env.observation_space.shape
     agent = Agent(**agent_args)
-    agent.Q_eval.load_state_dict(model)
+    agent.Q_eval.load_state_dict(model["model"])
+    agent.Q_eval.eval()
 
     # Run the specified number of episodes
     for episode in range(num_test_episodes):
