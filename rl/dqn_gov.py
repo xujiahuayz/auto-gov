@@ -77,7 +77,7 @@ class Agent:
 
         self.target_switch_on = target_switch_on
 
-        if self.target_net_enabled:
+        if self.target_switch_on:
             self.Q_target = DQN(
                 self.lr,
                 n_actions=n_actions,
