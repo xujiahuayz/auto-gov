@@ -210,7 +210,7 @@ if __name__ == "__main__":
     N_GAMES = 20
 
     def tkn_price_trend_func(x, y):
-        return np.array(range(x + 1))
+        return np.array(range(1, x + 2))
 
     agent_vars = {
         "eps_dec": 0,
@@ -219,7 +219,7 @@ if __name__ == "__main__":
         "gamma": 0.99,
         "epsilon": 1,
         "batch_size": 128,
-        # "target_switch_on": 0.9,
+        "target_switch_on": 0.9,
     }
 
     (
