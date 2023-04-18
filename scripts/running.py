@@ -223,11 +223,19 @@ max_score = max([w["score"] for w in trained_models])
 max_score_index = [w["score"] for w in trained_models].index(max_score)
 
 
-inference_with_trained_model(
-    model=trained_models[max_score_index],
+(
+    scores,
+    eps_history,
+    states,
+    rewards,
+    bench_states,
+    trained_model,
+) = inference_with_trained_model(
+    model=trained_models[-1],
     env=test_protocol_env,
     agent_args=agent_vars,
-    num_test_episodes=1,
+    num_test_episodes=400,
+    compared_to_benchmark=True,
 )
 
 #

@@ -480,7 +480,7 @@ class PlfPool:
         initiator: User,
         price_trend_func: Callable[
             [int, int | None], np.ndarray
-        ] = lambda x, y: np.ones(x),
+        ] = lambda x, y: np.ones(x + 1),
         initial_starting_funds: float = 1000,
         collateral_factor: float = 0.85,
         asset_name: str = "dai",

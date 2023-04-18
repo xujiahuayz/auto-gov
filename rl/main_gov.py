@@ -5,7 +5,6 @@ from typing import Any, Callable
 import numpy as np
 
 from market_env.caching import cache
-from market_env.env import DefiEnv
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
@@ -15,16 +14,11 @@ def run_episode(
     env: ProtocolEnv,
     agent: Agent,
     compared_to_benchmark: bool,
-    tkn_price_trend_func: Callable[[int, int | None], np.ndarray],
-    usdc_price_trend_func: Callable[[int, int | None], np.ndarray],
-    tkn_seed: int | None,
-    usdc_seed: int | None,
+    tkn_price_trend_this_game: np.ndarray,
+    usdc_price_trend_this_game: np.ndarray,
+    training: bool,
     **add_env_kwargs,
 ) -> tuple[float, list[float], list[int], list[dict[str, Any]], list[dict[str, Any]]]:
-    tkn_price_trend_this_game = tkn_price_trend_func(env.defi_env.max_steps, tkn_seed)
-    usdc_price_trend_this_game = usdc_price_trend_func(
-        env.defi_env.max_steps, usdc_seed
-    )
     bench_rewards, bench_states_this_game = bench_env(
         tkn_price_trend_func=lambda t, s: tkn_price_trend_this_game,
         usdc_price_trend_func=lambda t, s: usdc_price_trend_this_game,
@@ -48,17 +42,19 @@ def run_episode(
     while not done:
         # get states for plotting
         action = agent.choose_action(observation.astype(np.float32))
-        # this checks done or not
-
         observation_, reward, done, _ = env.step(action)
         reward -= bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
-        agent.store_transition(observation, action, reward, observation_, done)
-        agent.learn()
+
+        if training:
+            agent.store_transition(observation, action, reward, observation_, done)
+            agent.learn()
+        observation = observation_
+
         score += reward
         policy.append(action)
         reward_this_game.append(reward)
-        observation = observation_
         state_this_game.append(env.defi_env.state_summary)
+
     return score, reward_this_game, policy, state_this_game, bench_states_this_game
 
 
@@ -138,52 +134,33 @@ def train_env(
     )
 
     for i in range(n_games):
-        # pre-generate price trend to make sure that the same price trend is used for both envs
-        tkn_price_trend_this_game = tkn_price_trend_func(defi_env.max_steps, tkn_seed)
-        usdc_price_trend_this_game = usdc_price_trend_func(
-            defi_env.max_steps, usdc_seed
-        )
-        bench_rewards, bench_states_this_game = bench_env(
-            tkn_price_trend_func=lambda t, s: tkn_price_trend_this_game,
-            usdc_price_trend_func=lambda t, s: usdc_price_trend_this_game,
-            **add_env_kwargs,
-        )
-
-        # extend bench_rewards with 0 to match the length of the game (max_steps)
-        bench_rewards.extend([0.0] * (defi_env.max_steps + 1 - len(bench_rewards)))
-        bench_states.append(bench_states_this_game)
-        defi_env.plf_pools[
-            "tkn"
-        ].price_trend_func = lambda t, s: tkn_price_trend_this_game
-        defi_env.plf_pools[
-            "usdc"
-        ].price_trend_func = lambda t, s: usdc_price_trend_this_game
-        score = 0
-        done = False
-        policy = []
-        reward_this_game = []
-        observation = env.reset()
         start_time = time.time()
-        state_this_game = [defi_env.state_summary]
-        while not done:
-            # get states for plotting
-            action = agent.choose_action(observation.astype(np.float32))
-            # this checks done or not
+        (
+            score,
+            reward_this_game,
+            policy,
+            state_this_game,
+            bench_states_this_game,
+        ) = run_episode(
+            env=env,
+            agent=agent,
+            compared_to_benchmark=compared_to_benchmark,
+            tkn_price_trend_this_game=tkn_price_trend_func(
+                defi_env.max_steps, tkn_seed
+            ),
+            usdc_price_trend_this_game=usdc_price_trend_func(
+                defi_env.max_steps, usdc_seed
+            ),
+            training=True,
+        )
 
-            observation_, reward, done, _ = env.step(action)
-            reward -= bench_rewards[defi_env.step] if compared_to_benchmark else 0
-            agent.store_transition(observation, action, reward, observation_, done)
-            agent.learn()
-            score += reward
-            policy.append(action)
-            reward_this_game.append(reward)
-            observation = observation_
-            state_this_game.append(defi_env.state_summary)
+        bench_states.append(bench_states_this_game)
         time_cost.append(time.time() - start_time)
         scores.append(score)
         policies.append(policy)
         eps_history.append(agent.epsilon)
         states.append(state_this_game)
+        rewards.append(reward_this_game)
         # if score is the highest, save the model
         if score >= max(scores) or (i + 1) % 100 == 0:
             trained_model.append(
@@ -193,7 +170,6 @@ def train_env(
                     "model": agent.Q_eval.state_dict(),
                 }
             )
-        rewards.append(reward_this_game)
 
         chunk_size = 50
 
@@ -225,7 +201,15 @@ def inference_with_trained_model(
     env: ProtocolEnv,
     agent_args: dict[str, Any],
     num_test_episodes: int = 1,
-) -> None:
+    compared_to_benchmark: bool = True,
+) -> tuple[
+    list[float],
+    list[list[dict[str, Any]]],
+    list[list[float]],
+    list[list[dict[str, Any]]],
+    list[dict[str, Any]],
+    list[list[float]],
+]:
     """
     Interact with the environment using the loaded model.
 
@@ -233,6 +217,10 @@ def inference_with_trained_model(
         model_path: The path of the saved model.
         env (ProtocolEnv): The environment to interact with.
         num_episodes (int, optional): The number of episodes to run. Defaults to 1.
+        compared_to_benchmark (bool, optional): Whether to compare the performance with the benchmark. Defaults to True.
+
+    Returns:
+        The scores, states, rewards, bench_states, trained_model, policies.
     """
     # Create an agent with the same settings as during training
     agent_args["n_actions"] = env.action_space.n
@@ -242,20 +230,67 @@ def inference_with_trained_model(
     agent.Q_eval.eval()
     states = []
 
+    (
+        scores,
+        eps_history,
+        states,
+        trained_model,
+        bench_states,
+        policies,
+        rewards,
+    ) = (
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+    )
+
     # Run the specified number of episodes
-    for episode in range(num_test_episodes):
-        observation = env.reset()
-        done = False
-        score = 0
-        state_this_game = [DefiEnv.state_summary]
+    for i in range(num_test_episodes):
+        (
+            score,
+            reward_this_game,
+            policy,
+            state_this_game,
+            bench_states_this_game,
+        ) = run_episode(
+            env=env,
+            agent=agent,
+            compared_to_benchmark=compared_to_benchmark,
+            tkn_price_trend_this_game=env.defi_env.plf_pools["tkn"].asset_price_history,
+            usdc_price_trend_this_game=env.defi_env.plf_pools[
+                "usdc"
+            ].asset_price_history,
+            training=False,
+            max_steps=env.defi_env.max_steps,
+            initial_collateral_factor=env.defi_env.plf_pools[
+                "tkn"
+            ]._initial_collar_factor,
+            init_safety_borrow_margin=env.defi_env.users[
+                "alice"
+            ]._initial_safety_borrow_margin,
+            init_safety_supply_margin=env.defi_env.users[
+                "alice"
+            ]._initial_safety_supply_margin,
+        )
 
-        while not done:
-            action = agent.choose_action(observation.astype(np.float32))
-            observation, reward, done, _ = env.step(action)
-            score += reward
-            state
+        bench_states.append(bench_states_this_game)
+        scores.append(score)
+        policies.append(policy)
+        states.append(state_this_game)
+        rewards.append(reward_this_game)
 
-        print(f"Episode {episode + 1}, score of this episode: {score}")
+    return (
+        scores,
+        eps_history,
+        states,
+        rewards,
+        bench_states,
+        trained_model,
+    )
 
 
 if __name__ == "__main__":

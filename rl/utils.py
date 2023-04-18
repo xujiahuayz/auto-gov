@@ -12,11 +12,11 @@ def init_env(
     init_safety_borrow_margin: float = 0.5,
     init_safety_supply_margin: float = 0.5,
     tkn_price_trend_func: Callable[
-        [float, int | None], np.ndarray
-    ] = lambda x, y: np.ones(x),
+        [int, int | None], np.ndarray
+    ] = lambda x, y: np.ones(x + 1),
     usdc_price_trend_func: Callable[
         [int, int | None], np.ndarray
-    ] = lambda x, y: np.ones(x),
+    ] = lambda x, y: np.ones(x + 1),
     tkn_seed: int | None = None,
     usdc_seed: int | None = None,
 ) -> DefiEnv:
