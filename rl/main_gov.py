@@ -5,9 +5,61 @@ from typing import Any, Callable
 import numpy as np
 
 from market_env.caching import cache
+from market_env.env import DefiEnv
 from rl.dqn_gov import Agent
 from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
+
+
+def run_episode(
+    env: ProtocolEnv,
+    agent: Agent,
+    compared_to_benchmark: bool,
+    tkn_price_trend_func: Callable[[int, int | None], np.ndarray],
+    usdc_price_trend_func: Callable[[int, int | None], np.ndarray],
+    tkn_seed: int | None,
+    usdc_seed: int | None,
+    **add_env_kwargs,
+) -> tuple[float, list[float], list[int], list[dict[str, Any]], list[dict[str, Any]]]:
+    tkn_price_trend_this_game = tkn_price_trend_func(env.defi_env.max_steps, tkn_seed)
+    usdc_price_trend_this_game = usdc_price_trend_func(
+        env.defi_env.max_steps, usdc_seed
+    )
+    bench_rewards, bench_states_this_game = bench_env(
+        tkn_price_trend_func=lambda t, s: tkn_price_trend_this_game,
+        usdc_price_trend_func=lambda t, s: usdc_price_trend_this_game,
+        **add_env_kwargs,
+    )
+
+    # extend bench_rewards with 0 to match the length of the game (max_steps)
+    bench_rewards.extend([0.0] * (env.defi_env.max_steps + 1 - len(bench_rewards)))
+    env.defi_env.plf_pools[
+        "tkn"
+    ].price_trend_func = lambda t, s: tkn_price_trend_this_game
+    env.defi_env.plf_pools[
+        "usdc"
+    ].price_trend_func = lambda t, s: usdc_price_trend_this_game
+    score = 0
+    done = False
+    policy = []
+    reward_this_game = []
+    observation = env.reset()
+    state_this_game = [env.defi_env.state_summary]
+    while not done:
+        # get states for plotting
+        action = agent.choose_action(observation.astype(np.float32))
+        # this checks done or not
+
+        observation_, reward, done, _ = env.step(action)
+        reward -= bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
+        agent.store_transition(observation, action, reward, observation_, done)
+        agent.learn()
+        score += reward
+        policy.append(action)
+        reward_this_game.append(reward)
+        observation = observation_
+        state_this_game.append(env.defi_env.state_summary)
+    return score, reward_this_game, policy, state_this_game, bench_states_this_game
 
 
 def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
@@ -106,14 +158,13 @@ def train_env(
         defi_env.plf_pools[
             "usdc"
         ].price_trend_func = lambda t, s: usdc_price_trend_this_game
-        state_this_game = []
         score = 0
         done = False
         policy = []
         reward_this_game = []
         observation = env.reset()
         start_time = time.time()
-        state_this_game.append(defi_env.state_summary)
+        state_this_game = [defi_env.state_summary]
         while not done:
             # get states for plotting
             action = agent.choose_action(observation.astype(np.float32))
@@ -189,17 +240,20 @@ def inference_with_trained_model(
     agent = Agent(**agent_args)
     agent.Q_eval.load_state_dict(model["model"])
     agent.Q_eval.eval()
+    states = []
 
     # Run the specified number of episodes
     for episode in range(num_test_episodes):
         observation = env.reset()
         done = False
         score = 0
+        state_this_game = [DefiEnv.state_summary]
 
         while not done:
             action = agent.choose_action(observation.astype(np.float32))
             observation, reward, done, _ = env.step(action)
             score += reward
+            state
 
         print(f"Episode {episode + 1}, score of this episode: {score}")
 

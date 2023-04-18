@@ -145,7 +145,7 @@ dmypy.json
 
 .cache/*
 !.cache/.keep
-data/
+# data/
 .vescode/
 
 figures/

@@ -1,11 +1,15 @@
+import json
 import logging
 
 # plot time series of collateral factor.
 import matplotlib.pyplot as plt
 import numpy as np
+from market_env.constants import DATA_PATH
 
 from market_env.utils import generate_price_series
-from rl.main_gov import train_env
+from rl.main_gov import inference_with_trained_model, train_env
+from rl.rl_env import ProtocolEnv
+from rl.utils import init_env
 
 
 logging.basicConfig(level=logging.INFO)
@@ -192,3 +196,38 @@ ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # set the legend outside the plot
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+# get actual price data in json format from DATA_PATH
+
+
+test_step_number = 180
+real_prices = {}
+# get the price data from the json file
+for asset_name in ["usdc", "link"]:
+    price_data = json.load(open(DATA_PATH / f"{asset_name}.json", "r"))["Data"]["Data"][
+        -test_step_number:
+    ]
+    real_prices[asset_name] = [w["close"] for w in price_data]
+
+test_env = init_env(
+    initial_collateral_factor=0.75,
+    max_steps=test_step_number,
+    tkn_price_trend_func=lambda x, y: real_prices["link"],
+    usdc_price_trend_func=lambda x, y: real_prices["usdc"],
+)
+
+test_protocol_env = ProtocolEnv(test_env)
+
+# find the trained model with the highest score, where score is in w['score'] for w in trained_models
+max_score = max([w["score"] for w in trained_models])
+max_score_index = [w["score"] for w in trained_models].index(max_score)
+
+
+inference_with_trained_model(
+    model=trained_models[max_score_index],
+    env=test_protocol_env,
+    agent_args=agent_vars,
+    num_test_episodes=1,
+)
+
+#
