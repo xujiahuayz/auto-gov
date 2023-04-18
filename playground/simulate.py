@@ -27,7 +27,7 @@ agent_vars = {
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,
-    "target_switch_on": 0.7,
+    "target_switch_on": 0.5,
 }
 
 

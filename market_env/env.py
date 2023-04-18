@@ -642,7 +642,7 @@ class PlfPool:
             ]
         )
 
-    def get_one_step_profit(self) -> float:
+    def get_profit(self) -> float:
         current_time = self.env.step
         if current_time == 0:
             return 0
@@ -652,15 +652,6 @@ class PlfPool:
             self.reserve * self.asset_price_history[current_time]
             - previous_reserve * self.asset_price_history[current_time - 1]
         )
-
-    def get_profit(self) -> float:
-        current_time = self.env.step
-        if current_time == 0:
-            return 0
-        current_profit = self.get_one_step_profit()
-        profit_diff = current_profit - self.previous_profit
-        self.previous_profit = current_profit
-        return profit_diff
 
     @property
     def utilization_ratio(self) -> float:
