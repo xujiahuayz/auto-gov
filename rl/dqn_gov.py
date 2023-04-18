@@ -49,6 +49,7 @@ class Agent:
         max_mem_size: int = 100_000,
         eps_end: float = 0.05,
         eps_dec: float = 5e-5,
+        eps_dec_decrease_with_target: float = 0.2,
         layer1_size: int = 256,
         layer2_size: int = 256,
         target_switch_on: int | None = None,
@@ -76,6 +77,14 @@ class Agent:
         )
 
         self.target_switch_on = target_switch_on
+
+        # eps_dec_decrease_with_target is used to decrease the eps_dec with the target switch on
+        self.eps_dec_decrease_with_target = eps_dec_decrease_with_target
+        # when eps_dec_check_flag is True, we need to check whether we need to decrease eps_dec
+        if self.target_switch_on:
+            self.eps_dec_check_flag = True
+        else:
+            self.eps_dec_check_flag = False
 
         if self.target_switch_on:
             self.Q_target = DQN(
@@ -198,6 +207,12 @@ class Agent:
             self.update_counter += 1
             if self.update_counter % self.target_update == 0:
                 self.Q_target.load_state_dict(self.Q_eval.state_dict())
+
+        # check if epsilon decay should be decreased
+        if self.eps_dec_check_flag:
+            if self.target_net_enabled:
+                self.eps_dec = self.eps_dec * self.eps_dec_decrease_with_target
+                self.eps_dec_check_flag = False
 
         # update epsilon
         self.epsilon = (
