@@ -41,7 +41,9 @@ def run_episode(
     state_this_game = [env.defi_env.state_summary]
     while not done:
         # get states for plotting
-        action = agent.choose_action(observation.astype(np.float32))
+        action = agent.choose_action(
+            observation.astype(np.float32), evaluate=not training
+        )
         observation_, reward, done, _ = env.step(action)
         reward -= bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
 
@@ -308,7 +310,7 @@ if __name__ == "__main__":
         "gamma": 0.99,
         "epsilon": 1,
         "batch_size": 128,
-        "target_switch_on": 0.9,
+        "target_on_point": 0.9,
     }
 
     (

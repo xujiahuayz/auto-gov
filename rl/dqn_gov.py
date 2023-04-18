@@ -52,7 +52,7 @@ class Agent:
         eps_dec_decrease_with_target: float = 0.2,
         layer1_size: int = 256,
         layer2_size: int = 256,
-        target_switch_on: int | None = None,
+        target_on_point: int | None = None,
         target_update: int = 100,
     ):
         self.gamma = gamma
@@ -76,17 +76,14 @@ class Agent:
             fc2_dims=layer2_size,
         )
 
-        self.target_switch_on = target_switch_on
+        self.target_on_point = target_on_point
 
         # eps_dec_decrease_with_target is used to decrease the eps_dec with the target switch on
         self.eps_dec_decrease_with_target = eps_dec_decrease_with_target
         # when eps_dec_check_flag is True, we need to check whether we need to decrease eps_dec
-        if self.target_switch_on:
-            self.eps_dec_check_flag = True
-        else:
-            self.eps_dec_check_flag = False
+        self.eps_dec_check_flag = self.target_on_point
 
-        if self.target_switch_on:
+        if self.target_on_point:
             self.Q_target = DQN(
                 self.lr,
                 n_actions=n_actions,
@@ -109,11 +106,11 @@ class Agent:
 
     @property
     def target_net_enabled(self) -> bool:
-        if self.target_switch_on:
+        if self.target_on_point:
             return (
                 self.epsilon
                 < self.epsilon_start
-                - (self.epsilon_start - self.eps_min) * self.target_switch_on
+                - (self.epsilon_start - self.eps_min) * self.target_on_point
             )
         return False
 
@@ -142,21 +139,6 @@ class Agent:
         else:
             action = np.random.choice(self.action_space)
 
-        # print("=========================")
-        # print(observation[2])
-        # print(action)
-        # print("=========================")
-
-        # # add constraint
-        # # If the current collateral factor is less than 0, only allow keep or raise actions
-        # if observation[2] <= 0:
-        #     if action == 0:
-        #         action = 1
-        # # If the current collateral factor is more than 1, only allow keep or lower actions
-        # elif observation[2] >= 1:
-        #     if action == 2:
-        #         action = 1
-
         return action
 
     def learn(self) -> None:
@@ -173,11 +155,6 @@ class Agent:
 
         # create an index for each element of the current batch
         batch_index = np.arange(self.batch_size, dtype=np.int32)
-
-        # # print("=====")
-        # print(self.state_memory[batch])
-        # print(type(self.state_memory[batch]))
-        # # print("=====")
 
         state_batch = T.tensor(self.state_memory[batch]).to(self.Q_eval.device)
         new_state_batch = T.tensor(self.new_state_memory[batch]).to(self.Q_eval.device)
@@ -203,7 +180,7 @@ class Agent:
         self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
 
-        if self.target_switch_on:
+        if self.target_on_point:
             self.update_counter += 1
             if self.update_counter % self.target_update == 0:
                 self.Q_target.load_state_dict(self.Q_eval.state_dict())
