@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 number_steps = int(360 * 1.5)
 EPSILON_END = 1e-4
-EPSILON_DECAY = 4e-7
+EPSILON_DECAY = 5e-7
 batch_size = 64
 EPSILON_START = 1.0
 number_games = int(
@@ -23,11 +23,11 @@ number_games = int(
 agent_vars = {
     "gamma": 0.99,
     "epsilon": EPSILON_START,
-    "lr": 0.0008,
+    "lr": 0.001,
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,
-    "target_switch_on": 0.4,
+    "target_switch_on": 0.5,
 }
 
 
