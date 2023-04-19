@@ -1,15 +1,11 @@
-import json
 import logging
 
 # plot time series of collateral factor.
 import matplotlib.pyplot as plt
 import numpy as np
-from market_env.constants import DATA_PATH
 
 from market_env.utils import generate_price_series
-from rl.main_gov import inference_with_trained_model, train_env
-from rl.rl_env import ProtocolEnv
-from rl.utils import init_env
+from rl.main_gov import train_env
 
 
 logging.basicConfig(level=logging.INFO)
@@ -17,21 +13,33 @@ logging.basicConfig(level=logging.INFO)
 
 number_steps = int(360 * 1.5)
 EPSILON_END = 1e-4
-EPSILON_DECAY = 5e-7
+EPSILON_DECAY = 4e-7
 batch_size = 64
 EPSILON_START = 1.0
+target_on_point = 0.55
+eps_dec_decrease_with_target = 0.8
 number_games = int(
-    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100
+    (
+        (EPSILON_START * target_on_point)
+        + (EPSILON_START * (1 - target_on_point) - EPSILON_END)
+        / eps_dec_decrease_with_target
+    )
+    / EPSILON_DECAY
+    / number_steps
+    * 1.25
+    // 100
+    * 100
 )
 
 agent_vars = {
     "gamma": 0.99,
     "epsilon": EPSILON_START,
-    "lr": 0.001,
+    "lr": 0.00,
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,
-    "target_on_point": 0.5,
+    "target_on_point": target_on_point,
+    "eps_dec_decrease_with_target": eps_dec_decrease_with_target,
 }
 
 
@@ -42,11 +50,7 @@ def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
         mu_func=lambda t: 0.0001,
         sigma_func=lambda t: 0.05 + ((t - 200) ** 2) ** 0.01 / 20,
     )
-    # # inject sudden price drop
-    # for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
-    #     series[i] = 0.01
-    # inject sudden price rise
-    # series[20] = 90
+    series[1] = 1e-6
     return series
 
 
@@ -57,6 +61,7 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
         mu_func=lambda t: 0.0001,
         sigma_func=lambda t: 0.05,
     )
+    series[1] = 1e-6
     return series
 
 
@@ -196,46 +201,3 @@ ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # set the legend outside the plot
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
-
-# get actual price data in json format from DATA_PATH
-
-
-test_step_number = 180
-real_prices = {}
-# get the price data from the json file
-for asset_name in ["usdc", "link"]:
-    price_data = json.load(open(DATA_PATH / f"{asset_name}.json", "r"))["Data"]["Data"][
-        -test_step_number:
-    ]
-    real_prices[asset_name] = [w["close"] for w in price_data]
-
-test_env = init_env(
-    initial_collateral_factor=0.75,
-    max_steps=test_step_number,
-    tkn_price_trend_func=lambda x, y: real_prices["link"],
-    usdc_price_trend_func=lambda x, y: real_prices["usdc"],
-)
-
-test_protocol_env = ProtocolEnv(test_env)
-
-# find the trained model with the highest score, where score is in w['score'] for w in trained_models
-max_score = max([w["score"] for w in trained_models])
-max_score_index = [w["score"] for w in trained_models].index(max_score)
-
-
-(
-    scores,
-    eps_history,
-    states,
-    rewards,
-    bench_states,
-    trained_model,
-) = inference_with_trained_model(
-    model=trained_models[-1],
-    env=test_protocol_env,
-    agent_args=agent_vars,
-    num_test_episodes=400,
-    compared_to_benchmark=True,
-)
-
-#

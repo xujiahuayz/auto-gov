@@ -1,7 +1,7 @@
 {
   "editor.formatOnSave": true,
   "editor.formatOnSaveMode": "file",
-  "python.formatting.provider": "black",
+  "python.formatting.provider": "none",
   "python.linting.enabled": true,
   "editor.formatOnPaste": false,
   "todo-tree.tree.scanMode": "workspace",
@@ -10,5 +10,8 @@
   "python.testing.nosetestsEnabled": false,
   "python.testing.pytestEnabled": true,
   "jupyter.notebookFileRoot": "${workspaceFolder}",
-  "cSpell.words": ["collateralized"]
+  "cSpell.words": ["collateralized"],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }

@@ -16,8 +16,19 @@ EPSILON_END = 1e-4
 EPSILON_DECAY = 4e-7
 batch_size = 64
 EPSILON_START = 1.0
+target_on_point = 0.55
+eps_dec_decrease_with_target = 0.8
 number_games = int(
-    (EPSILON_START - EPSILON_END) / EPSILON_DECAY / number_steps * 1.25 // 100 * 100
+    (
+        (EPSILON_START * target_on_point)
+        + (EPSILON_START * (1 - target_on_point) - EPSILON_END)
+        / eps_dec_decrease_with_target
+    )
+    / EPSILON_DECAY
+    / number_steps
+    * 1.25
+    // 100
+    * 100
 )
 
 agent_vars = {
@@ -27,7 +38,8 @@ agent_vars = {
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,
-    "target_on_point": 0.6,
+    "target_on_point": target_on_point,
+    "eps_dec_decrease_with_target": eps_dec_decrease_with_target,
 }
 
 
@@ -38,11 +50,6 @@ def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
         mu_func=lambda t: 0.0001,
         sigma_func=lambda t: 0.05 + ((t - 200) ** 2) ** 0.01 / 20,
     )
-    # # inject sudden price drop
-    # for i in [5, 6, 7, 8, 9, 10, 11, 12, 13, 14]:
-    #     series[i] = 0.01
-    # inject sudden price rise
-    # series[20] = 90
     return series
 
 
@@ -101,11 +108,11 @@ ASSET_COLORS = {
 }
 
 
-stable_start = int(0 * number_games)
+stable_start = int(target_on_point * number_games)
 
 stable_scores = scores[stable_start:]
 # find out the position or index of the median score
-median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 50000]
+median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 5]
 # find out the index of the median score
 median_score_index = stable_scores.index(median_score)
 
@@ -140,27 +147,23 @@ ax2.set_ylabel("price")
 ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
 
+bs = bench_states[median_score_index]
+
 # initialize the figure
 fig, ax = plt.subplots()
 ax3 = ax.twinx()
 for asset in ["tkn", "weth", "usdc"]:
     # plot reserves of each asset in area plot with semi-transparent fill
     ax.fill_between(
-        range(len(states[-1])),
-        [
-            state["pools"][asset]["reserve"]
-            for state in bench_states[median_score_index]
-        ],
+        range(len(bs)),
+        [state["pools"][asset]["reserve"] for state in bs],
         alpha=0.5,
         label=asset,
         color=ASSET_COLORS[asset],
     )
     # plot utilization ratio
     ax3.plot(
-        [
-            state["pools"][asset]["utilization_ratio"]
-            for state in bench_states[median_score_index]
-        ],
+        [state["pools"][asset]["utilization_ratio"] for state in bs],
         color=ASSET_COLORS[asset],
         linestyle="dotted",
     )
@@ -178,7 +181,7 @@ fig, ax = plt.subplots()
 
 # plot the benchmark case
 ax.plot(
-    [state["net_position"] for state in bench_states[median_score_index]],
+    [state["net_position"] for state in bs],
     label="benchmark",
 )
 

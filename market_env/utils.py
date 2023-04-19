@@ -125,7 +125,8 @@ if __name__ == "__main__":
 
     # test advantage_factor
     advantage = np.linspace(-1, 1, 100)
-    factor = [advantage_factor(a, 5) for a in advantage]
+    factor = [advantage_factor(a, 10) for a in advantage]
+    plt.plot(advantage, factor)
     plt.plot([-0.7, 0, 0.3], [-1, 0, 1])
     plt.xlabel("Advantage")
     plt.ylabel("Advantage Factor")

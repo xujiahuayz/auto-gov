@@ -78,7 +78,7 @@ class DefiEnv:
     def __repr__(self) -> str:
         return f"DefiEnv({self.state_summary})"
 
-    def update_collateral_factor(self, action: int) -> None:
+    def act_update_react(self, action: int) -> None:
         num_pools: int = len(self.plf_pools)
         if not 0 <= action < self.num_action_pool**num_pools:
             raise ValueError("action must be between 0 and {num_pools**3 -1}")
@@ -752,59 +752,83 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     # https://docs.aave.com/risk/v/aave-v2/asset-risk/risk-parameters
     # initialize environment
-    defi_env = DefiEnv(prices=PriceDict({"tkn": 3, "usdc": 0.1, "weth": 1}))
+    defi_env = DefiEnv(prices=PriceDict({"tkn": 1, "usdc": 1, "weth": 1}), max_steps=3)
     Alice = User(
         name="alice",
         env=defi_env,
-        funds_available={"tkn": 10_000, "usdc": 200_000, "weth": 20_000},
+        funds_available={"tkn": 5_000, "usdc": 5_000, "weth": 5_000},
+    )
+    weth_plf = PlfPool(
+        env=defi_env,
+        initiator=Alice,
+        initial_starting_funds=5_000,
+        asset_name="weth",
+        collateral_factor=0,
+        competing_collateral_factor=0.7,
+        competing_supply_apy=0.001,
+        competing_borrow_apy=0.001,
+        price_trend_func=lambda x, s: np.array([1, 1, 1, 1, 1, 1, 1]),
     )
     tkn_plf = PlfPool(
         env=defi_env,
         initiator=Alice,
         initial_starting_funds=5_000,
         asset_name="tkn",
-        collateral_factor=0.8,
+        collateral_factor=1,
+        competing_collateral_factor=0.2,
+        competing_supply_apy=0.05,
+        competing_borrow_apy=0.2,
+        price_trend_func=lambda x, s: np.array([1, 1, 0.001, 0.01, 2, 0.001, 1, 0.1]),
     )
     usdc_plf = PlfPool(
         env=defi_env,
         initiator=Alice,
-        initial_starting_funds=150_000,
+        initial_starting_funds=5_000,
         asset_name="usdc",
-        collateral_factor=0.8,
+        collateral_factor=0,
+        competing_collateral_factor=0.7,
+        price_trend_func=lambda x, s: np.array([1, 1, 0.00001, 0.01, 0.001, 1, 0.1]),
     )
-    weth_plf = PlfPool(
-        env=defi_env,
-        initiator=Alice,
-        initial_starting_funds=15_000,
-        asset_name="weth",
-        collateral_factor=0.8,
-    )
-    print("Initial =============== \n")
-    print(Alice)
-    print(tkn_plf)
-    print(usdc_plf)
-    print(weth_plf)
+
+    # print("Initial =============== \n")
+    # print(Alice)
+    # print(tkn_plf)
+    # print(usdc_plf)
+    # print(weth_plf)
 
     # Alice react first
 
-    Alice.reactive_action()
-    print(Alice)
-    print(tkn_plf)
-    print(usdc_plf)
-    print(weth_plf)
+    defi_env.is_done()
+    # Alice.reactive_action()
 
-    defi_env.reset()
-    print("After reset")
-    print(Alice)
-    print(tkn_plf)
-    print(usdc_plf)
-    print(weth_plf)
+    defi_env.act_update_react(0)
+    defi_env.is_done()
 
-    # then the market update
-    tkn_plf.update_market()
-    usdc_plf.raise_collateral_factor()
-    Alice.reactive_action()
-    print(Alice)
-    print(tkn_plf)
-    print(usdc_plf)
-    print(weth_plf)
+    defi_env.act_update_react(0)
+    defi_env.is_done()
+
+    defi_env.act_update_react(0)
+    defi_env.is_done()
+
+    defi_env.act_update_react(0)
+    defi_env.is_done()
+    # print(Alice)
+    # print(tkn_plf)
+    # print(usdc_plf)
+    # print(weth_plf)
+
+    # defi_env.reset()
+    # print("After reset")
+    # print(Alice)
+    # print(tkn_plf)
+    # print(usdc_plf)
+    # print(weth_plf)
+
+    # # then the market update
+    # tkn_plf.update_market()
+    # usdc_plf.raise_collateral_factor()
+    # Alice.reactive_action()
+    # print(Alice)
+    # print(tkn_plf)
+    # print(usdc_plf)
+    # print(weth_plf)

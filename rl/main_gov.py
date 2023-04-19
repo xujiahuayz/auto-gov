@@ -154,6 +154,7 @@ def train_env(
                 defi_env.max_steps, usdc_seed
             ),
             training=True,
+            **add_env_kwargs,
         )
 
         bench_states.append(bench_states_this_game)

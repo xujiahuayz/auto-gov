@@ -37,7 +37,7 @@ class ProtocolEnv(gym.Env):
         return self.defi_env.get_state()
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, dict]:
-        self.defi_env.update_collateral_factor(action)
+        self.defi_env.act_update_react(action)
         state = self.defi_env.get_state()
         reward = self.defi_env.get_reward()
         done = self.defi_env.is_done()
