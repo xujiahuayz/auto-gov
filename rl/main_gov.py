@@ -301,7 +301,10 @@ if __name__ == "__main__":
     N_GAMES = 20
 
     def tkn_price_trend_func(x, y):
-        return np.array(range(1, x + 2))
+        series = np.array(range(1, x + 2))
+        series[3] = series[2] / 10
+        series[9] = series[8] * 10
+        return series
 
     agent_vars = {
         "eps_dec": 0,
