@@ -112,7 +112,7 @@ stable_start = int(target_on_point * number_games)
 
 stable_scores = scores[stable_start:]
 # find out the position or index of the median score
-median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 5]
+median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 20]
 # find out the index of the median score
 median_score_index = stable_scores.index(median_score)
 
@@ -124,10 +124,7 @@ ax2 = ax1.twinx()
 for asset in ["tkn", "weth", "usdc"]:
     # plot the collateral factor on the left axis
     ax1.plot(
-        [
-            state["pools"][asset]["collateral_factor"]
-            for state in states[median_score_index]
-        ],
+        [state["pools"][asset]["collateral_factor"] for state in example_state],
         color=ASSET_COLORS[asset],
         label=asset,
     )
@@ -147,7 +144,7 @@ ax2.set_ylabel("price")
 ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
 
-bs = bench_states[median_score_index]
+bs = bench_states[stable_start:][median_score_index]
 
 # initialize the figure
 fig, ax = plt.subplots()
@@ -174,7 +171,9 @@ for asset in ["tkn", "weth", "usdc"]:
 ax.set_xlabel("time")
 ax.set_ylabel("reserve")
 # calculate the env's total net position over time
-total_net_position = [state["net_position"] for state in states[median_score_index]]
+total_net_position = [
+    state["net_position"] for state in states[stable_start:][median_score_index]
+]
 
 # plot the total net position
 fig, ax = plt.subplots()
