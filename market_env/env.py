@@ -269,6 +269,11 @@ class User:
                 # handle some funky rounding errors
                 return 0
             log_text = f"withdrawing {-amount} {plf.asset_name} when pool has {plf.total_available_funds} {plf.asset_name} at limit {withdraw_limit}"
+
+            # TODO: model bank run -- not able to withdraw all funds
+            to_withdraw_amount = min(-amount, withdraw_limit)
+            if to_withdraw_amount > plf.total_available_funds:
+                print("BANK RUN! NOT ABLE TO WITHDRAW")
             amount = max(amount, -withdraw_limit, -plf.total_available_funds)
 
         logging.debug(log_text)
@@ -400,6 +405,10 @@ class User:
                 self.consecutive_good_supplies += 1
                 user_actions.append(("supply", supply_repay_amount, plf_name))
             else:
+                if supply_repay_amount < base_amount * agg_advantage_multiplier:
+                    # not able to drain as much as wished
+                    self.consecutive_good_supplies = 0
+                    self.safety_supply_buffer += 0.05
                 user_actions.append(("withdraw", -supply_repay_amount, plf_name))
 
         if self.existing_borrow_value < self.max_borrowable_value:  # healthy loan

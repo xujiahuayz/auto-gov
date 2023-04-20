@@ -11,9 +11,9 @@ from rl.main_gov import train_env
 logging.basicConfig(level=logging.INFO)
 
 
-number_steps = int(360 * 1.5)
+number_steps = int(30 * 18)
 EPSILON_END = 1e-4
-EPSILON_DECAY = 4e-7
+EPSILON_DECAY = 5e-7
 batch_size = 64
 EPSILON_START = 1.0
 target_on_point = 0.55
@@ -47,7 +47,7 @@ def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     series = generate_price_series(
         time_steps=time_steps,
         seed=seed,
-        mu_func=lambda t: 0.0001,
+        mu_func=lambda t: 0.00001,
         sigma_func=lambda t: 0.05 + ((t - 200) ** 2) ** 0.01 / 20,
     )
     return series
