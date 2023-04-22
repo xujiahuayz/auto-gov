@@ -28,7 +28,11 @@ class DQN(nn.Module):
         nn.init.xavier_uniform_(self.fc3.weight)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
-        self.loss = nn.MSELoss()
+        # use MAE loss (L1 loss) function
+        self.loss = nn.L1Loss()
+
+        # # use MSE loss (L2 loss) function
+        # self.loss = nn.MSELoss()
 
         # if there is a GPU, use it, otherwise use CPU
         self.device = T.device("cuda:0" if T.cuda.is_available() else "cpu")
@@ -186,6 +190,10 @@ class Agent:
 
         # calculate the loss
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
+        # if loss is inf, print the target and prediction
+        if loss == float("inf"):
+            print("target: ", q_target)
+            print("prediction: ", q_eval)
         loss.backward()
         # clip the gradients to avoid exploding gradients
         nn.utils.clip_grad_norm_(self.Q_eval.parameters(), max_norm=1.0)
