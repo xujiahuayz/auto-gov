@@ -35,9 +35,14 @@ class DQN(nn.Module):
         self.to(self.device)
 
     def forward(self, state):
-        x = F.relu(self.fc1(state))
-        x = F.relu(self.fc2(x))
-        actions = self.fc3(x)
+        # use LeakyReLU as activation function
+        layer1 = F.leaky_relu(self.fc1(state))
+        layer2 = F.leaky_relu(self.fc2(layer1))
+        actions = self.fc3(layer2)
+
+        # x = F.relu(self.fc1(state))
+        # x = F.relu(self.fc2(x))
+        # actions = self.fc3(x)
 
         return actions
 
@@ -182,6 +187,8 @@ class Agent:
         # calculate the loss
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
         loss.backward()
+        # clip the gradients to avoid exploding gradients
+        nn.utils.clip_grad_norm_(self.Q_eval.parameters(), max_norm=1.0)
         self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
 
