@@ -31,10 +31,12 @@ number_games = int(
     * 100
 )
 
+logging.info(f"number of games: {number_games}")
+
 agent_vars = {
     "gamma": 0.99,
     "epsilon": EPSILON_START,
-    "lr": 0.00,
+    "lr": 0.00015,
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,

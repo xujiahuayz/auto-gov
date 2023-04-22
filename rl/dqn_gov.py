@@ -22,6 +22,11 @@ class DQN(nn.Module):
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
 
+        # weight initialization
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.xavier_uniform_(self.fc3.weight)
+
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         self.loss = nn.MSELoss()
 
@@ -228,3 +233,14 @@ def load_trained_model(agent: Agent, model_path: str) -> None:
     agent.Q_eval.load_state_dict(T.load(model_path))
     agent.Q_eval.eval()
     print(f"Trained model loaded from {model_path}")
+
+
+def contain_nan(model_state_dict):
+    """
+    Check if the model state dict contains NaN values.
+    """
+    for key in model_state_dict:
+        if T.isnan(model_state_dict[key]).any():
+            return True
+    return False
+    
