@@ -666,7 +666,8 @@ class PlfPool:
     def utilization_ratio(self) -> float:
         if self.total_i_tokens == 0:
             return 0
-        return self.total_b_tokens / self.total_i_tokens
+        util_rate = self.total_b_tokens / self.total_i_tokens
+        return max(0, min(util_rate, 0.97))
 
     # max(0, min(1 - 1e-3, ratio))
 
