@@ -190,10 +190,10 @@ class Agent:
 
         # calculate the loss
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
-        # if loss is inf, print the target and prediction
-        if loss == float("inf"):
-            print("target: ", q_target)
-            print("prediction: ", q_eval)
+        # # if loss is inf, print the target and prediction
+        # if loss == float("inf"):
+        #     print("target: ", q_target)
+        #     print("prediction: ", q_eval)
         loss.backward()
         # clip the gradients to avoid exploding gradients
         nn.utils.clip_grad_norm_(self.Q_eval.parameters(), max_norm=1.0)
