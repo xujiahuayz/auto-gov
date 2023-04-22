@@ -22,17 +22,31 @@ class DQN(nn.Module):
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
 
+        # weight initialization
+        nn.init.xavier_uniform_(self.fc1.weight)
+        nn.init.xavier_uniform_(self.fc2.weight)
+        nn.init.xavier_uniform_(self.fc3.weight)
+
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
-        self.loss = nn.MSELoss()
+        # use MAE loss (L1 loss) function
+        self.loss = nn.L1Loss()
+
+        # # use MSE loss (L2 loss) function
+        # self.loss = nn.MSELoss()
 
         # if there is a GPU, use it, otherwise use CPU
         self.device = T.device("cuda:0" if T.cuda.is_available() else "cpu")
         self.to(self.device)
 
     def forward(self, state):
-        x = F.relu(self.fc1(state))
-        x = F.relu(self.fc2(x))
-        actions = self.fc3(x)
+        # use LeakyReLU as activation function
+        layer1 = F.leaky_relu(self.fc1(state))
+        layer2 = F.leaky_relu(self.fc2(layer1))
+        actions = self.fc3(layer2)
+
+        # x = F.relu(self.fc1(state))
+        # x = F.relu(self.fc2(x))
+        # actions = self.fc3(x)
 
         return actions
 
@@ -176,7 +190,13 @@ class Agent:
 
         # calculate the loss
         loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
+        # # if loss is inf, print the target and prediction
+        # if loss == float("inf"):
+        #     print("target: ", q_target)
+        #     print("prediction: ", q_eval)
         loss.backward()
+        # clip the gradients to avoid exploding gradients
+        nn.utils.clip_grad_norm_(self.Q_eval.parameters(), max_norm=1.0)
         self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
 
@@ -228,3 +248,14 @@ def load_trained_model(agent: Agent, model_path: str) -> None:
     agent.Q_eval.load_state_dict(T.load(model_path))
     agent.Q_eval.eval()
     print(f"Trained model loaded from {model_path}")
+
+
+def contain_nan(model_state_dict):
+    """
+    Check if the model state dict contains NaN values.
+    """
+    for key in model_state_dict:
+        if T.isnan(model_state_dict[key]).any():
+            return True
+    return False
+    
