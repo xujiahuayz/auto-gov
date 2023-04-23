@@ -253,13 +253,15 @@ class User:
                 if w is not plf
             )
 
-            minimum_supply = max(
-                0,
-                (
+            minimum_supply = (
+                max(
+                    0,
                     (self.existing_borrow_value - supported_borrow_without_this_plf)
                     / plf.collateral_factor
-                    / self.env.prices[plf.asset_name]
-                ),
+                    / self.env.prices[plf.asset_name],
+                )
+                if plf.collateral_factor > 0
+                else 0
             )
 
             withdraw_limit = (
