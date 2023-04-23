@@ -328,7 +328,7 @@ def inference_with_trained_model(
 if __name__ == "__main__":
     # show logging level at info
     logging.basicConfig(level=logging.INFO)
-    N_GAMES = 30
+    N_GAMES = 50
 
     def tkn_price_trend_func(x, y):
         series = np.array(range(1, x + 2))
@@ -357,16 +357,18 @@ if __name__ == "__main__":
     ) = train_env(
         agent_args=agent_vars,
         n_games=N_GAMES,
-        initial_collateral_factor=0.75,
-        max_steps=30,
+        initial_collateral_factor=0.99,
+        max_steps=181,
         compared_to_benchmark=True,
         tkn_price_trend_func=tkn_price_trend_func,
+        attack_steps=[26, 27, 28, 29, 30, 200],
     )
 
     test_env = init_env(
-        initial_collateral_factor=0.75,
+        initial_collateral_factor=0.99,
         max_steps=20,
         tkn_price_trend_func=tkn_price_trend_func,
+        attack_steps=[6, 11, 32],
     )
 
     test_protocol_env = ProtocolEnv(test_env)

@@ -22,7 +22,7 @@ class DefiEnv:
         prices: PriceDict | None = None,
         plf_pools: dict[str, PlfPool] | None = None,
         max_steps: int = 30,
-        attack_steps: list[float] | None = None,
+        attack_steps: list[int] | None = None,
     ):
         if users is None:
             users = {}
@@ -259,10 +259,9 @@ class User:
                 max(
                     0,
                     (self.existing_borrow_value - supported_borrow_without_this_plf)
-                    / plf.collateral_factor
-                    / self.env.prices[plf.asset_name],
+                    / x,
                 )
-                if plf.collateral_factor > 0
+                if (x := (plf.collateral_factor * self.env.prices[plf.asset_name])) > 0
                 else 0
             )
 
@@ -381,13 +380,14 @@ class User:
         user_actions = []
 
         # deposit / withdraw funds to the liquidity pool based on market conditions
-        for plf_name, plf in self.env.plf_pools.items():
+        for plf_name in ["tkn", "weth", "usdc"]:
+            plf = self.env.plf_pools[plf_name]
             supply_apy_advantage = plf.supply_apy - plf.competing_supply_apy
             collateral_factor_advantage = (
                 plf.collateral_factor - plf.competing_collateral_factor
             )
             supply_advantage_multiplier = (
-                2 / (1 + np.exp(-supply_apy_advantage * 5))
+                2 / (1 + np.exp(-supply_apy_advantage * 10))
             ) - 1
             collateral_factor_multiplier = collateral_factor_advantage / (
                 plf.competing_collateral_factor
@@ -419,10 +419,12 @@ class User:
                 user_actions.append(("withdraw", -supply_repay_amount, plf_name))
 
         if self.existing_borrow_value < self.max_borrowable_value:  # healthy loan
-            for plf_name, plf in self.env.plf_pools.items():
+            # for plf_name, plf in self.env.plf_pools.items():
+            for plf_name in ["weth", "usdc", "tkn"]:
+                plf = self.env.plf_pools[plf_name]
                 borrow_apy_advantage = plf.competing_borrow_apy - plf.borrow_apy
                 borrow_advantage_multiplier = (
-                    2 / (1 + np.exp(-borrow_apy_advantage * 5))
+                    2 / (1 + np.exp(-borrow_apy_advantage * 10))
                 ) - 1
                 base_amount = (
                     plf.total_available_funds

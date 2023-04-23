@@ -8,6 +8,7 @@ from market_env.utils import PriceDict
 
 def init_env(
     max_steps: int = 30,
+    attack_steps: list[int] | None = None,
     initial_collateral_factor: float = 0.8,
     init_safety_borrow_margin: float = 0.5,
     init_safety_supply_margin: float = 0.5,
@@ -21,7 +22,9 @@ def init_env(
     usdc_seed: int | None = None,
 ) -> DefiEnv:
     defi_env = DefiEnv(
-        prices=PriceDict({"tkn": 1, "usdc": 1, "weth": 1}), max_steps=max_steps
+        prices=PriceDict({"tkn": 1, "usdc": 1, "weth": 1}),
+        max_steps=max_steps,
+        attack_steps=attack_steps,
     )
     Alice = User(
         name="alice",
@@ -38,6 +41,7 @@ def init_env(
         asset_name="tkn",
         collateral_factor=initial_collateral_factor,
         seed=tkn_seed,
+        competing_collateral_factor=0,
     )
     usdc_plf = PlfPool(
         env=defi_env,
@@ -47,6 +51,7 @@ def init_env(
         asset_name="usdc",
         collateral_factor=initial_collateral_factor,
         seed=usdc_seed,
+        competing_collateral_factor=0.65,
     )
     weth_plf = PlfPool(
         env=defi_env,
@@ -55,5 +60,6 @@ def init_env(
         initial_starting_funds=15_000,
         asset_name="weth",
         collateral_factor=initial_collateral_factor,
+        competing_collateral_factor=0.7,
     )
     return defi_env
