@@ -1,11 +1,15 @@
+import json
 import logging
 
 # plot time series of collateral factor.
 import matplotlib.pyplot as plt
 import numpy as np
+from market_env.constants import DATA_PATH
 
 from market_env.utils import generate_price_series
-from rl.main_gov import train_env
+from rl.main_gov import inference_with_trained_model, train_env
+from rl.rl_env import ProtocolEnv
+from rl.utils import init_env
 
 
 logging.basicConfig(level=logging.INFO)
@@ -196,3 +200,39 @@ ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # set the legend outside the plot
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+test_model = trained_models[-2]
+
+
+test_steps = 360
+prices = {}
+for asset in ["link", "usdc"]:
+    # get price data in json from data folder
+    with open(DATA_PATH / f"{asset}.json", "r") as f:
+        prices[asset] = [
+            w["close"] for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
+        ]
+
+
+test_env = init_env(
+    initial_collateral_factor=0.75,
+    max_steps=test_steps,
+    tkn_price_trend_func=lambda x, y: prices["link"],
+    usdc_price_trend_func=lambda x, y: prices["usdc"],
+)
+test_protocol_env = ProtocolEnv(test_env)
+
+
+(
+    scores,
+    states,
+    rewards,
+    bench_states,
+    trained_model,
+    policies,
+) = inference_with_trained_model(
+    model=test_model,
+    env=test_protocol_env,
+    agent_args=agent_vars,
+    num_test_episodes=3,
+)
