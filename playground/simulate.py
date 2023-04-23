@@ -83,16 +83,11 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     agent_args=agent_vars,
     # args for init_env
     max_steps=number_steps,
-    initial_collateral_factor=0.7,
+    initial_collateral_factor=0.75,
     tkn_price_trend_func=tkn_prices,
     usdc_price_trend_func=usdc_prices,
 )
 
-
-# # check whether the prices are the same
-# tkn_prices = [state["pools"]["tkn"]["price"] for state in bench_states[-1]]
-
-# tkn_prices_2 = [state["pools"]["tkn"]["price"] for state in states[-1]]
 
 # plot scores on the left axis and epsilons on the right axis
 fig, ax1 = plt.subplots()

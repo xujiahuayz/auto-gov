@@ -80,7 +80,6 @@ def run_episode(
         if training:
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
-        observation_prev = observation
         observation = observation_
 
         score += reward
