@@ -13,11 +13,11 @@ logging.basicConfig(level=logging.INFO)
 
 number_steps = int(30 * 18)
 EPSILON_END = 1e-4
-EPSILON_DECAY = 5e-7
+EPSILON_DECAY = 3e-7
 batch_size = 128
 EPSILON_START = 1.0
-target_on_point = 0.8
-eps_dec_decrease_with_target = 0.5
+target_on_point = 0.5
+eps_dec_decrease_with_target = 0.6
 number_games = int(
     (
         (EPSILON_START * target_on_point)
