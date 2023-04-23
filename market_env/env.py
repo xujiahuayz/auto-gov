@@ -481,6 +481,10 @@ class User:
             self.safety_supply_buffer -= 0.05
         return user_actions
 
+    def price_attack(self):
+        # arbitrarily increase tkn price by 100%
+        self.env.prices["tkn"] *= 2
+
 
 class PlfPool:
     def __init__(
@@ -628,13 +632,6 @@ class PlfPool:
         # TODO: check when to update the price
         self.update_asset_price()
         self.reward = 0  # reset reward
-
-    # def get_reward(self) -> float:
-    #     """
-    #     get the difference between the profit gained from this episode and the profit gained from the previous episode
-    #     """
-    #     # self.reward = self.get_profit()
-    #     return self.reward
 
     def get_state(self) -> np.ndarray:
         return np.array(
