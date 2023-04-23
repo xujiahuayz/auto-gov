@@ -114,7 +114,7 @@ stable_start = int(target_on_point * number_games)
 
 stable_scores = scores[stable_start:]
 # find out the position or index of the median score
-median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 20]
+median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 2000]
 # find out the index of the median score
 median_score_index = stable_scores.index(median_score)
 
