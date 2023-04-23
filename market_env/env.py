@@ -22,6 +22,7 @@ class DefiEnv:
         prices: PriceDict | None = None,
         plf_pools: dict[str, PlfPool] | None = None,
         max_steps: int = 30,
+        attack_steps: list[float] | None = None,
     ):
         if users is None:
             users = {}
@@ -39,6 +40,7 @@ class DefiEnv:
         self.bad_loan_expenses: float = 0.0
         self.max_steps = max_steps
         self.num_action_pool: int = 3  # lower, keep, raise
+        self.attack_steps = attack_steps
 
     @property
     def prices(self) -> PriceDict:
@@ -370,6 +372,9 @@ class User:
             logging.debug("USER IS DEFAULTING!!! WRITING OFF LOAN")
             self.env.bad_loan_expenses += self.existing_borrow_value
             return [("default", 0, "all")]
+
+        if (attack_steps := self.env.attack_steps) and (self.env.step in attack_steps):
+            self.price_attack()
 
         user_funds = self.funds_available
 
