@@ -14,10 +14,10 @@ logging.basicConfig(level=logging.INFO)
 number_steps = int(30 * 18)
 EPSILON_END = 1e-4
 EPSILON_DECAY = 5e-7
-batch_size = 64
+batch_size = 128
 EPSILON_START = 1.0
-target_on_point = 0.55
-eps_dec_decrease_with_target = 0.8
+target_on_point = 0.8
+eps_dec_decrease_with_target = 0.5
 number_games = int(
     (
         (EPSILON_START * target_on_point)
@@ -26,7 +26,7 @@ number_games = int(
     )
     / EPSILON_DECAY
     / number_steps
-    * 1.25
+    * 2
     // 100
     * 100
 )
@@ -34,7 +34,7 @@ number_games = int(
 logging.info(f"number of games: {number_games}")
 
 agent_vars = {
-    "gamma": 0.99,
+    "gamma": 0.95,
     "epsilon": EPSILON_START,
     "lr": 0.00015,
     "eps_end": EPSILON_END,

@@ -28,11 +28,11 @@ class DQN(nn.Module):
         nn.init.xavier_uniform_(self.fc3.weight)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
-        # use MAE loss (L1 loss) function
-        self.loss = nn.L1Loss()
+        # # use MAE loss (L1 loss) function
+        # self.loss = nn.L1Loss()
 
-        # # use MSE loss (L2 loss) function
-        # self.loss = nn.MSELoss()
+        # use MSE loss (L2 loss) function
+        self.loss = nn.MSELoss()
 
         # if there is a GPU, use it, otherwise use CPU
         self.device = T.device("cuda:0" if T.cuda.is_available() else "cpu")
