@@ -184,6 +184,7 @@ def train_env(
                 defi_env.max_steps, usdc_seed
             ),
             training=True,
+            **add_env_kwargs,
         )
 
         bench_states.append(bench_states_this_game)
@@ -331,11 +332,10 @@ def inference_with_trained_model(
 if __name__ == "__main__":
     # show logging level at info
     logging.basicConfig(level=logging.INFO)
-    N_GAMES = 50
+    N_GAMES = 1
 
     def tkn_price_trend_func(x, y):
-        series = np.array(range(1, x + 2))
-        series[3] = series[2] / 10
+        series = np.array(range(1, x + 2)).astype(float)
         series[9] = series[8] * 10
         return series
 
@@ -364,7 +364,10 @@ if __name__ == "__main__":
         max_steps=181,
         compared_to_benchmark=True,
         tkn_price_trend_func=tkn_price_trend_func,
-        attack_steps=[26, 27, 28, 29, 30, 200],
+        attack_steps=[
+            3,
+            26,
+        ],
     )
 
     test_env = init_env(

@@ -274,9 +274,9 @@ class User:
             log_text = f"withdrawing {-amount} {plf.asset_name} when pool has {plf.total_available_funds} {plf.asset_name} at limit {withdraw_limit}"
 
             # TODO: model bank run -- not able to withdraw all funds
-            to_withdraw_amount = min(-amount, withdraw_limit)
-            if to_withdraw_amount > plf.total_available_funds:
-                print("BANK RUN! NOT ABLE TO WITHDRAW")
+            # to_withdraw_amount = min(-amount, withdraw_limit)
+            # if to_withdraw_amount > plf.total_available_funds:
+            #     print("BANK RUN! NOT ABLE TO WITHDRAW")
             amount = max(amount, -withdraw_limit, -plf.total_available_funds)
 
         logging.debug(log_text)
@@ -342,7 +342,6 @@ class User:
             else f"repaying {-amount} {plf.borrow_token_name}"
         )
         # update liquidity pool
-        plf.total_borrowed_funds += amount
         plf.total_available_funds -= amount
 
         # update b tokens of the user in the pool registry
@@ -359,6 +358,22 @@ class User:
 
         return amount
 
+    def repay_with_itokens(self, amount: float, plf: PlfPool) -> float:
+        if amount <= 0:
+            return 0
+        amount = min(
+            amount,
+            self.funds_available[plf.interest_token_name],
+            self.funds_available[plf.borrow_token_name],
+        )
+
+        plf.user_b_tokens[self.name] -= amount
+        self.funds_available[plf.borrow_token_name] = plf.user_b_tokens[self.name]
+
+        plf.user_i_tokens[self.name] -= amount
+        self.funds_available[plf.interest_token_name] = plf.user_i_tokens[self.name]
+        return amount
+
     def reactive_action(self) -> list[tuple[str, float, str]]:
         """
         supply funds to the liquidity pool in response to market conditions
@@ -373,7 +388,7 @@ class User:
             return [("default", 0, "all")]
 
         if (attack_steps := self.env.attack_steps) and (self.env.step in attack_steps):
-            self.price_attack()
+            return self.price_attack()
 
         user_funds = self.funds_available
 
@@ -492,7 +507,56 @@ class User:
 
     def price_attack(self):
         # arbitrarily increase tkn price by 100%
-        self.env.prices["tkn"] *= 2
+        self.env.prices["tkn"] *= 200
+        user_actions = []
+        # repay all loans
+        tkn_pool = self.env.plf_pools["tkn"]
+        eth_pool = self.env.plf_pools["weth"]
+        usdc_pool = self.env.plf_pools["usdc"]
+
+        tkn_supply_amount = self._supply_withdraw(self.funds_available["tkn"], tkn_pool)
+        user_actions.append(("supply", tkn_supply_amount, "tkn"))
+
+        tkn_repay_amount = self.repay_with_itokens(
+            tkn_pool.user_i_tokens[self.name], tkn_pool
+        )
+        user_actions.append(("repay_with_i", tkn_repay_amount, "tkn"))
+        # deposit all tkn
+
+        eth_repay_amount = self.repay_with_itokens(
+            eth_pool.user_i_tokens[self.name], eth_pool
+        )
+        user_actions.append(("repay_with_i", eth_repay_amount, "weth"))
+
+        usdc_repay_amount = self.repay_with_itokens(
+            usdc_pool.user_i_tokens[self.name], usdc_pool
+        )
+        user_actions.append(("repay_with_i", usdc_repay_amount, "usdc"))
+
+        # withdraw all eth and usdc
+        eth_withdraw_amount = self._supply_withdraw(
+            -self.funds_available[eth_pool.interest_token_name], eth_pool
+        )
+        user_actions.append(("withdraw", -eth_withdraw_amount, "weth"))
+        usdc_withdraw_amount = self._supply_withdraw(
+            -self.funds_available[usdc_pool.interest_token_name], usdc_pool
+        )
+        user_actions.append(("withdraw", -usdc_withdraw_amount, "usdc"))
+
+        # borrow eth and usdc
+        eth_borrow_amount = self._borrow_repay(eth_pool.total_available_funds, eth_pool)
+        user_actions.append(("borrow", eth_borrow_amount, "weth"))
+        usdc_borrow_amount = self._borrow_repay(
+            usdc_pool.total_available_funds, usdc_pool
+        )
+        user_actions.append(("borrow", usdc_borrow_amount, "usdc"))
+
+        # withdraw residual tkn
+        tkn_withdraw_amount = self._supply_withdraw(
+            -self.funds_available[tkn_pool.interest_token_name], tkn_pool
+        )
+        user_actions.append(("withdraw", -tkn_withdraw_amount, "tkn"))
+        return user_actions
 
 
 class PlfPool:
@@ -556,7 +620,6 @@ class PlfPool:
         self.reward: float = 0.0
 
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
-        self.total_borrowed_funds = 0.0
 
         self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_name
         self.borrow_token_name = DEBT_TOKEN_PREFIX + self.asset_name
@@ -646,7 +709,7 @@ class PlfPool:
         return np.array(
             [
                 self.total_available_funds,
-                self.total_borrowed_funds,
+                self.reserve,
                 self.total_i_tokens,
                 self.total_b_tokens,
                 self.collateral_factor,

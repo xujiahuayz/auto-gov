@@ -13,7 +13,7 @@ class ProtocolEnv(gym.Env):
         num_pools = len(defi_env.plf_pools)
         self.observation_space = gym.spaces.Box(
             # self.total_available_funds,
-            # self.total_borrowed_funds,
+            # self.reserve,
             # self.total_i_tokens,
             # self.total_b_tokens,
             # self.collateral_factor,
@@ -21,7 +21,7 @@ class ProtocolEnv(gym.Env):
             # self.supply_apy,
             # self.borrow_apy,
             # self.env.prices[self.asset_name],
-            low=np.array([0, -np.inf, 0, 0, -np.inf, 0, 0, 0, 0] * num_pools),
+            low=np.array([0, 0, 0, 0, -np.inf, 0, 0, 0, 0] * num_pools),
             high=np.array(
                 [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
                 * num_pools
