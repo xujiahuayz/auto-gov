@@ -120,11 +120,15 @@ class Agent:
 
     @property
     def target_net_enabled(self) -> bool:
+        # eps_start -----eps_dec-----> target_on_point -----eps_dec*eps_dec_decrease_with_target-----> eps_min
+        #                   ^                                                 ^
+        #                   |                                                 |
+        #                   |                                                 |
+        #        length: eps_start - target_on_point              length: target_on_point - eps_min
+
         if self.target_on_point:
             return (
-                self.epsilon
-                < self.epsilon_start
-                - (self.epsilon_start - self.eps_min) * self.target_on_point
+                self.epsilon < self.target_on_point
             )
         return False
 
@@ -209,6 +213,7 @@ class Agent:
         # check if epsilon decay should be decreased
         if self.eps_dec_check_flag:
             if self.target_net_enabled:
+                # decrease epsilon decay
                 self.eps_dec = self.eps_dec * self.eps_dec_decrease_with_target
                 self.eps_dec_check_flag = False
 

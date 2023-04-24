@@ -4,6 +4,7 @@ import logging
 # plot time series of collateral factor.
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 from market_env.constants import DATA_PATH
 
 from market_env.utils import generate_price_series
@@ -20,19 +21,15 @@ EPSILON_END = 1e-4
 EPSILON_DECAY = 3e-7
 batch_size = 128
 EPSILON_START = 1.0
-target_on_point = 0.5
-eps_dec_decrease_with_target = 0.6
+target_on_point = 0.35
+eps_dec_decrease_with_target = 0.25
 number_games = int(
-    (
-        (EPSILON_START * target_on_point)
-        + (EPSILON_START * (1 - target_on_point) - EPSILON_END)
-        / eps_dec_decrease_with_target
+    math.ceil(
+        (
+            (EPSILON_START - target_on_point) / EPSILON_DECAY +
+            (target_on_point - EPSILON_END) / (EPSILON_DECAY * eps_dec_decrease_with_target)
+        ) / number_steps
     )
-    / EPSILON_DECAY
-    / number_steps
-    * 2
-    // 100
-    * 100
 )
 
 logging.info(f"number of games: {number_games}")

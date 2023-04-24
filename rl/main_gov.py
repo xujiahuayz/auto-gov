@@ -322,6 +322,8 @@ def inference_with_trained_model(
         rewards,
         bench_states,
         trained_model,
+        # # return the list of history losses
+        # agent.loss_list,
     )
 
 
