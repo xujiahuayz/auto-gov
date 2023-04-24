@@ -210,7 +210,7 @@ def train_env(
             logging.info(
                 "Episode: {}, time taken: {:.2f}s, the last score: {:.2f}, average last {} scores: {:.2f}, epsilon: {:.4f}".format(
                     i,
-                    time_cost[-1],
+                    sum(time_cost[-chunk_size:]),
                     score,
                     chunk_size,
                     avg_score,
