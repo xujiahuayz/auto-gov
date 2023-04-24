@@ -123,6 +123,7 @@ def train_env(
     ] = lambda x, y: np.ones(x),
     tkn_seed: int | None = None,
     usdc_seed: int | None = None,
+    attack_steps: Callable[[int], list[int] | None] = lambda x: None,
     **add_env_kwargs,
 ) -> tuple[
     list[float],
@@ -167,6 +168,7 @@ def train_env(
 
     for i in range(n_games):
         start_time = time.time()
+        attack_steps_this_game = attack_steps(defi_env.max_steps)
         (
             score,
             reward_this_game,
@@ -184,6 +186,7 @@ def train_env(
                 defi_env.max_steps, usdc_seed
             ),
             training=True,
+            attack_steps=attack_steps_this_game,
             **add_env_kwargs,
         )
 

@@ -73,6 +73,10 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     return series
 
 
+def attack_func(t: int) -> list[int]:
+    return np.random.randint(0, t, 3).tolist()
+
+
 (
     scores,
     eps_history,
@@ -90,7 +94,7 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     initial_collateral_factor=0.75,
     tkn_price_trend_func=tkn_prices,
     usdc_price_trend_func=usdc_prices,
-    attack_steps=attack_steps,
+    attack_steps=attack_func,
 )
 
 
