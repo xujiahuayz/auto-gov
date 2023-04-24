@@ -17,20 +17,25 @@ logging.basicConfig(level=logging.INFO)
 
 
 number_steps = int(30 * 18)
-EPSILON_END = 1e-4
-EPSILON_DECAY = 3e-7
+EPSILON_END = 5e-4
+EPSILON_DECAY = 4e-7
 batch_size = 100
 EPSILON_START = 1.0
-target_on_point = 0.35
-eps_dec_decrease_with_target = 0.25
+target_on_point = 0.3
+eps_dec_decrease_with_target = 0.3
 number_games = int(
     math.ceil(
         (
-            (EPSILON_START - target_on_point) / EPSILON_DECAY +
-            (target_on_point - EPSILON_END) / (EPSILON_DECAY * eps_dec_decrease_with_target)
-        ) / number_steps
+            (EPSILON_START - target_on_point) / EPSILON_DECAY
+            + (target_on_point - EPSILON_END)
+            / (EPSILON_DECAY * eps_dec_decrease_with_target)
+        )
+        / number_steps
     )
 )
+
+# pick 5 random integers between 0 and number_steps
+attack_steps = np.random.randint(0, number_steps, 5).tolist()
 
 logging.info(f"number of games: {number_games}")
 
@@ -83,6 +88,7 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     initial_collateral_factor=0.75,
     tkn_price_trend_func=tkn_prices,
     usdc_price_trend_func=usdc_prices,
+    attack_steps=attack_steps,
 )
 
 

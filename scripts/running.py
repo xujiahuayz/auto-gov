@@ -1,40 +1,50 @@
+import json
 import logging
 
 # plot time series of collateral factor.
 import matplotlib.pyplot as plt
 import numpy as np
+import math
+from market_env.constants import DATA_PATH
 
 from market_env.utils import generate_price_series
-from rl.main_gov import train_env
+from rl.main_gov import inference_with_trained_model, train_env
+from rl.rl_env import ProtocolEnv
+from rl.utils import init_env
 
 
 logging.basicConfig(level=logging.INFO)
 
 
-number_steps = int(360 * 1.5)
-EPSILON_END = 1e-4
+number_steps = int(30 * 18)
+EPSILON_END = 5e-4
 EPSILON_DECAY = 4e-7
-batch_size = 64
+batch_size = 100
 EPSILON_START = 1.0
-target_on_point = 0.55
-eps_dec_decrease_with_target = 0.8
+target_on_point = 0.3
+eps_dec_decrease_with_target = 0.3
 number_games = int(
-    (
-        (EPSILON_START * target_on_point)
-        + (EPSILON_START * (1 - target_on_point) - EPSILON_END)
-        / eps_dec_decrease_with_target
+    math.ceil(
+        (
+            (EPSILON_START - target_on_point) / EPSILON_DECAY
+            + (target_on_point - EPSILON_END)
+            / (EPSILON_DECAY * eps_dec_decrease_with_target)
+        )
+        / number_steps
     )
-    / EPSILON_DECAY
-    / number_steps
-    * 1.25
-    // 100
-    * 100
 )
 
+# pick 5 random integers between 0 and number_steps
+attack_steps = np.random.randint(0, number_steps, 5).tolist()
+# sort the list
+attack_steps.sort()
+
+logging.info(f"number of games: {number_games}")
+
 agent_vars = {
-    "gamma": 0.99,
+    "gamma": 0.95,
     "epsilon": EPSILON_START,
-    "lr": 0.00,
+    "lr": 0.00015,
     "eps_end": EPSILON_END,
     "eps_dec": EPSILON_DECAY,
     "batch_size": batch_size,
@@ -47,10 +57,9 @@ def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     series = generate_price_series(
         time_steps=time_steps,
         seed=seed,
-        mu_func=lambda t: 0.0001,
+        mu_func=lambda t: 0.00001,
         sigma_func=lambda t: 0.05 + ((t - 200) ** 2) ** 0.01 / 20,
     )
-    series[1] = 1e-6
     return series
 
 
@@ -61,7 +70,6 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
         mu_func=lambda t: 0.0001,
         sigma_func=lambda t: 0.05,
     )
-    series[1] = 1e-6
     return series
 
 
@@ -79,16 +87,12 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     agent_args=agent_vars,
     # args for init_env
     max_steps=number_steps,
-    initial_collateral_factor=0.7,
+    initial_collateral_factor=0.75,
     tkn_price_trend_func=tkn_prices,
     usdc_price_trend_func=usdc_prices,
+    attack_steps=attack_steps,
 )
 
-
-# # check whether the prices are the same
-# tkn_prices = [state["pools"]["tkn"]["price"] for state in bench_states[-1]]
-
-# tkn_prices_2 = [state["pools"]["tkn"]["price"] for state in states[-1]]
 
 # plot scores on the left axis and epsilons on the right axis
 fig, ax1 = plt.subplots()
@@ -110,11 +114,11 @@ ASSET_COLORS = {
 }
 
 
-stable_start = int(0 * number_games)
+stable_start = int(target_on_point * number_games)
 
 stable_scores = scores[stable_start:]
 # find out the position or index of the median score
-median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 50000]
+median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 2000]
 # find out the index of the median score
 median_score_index = stable_scores.index(median_score)
 
@@ -126,10 +130,7 @@ ax2 = ax1.twinx()
 for asset in ["tkn", "weth", "usdc"]:
     # plot the collateral factor on the left axis
     ax1.plot(
-        [
-            state["pools"][asset]["collateral_factor"]
-            for state in states[median_score_index]
-        ],
+        [state["pools"][asset]["collateral_factor"] for state in example_state],
         color=ASSET_COLORS[asset],
         label=asset,
     )
@@ -149,27 +150,23 @@ ax2.set_ylabel("price")
 ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
 
+bs = bench_states[stable_start:][median_score_index]
+
 # initialize the figure
 fig, ax = plt.subplots()
 ax3 = ax.twinx()
 for asset in ["tkn", "weth", "usdc"]:
     # plot reserves of each asset in area plot with semi-transparent fill
     ax.fill_between(
-        range(len(states[-1])),
-        [
-            state["pools"][asset]["reserve"]
-            for state in bench_states[median_score_index]
-        ],
+        range(len(bs)),
+        [state["pools"][asset]["reserve"] for state in bs],
         alpha=0.5,
         label=asset,
         color=ASSET_COLORS[asset],
     )
     # plot utilization ratio
     ax3.plot(
-        [
-            state["pools"][asset]["utilization_ratio"]
-            for state in bench_states[median_score_index]
-        ],
+        [state["pools"][asset]["utilization_ratio"] for state in bs],
         color=ASSET_COLORS[asset],
         linestyle="dotted",
     )
@@ -180,14 +177,16 @@ for asset in ["tkn", "weth", "usdc"]:
 ax.set_xlabel("time")
 ax.set_ylabel("reserve")
 # calculate the env's total net position over time
-total_net_position = [state["net_position"] for state in states[median_score_index]]
+total_net_position = [
+    state["net_position"] for state in states[stable_start:][median_score_index]
+]
 
 # plot the total net position
 fig, ax = plt.subplots()
 
 # plot the benchmark case
 ax.plot(
-    [state["net_position"] for state in bench_states[median_score_index]],
+    [state["net_position"] for state in bs],
     label="benchmark",
 )
 
@@ -201,3 +200,39 @@ ax.set_xlabel("time")
 ax.set_ylabel("total net position")
 # set the legend outside the plot
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+test_model = trained_models[-2]
+
+
+test_steps = 360
+prices = {}
+for asset in ["link", "usdc"]:
+    # get price data in json from data folder
+    with open(DATA_PATH / f"{asset}.json", "r") as f:
+        prices[asset] = [
+            w["close"] for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
+        ]
+
+
+test_env = init_env(
+    initial_collateral_factor=0.75,
+    max_steps=test_steps,
+    tkn_price_trend_func=lambda x, y: prices["link"],
+    usdc_price_trend_func=lambda x, y: prices["usdc"],
+)
+test_protocol_env = ProtocolEnv(test_env)
+
+
+(
+    scores,
+    states,
+    rewards,
+    bench_states,
+    trained_model,
+    policies,
+) = inference_with_trained_model(
+    model=test_model,
+    env=test_protocol_env,
+    agent_args=agent_vars,
+    num_test_episodes=3,
+)
