@@ -361,13 +361,10 @@ if __name__ == "__main__":
         agent_args=agent_vars,
         n_games=N_GAMES,
         initial_collateral_factor=0.99,
-        max_steps=181,
+        max_steps=360,
         compared_to_benchmark=True,
         tkn_price_trend_func=tkn_price_trend_func,
-        attack_steps=[
-            3,
-            26,
-        ],
+        attack_steps=[3, 358],
     )
 
     test_env = init_env(

@@ -381,18 +381,19 @@ class User:
         for plf_name, plf in self.env.plf_pools.items():
             assert self.env.prices[plf_name] == plf.asset_price_history[self.env.step]
 
+        user_actions = []
+
+        if (attack_steps := self.env.attack_steps) and (self.env.step in attack_steps):
+            user_actions = self.price_attack()
+
         if self.existing_borrow_value >= self.existing_supply_value > 0:
             # not worth repaying the loan, prefer defaulting
             logging.debug("USER IS DEFAULTING!!! WRITING OFF LOAN")
             self.env.bad_loan_expenses += self.existing_borrow_value
-            return [("default", 0, "all")]
-
-        if (attack_steps := self.env.attack_steps) and (self.env.step in attack_steps):
-            return self.price_attack()
+            user_actions.append(("default", 0, "all"))
+            return user_actions
 
         user_funds = self.funds_available
-
-        user_actions = []
 
         # deposit / withdraw funds to the liquidity pool based on market conditions
         for plf_name in ["tkn", "weth", "usdc"]:
@@ -533,16 +534,6 @@ class User:
         )
         user_actions.append(("repay_with_i", usdc_repay_amount, "usdc"))
 
-        # withdraw all eth and usdc
-        eth_withdraw_amount = self._supply_withdraw(
-            -self.funds_available[eth_pool.interest_token_name], eth_pool
-        )
-        user_actions.append(("withdraw", -eth_withdraw_amount, "weth"))
-        usdc_withdraw_amount = self._supply_withdraw(
-            -self.funds_available[usdc_pool.interest_token_name], usdc_pool
-        )
-        user_actions.append(("withdraw", -usdc_withdraw_amount, "usdc"))
-
         # borrow eth and usdc
         eth_borrow_amount = self._borrow_repay(eth_pool.total_available_funds, eth_pool)
         user_actions.append(("borrow", eth_borrow_amount, "weth"))
@@ -556,6 +547,9 @@ class User:
             -self.funds_available[tkn_pool.interest_token_name], tkn_pool
         )
         user_actions.append(("withdraw", -tkn_withdraw_amount, "tkn"))
+
+        # resume price
+        self.env.prices["tkn"] /= 200
         return user_actions
 
 
