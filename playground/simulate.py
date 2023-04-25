@@ -17,11 +17,11 @@ logging.basicConfig(level=logging.INFO)
 
 
 number_steps = int(30 * 18)
-EPSILON_END = 5e-4
-EPSILON_DECAY = 4e-7
+EPSILON_END = 1e-4
+EPSILON_DECAY = 3e-7
 batch_size = 100
 EPSILON_START = 1.0
-target_on_point = 0.3
+target_on_point = 0.4
 eps_dec_decrease_with_target = 0.3
 number_games = int(
     math.ceil(
@@ -36,6 +36,8 @@ number_games = int(
 
 # pick 5 random integers between 0 and number_steps
 attack_steps = np.random.randint(0, number_steps, 5).tolist()
+# sort the list
+attack_steps.sort()
 
 logging.info(f"number of games: {number_games}")
 
@@ -71,6 +73,10 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     return series
 
 
+def attack_func(t: int) -> list[int]:
+    return np.random.randint(0, t, 3).tolist()
+
+
 (
     scores,
     eps_history,
@@ -88,7 +94,7 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     initial_collateral_factor=0.75,
     tkn_price_trend_func=tkn_prices,
     usdc_price_trend_func=usdc_prices,
-    attack_steps=attack_steps,
+    attack_steps=attack_func,
 )
 
 
@@ -175,9 +181,7 @@ for asset in ["tkn", "weth", "usdc"]:
 ax.set_xlabel("time")
 ax.set_ylabel("reserve")
 # calculate the env's total net position over time
-total_net_position = [
-    state["net_position"] for state in states[stable_start:][median_score_index]
-]
+total_net_position = [state["net_position"] for state in example_state]
 
 # plot the total net position
 fig, ax = plt.subplots()
@@ -186,6 +190,7 @@ fig, ax = plt.subplots()
 ax.plot(
     [state["net_position"] for state in bs],
     label="benchmark",
+    lw=2,
 )
 
 ax.set_xlabel("time")
