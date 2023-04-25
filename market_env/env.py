@@ -542,10 +542,8 @@ class User:
         )
         user_actions.append(("borrow", usdc_borrow_amount, "usdc"))
 
-        # withdraw residual tkn
-        tkn_withdraw_amount = self._supply_withdraw(
-            -self.funds_available[tkn_pool.interest_token_name], tkn_pool
-        )
+        # withdraw what's been supplied
+        tkn_withdraw_amount = self._supply_withdraw(-tkn_supply_amount, tkn_pool)
         user_actions.append(("withdraw", -tkn_withdraw_amount, "tkn"))
 
         # resume price
