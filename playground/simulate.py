@@ -17,18 +17,18 @@ logging.basicConfig(level=logging.INFO)
 
 
 number_steps = int(30 * 18)
-EPSILON_END = 1e-4
-EPSILON_DECAY = 3e-7
+epsilon_end = 1e-4
+epsilon_decay = 3e-7
 batch_size = 100
-EPSILON_START = 1.0
+epsilon_start = 1.0
 target_on_point = 0.4
 eps_dec_decrease_with_target = 0.3
 number_games = int(
     math.ceil(
         (
-            (EPSILON_START - target_on_point) / EPSILON_DECAY
-            + (target_on_point - EPSILON_END)
-            / (EPSILON_DECAY * eps_dec_decrease_with_target)
+            (epsilon_start - target_on_point) / epsilon_decay
+            + (target_on_point - epsilon_end)
+            / (epsilon_decay * eps_dec_decrease_with_target)
         )
         / number_steps
     )
@@ -43,10 +43,10 @@ logging.info(f"number of games: {number_games}")
 
 agent_vars = {
     "gamma": 0.95,
-    "epsilon": EPSILON_START,
+    "epsilon": epsilon_start,
     "lr": 0.00015,
-    "eps_end": EPSILON_END,
-    "eps_dec": EPSILON_DECAY,
+    "eps_end": epsilon_end,
+    "eps_dec": epsilon_decay,
     "batch_size": batch_size,
     "target_on_point": target_on_point,
     "eps_dec_decrease_with_target": eps_dec_decrease_with_target,
@@ -86,7 +86,7 @@ def attack_func(t: int) -> list[int]:
     bench_states,
     trained_models,
 ) = train_env(
-    n_episodes=number_games,
+    n_games=number_games,
     compared_to_benchmark=True,
     agent_args=agent_vars,
     # args for init_env
@@ -204,7 +204,21 @@ ax.set_ylabel("total net position")
 # set the legend outside the plot
 ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
-test_model = trained_models[-2]
+
+# episodes_stored = [w["episode"] for w in trained_models]
+# scores_stored = [w["score"] for w in trained_models]
+# target_on_episode = int(
+#     (epsilon_start - target_on_point) / epsilon_decay / number_steps - 0.5
+# )
+# # median score before target net
+# median_score_before = sorted(stable_scores, reverse=True)[len(stable_scores) // 2000]
+
+# plt.plot(episodes_stored, scores_stored)
+# plt.show()
+# plt.close()
+
+
+# test_model = trained_models[-7]
 
 
 test_steps = 360
@@ -225,17 +239,9 @@ test_env = init_env(
 )
 test_protocol_env = ProtocolEnv(test_env)
 
-
-(
-    scores,
-    states,
-    rewards,
-    bench_states,
-    trained_model,
-    policies,
-) = inference_with_trained_model(
+x = inference_with_trained_model(
     model=test_model,
     env=test_protocol_env,
     agent_args=agent_vars,
-    num_test_episodes=900,
+    num_test_episodes=90,
 )

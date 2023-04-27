@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 
 # plot time series of collateral factor.
 import matplotlib.pyplot as plt
@@ -33,15 +33,18 @@ def plot_training(
     ax1.plot(range(number_episodes), scores, color=score_color)
     ax2.plot(range(number_episodes), eps_history, color=epsilon_color)
 
-    ax2.hlines(
-        y=[target_on_point],
-        xmin=[(epsilon_start - target_on_point) / epsilon_decay / number_steps - 0.5],
-        xmax=[number_episodes],
-        colors=[epsilon_color],
-        linestyles="dashed",
-    )
+    # ax2.hlines(
+    #     y=[target_on_point],
+    #     xmin=[(epsilon_start - target_on_point) / epsilon_decay / number_steps - 0.5],
+    #     xmax=[number_episodes],
+    #     colors=[epsilon_color],
+    #     linestyles="dashed",
+    # )
 
     # TODO: specify when target is turned on by labeling it on ax2, consider logging y
+
+    if attack_on:
+        pass
 
     # label axes
     ax1.set_xlabel("episode")
@@ -53,3 +56,98 @@ def plot_training(
         fname=FIGURES_PATH / f"{number_steps}_{target_on_point}_{attack_on}.pdf"
     )
     plt.show()
+
+
+def plot_examp_states(example_states: list[dict[str, Any]], bs: list[dict[str, Any]]):
+    # create a figure with two axes
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    for asset in ["tkn", "weth", "usdc"]:
+        # plot the collateral factor on the left axis
+        ax1.plot(
+            [state["pools"][asset]["collateral_factor"] for state in example_state],
+            color=ASSET_COLORS[asset],
+            label=asset,
+        )
+        # plot the price on the right axis
+
+        ax2.plot(
+            [state["pools"][asset]["price"] for state in example_state],
+            color=ASSET_COLORS[asset],
+            linestyle="dashed",
+        )
+
+    # set the labels
+    ax1.set_ylabel("collateral factor")
+    ax2.set_ylabel("price")
+
+    # set the legend outside the plot
+    ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+    # initialize the figure
+    fig, ax = plt.subplots()
+    ax3 = ax.twinx()
+    for asset in ["tkn", "weth", "usdc"]:
+        # plot reserves of each asset in area plot with semi-transparent fill
+        ax.fill_between(
+            range(len(bs)),
+            [state["pools"][asset]["reserve"] for state in bs],
+            alpha=0.5,
+            label=asset,
+            color=ASSET_COLORS[asset],
+        )
+        # plot utilization ratio
+        ax3.plot(
+            [state["pools"][asset]["utilization_ratio"] for state in bs],
+            color=ASSET_COLORS[asset],
+            linestyle="dotted",
+        )
+        ax3.set_ylabel("utilization ratio")
+
+    # set the labels
+    ax.set_xlabel("time")
+    ax.set_ylabel("reserve")
+    # calculate the env's total net position over time
+    total_net_position = [state["net_position"] for state in example_state]
+
+    # plot the total net position
+    fig, ax = plt.subplots()
+
+    # plot the benchmark case
+    ax.plot(
+        [state["net_position"] for state in bs],
+        label="benchmark",
+        lw=2,
+    )
+
+    ax.set_xlabel("time")
+    ax.set_ylabel("total net position")
+    # legend outside the plot
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+    ax.plot(total_net_position, label="RL")
+    ax.set_xlabel("time")
+    ax.set_ylabel("total net position")
+    # set the legend outside the plot
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+
+# color scheme for the three assets
+ASSET_COLORS = {
+    "tkn": "tab:blue",
+    "weth": "tab:orange",
+    "usdc": "tab:green",
+}
+
+
+stable_start = int(target_on_point * number_games)
+
+stable_scores = scores[stable_start:]
+# find out the position or index of the median score
+median_score = sorted(stable_scores, reverse=True)[len(stable_scores) // 2000]
+# find out the index of the median score
+median_score_index = stable_scores.index(median_score)
+
+example_state = states[stable_start:][median_score_index]
+
+bs = bench_states[stable_start:][median_score_index]

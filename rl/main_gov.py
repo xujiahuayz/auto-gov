@@ -119,7 +119,7 @@ def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
 @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
 def train_env(
     agent_args: dict[str, Any],
-    n_episodes: int = 2_000,
+    n_games: int = 2_000,
     compared_to_benchmark: bool = True,
     tkn_price_trend_func: Callable[
         [int, int | None], np.ndarray
@@ -182,7 +182,7 @@ def train_env(
         [],
     )
 
-    for i in range(n_episodes):
+    for i in range(n_games):
         start_time = time.time()
         attack_steps_this_episode = (
             attack_steps(defi_env.max_steps) if attack_steps else None
@@ -259,9 +259,7 @@ def inference_with_trained_model(
 ) -> tuple[
     list[float],
     list[list[dict[str, Any]]],
-    list[list[float]],
     list[list[dict[str, Any]]],
-    list[dict[str, Any]],
     list[list[float]],
 ]:
     """
@@ -274,7 +272,10 @@ def inference_with_trained_model(
         compared_to_benchmark (bool, optional): Whether to compare the performance with the benchmark. Defaults to True.
 
     Returns:
-        The scores, states, rewards, bench_states, trained_model, policies.
+        scores,
+        states,
+        rewards,
+        bench_states,
     """
     # Create an agent with the same settings as during training
     agent_args["n_actions"] = env.action_space.n
@@ -286,15 +287,11 @@ def inference_with_trained_model(
 
     (
         scores,
-        eps_history,
         states,
-        trained_model,
         bench_states,
         policies,
         rewards,
     ) = (
-        [],
-        [],
         [],
         [],
         [],
@@ -341,11 +338,9 @@ def inference_with_trained_model(
 
     return (
         scores,
-        eps_history,
         states,
         rewards,
         bench_states,
-        trained_model,
         # # return the list of history losses
         # agent.loss_list,
     )
@@ -381,7 +376,7 @@ if __name__ == "__main__":
         training_models,
     ) = train_env(
         agent_args=agent_vars,
-        n_episodes=N_EPISODES,
+        n_games=N_EPISODES,
         initial_collateral_factor=0.99,
         max_steps=360,
         compared_to_benchmark=True,

@@ -1,13 +1,15 @@
 import logging
 import math
 from typing import Callable
-from scripts.plotting import plot_training
+from market_env.constants import FIGURES_PATH
 
-# plot time series of collateral factor.
-import numpy as np
+from matplotlib import pyplot as plt
 
-from market_env.utils import generate_price_series
+
 from rl.main_gov import train_env
+from scripts.config import attack_func, tkn_prices, usdc_prices
+
+# from scripts.plotting import plot_training
 
 
 def training_visualizing(
@@ -21,6 +23,7 @@ def training_visualizing(
     tkn_prices: Callable,
     usdc_prices: Callable,
     attack_func: Callable | None,
+    models_chosen: list[int] | None = None,
 ):
     number_episodes = int(
         math.ceil(
@@ -55,7 +58,7 @@ def training_visualizing(
         bench_states,
         trained_models,
     ) = train_env(
-        n_episodes=number_episodes,
+        n_games=number_episodes,
         compared_to_benchmark=True,
         agent_args=agent_vars,
         # args for init_env
@@ -66,64 +69,66 @@ def training_visualizing(
         attack_steps=attack_func,
     )
 
-    plot_training(
-        number_steps=number_steps,
-        epsilon_decay=epsilon_decay,
-        epsilon_start=epsilon_start,
-        target_on_point=target_on_point,
-        attack_func=attack_func,
-        eps_history=eps_history,
-        scores=scores,
+    # episodes_stored = [w["episode"] for w in trained_models]
+    # scores_stored = [scores[i] for i in episodes_stored]
+    # plt.plot(episodes_stored, scores_stored)
+    # plt.show()
+    # plt.close()
+
+    score_color = "blue"
+    epsilon_color = "orange"
+    number_episodes = len(scores)
+    attack_on = attack_func is not None
+    # TODO: make font size large
+    fig, ax1 = plt.subplots()
+    # TODO: put specs text inside the plot
+    specs_text = f"max steps / episode: {number_steps} \n attacks on: {attack_on}"
+    plt.title(specs_text)
+    plt.xlim(0, number_episodes - 1)
+    ax2 = ax1.twinx()
+    ax1.plot(range(number_episodes), scores, color=score_color)
+    ax2.plot(range(number_episodes), eps_history, color=epsilon_color)
+
+    # ax2.hlines(
+    #     y=[target_on_point],
+    #     xmin=[(epsilon_start - target_on_point) / epsilon_decay / number_steps - 0.5],
+    #     xmax=[number_episodes],
+    #     colors=[epsilon_color],
+    #     linestyles="dashed",
+    # )
+
+    # TODO: specify when target is turned on by labeling it on ax2, consider logging y
+
+    bench_bust = [
+        x for x in range(len(bench_states)) if len(bench_states[x]) < number_steps
+    ]
+    RL_bust = [x for x in range(len(states)) if len(states[x]) < number_steps]
+    ax2.scatter(x=bench_bust, y=[0] * len(bench_bust), label="benchmark", marker=1)
+    ax2.scatter(x=RL_bust, y=[0] * len(RL_bust), label="RL", marker=2)
+    ax2.legend()
+
+    # label axes
+    ax1.set_xlabel("episode")
+    ax1.set_ylabel("score", color=score_color)
+    ax2.set_ylabel("episode-end $\epsilon$", color=epsilon_color)
+    # ax2.set_ylim(0, 1)
+    fig.tight_layout()
+    fig.savefig(
+        fname=FIGURES_PATH / f"{number_steps}_{target_on_point}_{attack_on}.pdf"
     )
+    plt.show()
 
     return scores, eps_history, states, rewards, time_cost, bench_states, trained_models
-
-
-def training_parallel(args: tuple, **kargs):
-    return training_visualizing(
-        number_steps=args[1], target_on_point=args[2], attack_func=args[0], **kargs
-    )
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    number_steps = int(30 * 18)
-    EPSILON_END = 5e-5
-    EPSILON_DECAY = 3e-4
-    batch_size = 128
-    EPSILON_START = 1.0
-    target_on_point = 0.4
-    eps_dec_decrease_with_target = 0.3
-
-    def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
-        series = generate_price_series(
-            time_steps=time_steps,
-            seed=seed,
-            mu_func=lambda t: 0.00001,
-            sigma_func=lambda t: 0.05 + ((t - 200) ** 2) ** 0.01 / 20,
-        )
-        return series
-
-    def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
-        series = generate_price_series(
-            time_steps=time_steps,
-            seed=None,
-            mu_func=lambda t: 0.0001,
-            sigma_func=lambda t: 0.05,
-        )
-        return series
-
-    def attack_func(t: int) -> list[int]:
-        attack_steps = np.random.randint(0, t, 3).tolist()
-        attack_steps.sort()
-        return attack_steps
-
     for attack_function in [
-        None,
+        # None,
         attack_func,
     ]:
-        for number_steps in [30 * 12, 30 * 18]:
+        for number_steps in [30 * 24]:
             for target_on_point in [0.4, 0.5]:
                 (
                     scores,
@@ -135,13 +140,16 @@ if __name__ == "__main__":
                     trained_model,
                 ) = training_visualizing(
                     number_steps=number_steps,
-                    epsilon_end=EPSILON_END,
-                    epsilon_decay=EPSILON_DECAY,
-                    batch_size=batch_size,
-                    epsilon_start=EPSILON_START,
-                    target_on_point=target_on_point,
-                    eps_dec_decrease_with_target=eps_dec_decrease_with_target,
+                    epsilon_end=5e-5,
+                    epsilon_decay=1e-4,
+                    batch_size=128,
+                    epsilon_start=1,
+                    target_on_point=0.3,
+                    eps_dec_decrease_with_target=0.3,
                     tkn_prices=tkn_prices,
                     usdc_prices=usdc_prices,
                     attack_func=attack_function,
                 )
+
+                print([len(bench_states[x]) for x in range(len(bench_states))])
+                print([len(states[x]) for x in range(len(states))])
