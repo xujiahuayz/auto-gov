@@ -123,7 +123,7 @@ def train_env(
     ] = lambda x, y: np.ones(x),
     tkn_seed: int | None = None,
     usdc_seed: int | None = None,
-    attack_steps: Callable[[int], list[int] | None] = lambda x: None,
+    attack_steps: Callable[[int], list[int]] | None = None,
     **add_env_kwargs,
 ) -> tuple[
     list[float],
@@ -134,6 +134,16 @@ def train_env(
     list[list[dict[str, Any]]],
     list[dict[str, Any]],
 ]:
+    """
+    Return:
+        scores,
+        eps_history,
+        states,
+        rewards,
+        time_cost,
+        bench_states,
+        trained_model,
+    """
     # initialize environment
     defi_env = init_env(**add_env_kwargs)
     env = ProtocolEnv(defi_env)
@@ -168,7 +178,9 @@ def train_env(
 
     for i in range(n_games):
         start_time = time.time()
-        attack_steps_this_game = attack_steps(defi_env.max_steps)
+        attack_steps_this_game = (
+            attack_steps(defi_env.max_steps) if attack_steps else None
+        )
         (
             score,
             reward_this_game,

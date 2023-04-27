@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 number_steps = int(30 * 18)
 EPSILON_END = 1e-4
-EPSILON_DECAY = 3e-7
+EPSILON_DECAY = 3e-4
 batch_size = 100
 EPSILON_START = 1.0
 target_on_point = 0.4
@@ -94,7 +94,7 @@ def attack_func(t: int) -> list[int]:
     initial_collateral_factor=0.75,
     tkn_price_trend_func=tkn_prices,
     usdc_price_trend_func=usdc_prices,
-    attack_steps=attack_func,
+    # attack_steps=attack_func,
 )
 
 
@@ -109,6 +109,7 @@ ax1.set_ylabel("Score", color="tab:blue")
 ax2.set_ylabel("Epsilon", color="tab:orange")
 
 plt.show()
+
 
 # color scheme for the three assets
 ASSET_COLORS = {
@@ -207,35 +208,35 @@ ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 test_model = trained_models[-2]
 
 
-test_steps = 360
-prices = {}
-for asset in ["link", "usdc"]:
-    # get price data in json from data folder
-    with open(DATA_PATH / f"{asset}.json", "r") as f:
-        prices[asset] = [
-            w["close"] for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
-        ]
+# test_steps = 360
+# prices = {}
+# for asset in ["link", "usdc"]:
+#     # get price data in json from data folder
+#     with open(DATA_PATH / f"{asset}.json", "r") as f:
+#         prices[asset] = [
+#             w["close"] for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
+#         ]
 
 
-test_env = init_env(
-    initial_collateral_factor=0.75,
-    max_steps=test_steps,
-    tkn_price_trend_func=lambda x, y: prices["link"],
-    usdc_price_trend_func=lambda x, y: prices["usdc"],
-)
-test_protocol_env = ProtocolEnv(test_env)
+# test_env = init_env(
+#     initial_collateral_factor=0.75,
+#     max_steps=test_steps,
+#     tkn_price_trend_func=lambda x, y: prices["link"],
+#     usdc_price_trend_func=lambda x, y: prices["usdc"],
+# )
+# test_protocol_env = ProtocolEnv(test_env)
 
 
-(
-    scores,
-    states,
-    rewards,
-    bench_states,
-    trained_model,
-    policies,
-) = inference_with_trained_model(
-    model=test_model,
-    env=test_protocol_env,
-    agent_args=agent_vars,
-    num_test_episodes=900,
-)
+# (
+#     scores,
+#     states,
+#     rewards,
+#     bench_states,
+#     trained_model,
+#     policies,
+# ) = inference_with_trained_model(
+#     model=test_model,
+#     env=test_protocol_env,
+#     agent_args=agent_vars,
+#     num_test_episodes=3,
+# )
