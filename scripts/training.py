@@ -22,7 +22,7 @@ def training_visualizing(
     usdc_prices: Callable,
     attack_func: Callable | None,
 ):
-    number_games = int(
+    number_episodes = int(
         math.ceil(
             (
                 (epsilon_start - target_on_point) / epsilon_decay
@@ -33,7 +33,7 @@ def training_visualizing(
         )
     )
 
-    logging.info(f"number of games: {number_games}")
+    logging.info(f"number of episodes: {number_episodes}")
 
     agent_vars = {
         "gamma": 0.95,
@@ -55,7 +55,7 @@ def training_visualizing(
         bench_states,
         trained_models,
     ) = train_env(
-        n_games=number_games,
+        n_episodes=number_episodes,
         compared_to_benchmark=True,
         agent_args=agent_vars,
         # args for init_env

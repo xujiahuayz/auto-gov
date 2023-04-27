@@ -14,14 +14,14 @@ def run_episode(
     env: ProtocolEnv,
     agent: Agent,
     compared_to_benchmark: bool,
-    tkn_price_trend_this_game: np.ndarray,
-    usdc_price_trend_this_game: np.ndarray,
+    tkn_price_trend_this_episode: np.ndarray,
+    usdc_price_trend_this_episode: np.ndarray,
     training: bool,
     **add_env_kwargs,
 ) -> tuple[float, list[float], list[int], list[dict[str, Any]], list[dict[str, Any]]]:
-    bench_rewards, bench_states_this_game = bench_env(
-        tkn_price_trend_func=lambda t, s: tkn_price_trend_this_game,
-        usdc_price_trend_func=lambda t, s: usdc_price_trend_this_game,
+    bench_rewards, bench_states_this_episode = bench_env(
+        tkn_price_trend_func=lambda t, s: tkn_price_trend_this_episode,
+        usdc_price_trend_func=lambda t, s: usdc_price_trend_this_episode,
         **add_env_kwargs,
     )
 
@@ -29,16 +29,16 @@ def run_episode(
     bench_rewards.extend([0.0] * (env.defi_env.max_steps + 1 - len(bench_rewards)))
     env.defi_env.plf_pools[
         "tkn"
-    ].price_trend_func = lambda t, s: tkn_price_trend_this_game
+    ].price_trend_func = lambda t, s: tkn_price_trend_this_episode
     env.defi_env.plf_pools[
         "usdc"
-    ].price_trend_func = lambda t, s: usdc_price_trend_this_game
+    ].price_trend_func = lambda t, s: usdc_price_trend_this_episode
     score = 0
     done = False
     policy = []
-    reward_this_game = []
+    reward_this_episode = []
     observation = env.reset()
-    state_this_game = [env.defi_env.state_summary]
+    state_this_episode = [env.defi_env.state_summary]
     while not done:
         # for debug!
         arr = np.array(observation, dtype=np.float32)
@@ -84,16 +84,22 @@ def run_episode(
 
         score += reward
         policy.append(action)
-        reward_this_game.append(reward)
-        state_this_game.append(env.defi_env.state_summary)
+        reward_this_episode.append(reward)
+        state_this_episode.append(env.defi_env.state_summary)
 
-    return score, reward_this_game, policy, state_this_game, bench_states_this_game
+    return (
+        score,
+        reward_this_episode,
+        policy,
+        state_this_episode,
+        bench_states_this_episode,
+    )
 
 
 def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
     defi_env = init_env(**kwargs)
     env = ProtocolEnv(defi_env)
-    state_this_game = [defi_env.state_summary]
+    state_this_episode = [defi_env.state_summary]
     score = 0
     done = False
     rewards = [0.0]
@@ -104,16 +110,16 @@ def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
         # never change collateral factor
         _, reward, done, _ = env.step(0)
         score += reward
-        state_this_game.append(defi_env.state_summary)
+        state_this_episode.append(defi_env.state_summary)
         rewards.append(reward)
 
-    return rewards, state_this_game
+    return rewards, state_this_episode
 
 
 @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
 def train_env(
     agent_args: dict[str, Any],
-    n_games: int = 2_000,
+    n_episodes: int = 2_000,
     compared_to_benchmark: bool = True,
     tkn_price_trend_func: Callable[
         [int, int | None], np.ndarray
@@ -176,45 +182,44 @@ def train_env(
         [],
     )
 
-    for i in range(n_games):
+    for i in range(n_episodes):
         start_time = time.time()
-        attack_steps_this_game = (
+        attack_steps_this_episode = (
             attack_steps(defi_env.max_steps) if attack_steps else None
         )
         (
             score,
-            reward_this_game,
+            reward_this_episode,
             policy,
-            state_this_game,
-            bench_states_this_game,
+            state_this_episode,
+            bench_states_this_episode,
         ) = run_episode(
             env=env,
             agent=agent,
             compared_to_benchmark=compared_to_benchmark,
-            tkn_price_trend_this_game=tkn_price_trend_func(
+            tkn_price_trend_this_episode=tkn_price_trend_func(
                 defi_env.max_steps, tkn_seed
             ),
-            usdc_price_trend_this_game=usdc_price_trend_func(
+            usdc_price_trend_this_episode=usdc_price_trend_func(
                 defi_env.max_steps, usdc_seed
             ),
             training=True,
-            attack_steps=attack_steps_this_game,
+            attack_steps=attack_steps_this_episode,
             **add_env_kwargs,
         )
 
-        bench_states.append(bench_states_this_game)
+        bench_states.append(bench_states_this_episode)
         time_cost.append(time.time() - start_time)
         scores.append(score)
         policies.append(policy)
         eps_history.append(agent.epsilon)
-        states.append(state_this_game)
-        rewards.append(reward_this_game)
+        states.append(state_this_episode)
+        rewards.append(reward_this_episode)
         # if score is the highest, save the model
         if score >= max(scores) or (i + 1) % 100 == 0:
             trained_model.append(
                 {
                     "episode": i,
-                    "score": score,
                     "model": agent.Q_eval.state_dict(),
                 }
             )
@@ -301,16 +306,18 @@ def inference_with_trained_model(
     for i in range(num_test_episodes):
         (
             score,
-            reward_this_game,
+            reward_this_episode,
             policy,
-            state_this_game,
-            bench_states_this_game,
+            state_this_episode,
+            bench_states_this_episode,
         ) = run_episode(
             env=env,
             agent=agent,
             compared_to_benchmark=compared_to_benchmark,
-            tkn_price_trend_this_game=env.defi_env.plf_pools["tkn"].asset_price_history,
-            usdc_price_trend_this_game=env.defi_env.plf_pools[
+            tkn_price_trend_this_episode=env.defi_env.plf_pools[
+                "tkn"
+            ].asset_price_history,
+            usdc_price_trend_this_episode=env.defi_env.plf_pools[
                 "usdc"
             ].asset_price_history,
             training=False,
@@ -326,11 +333,11 @@ def inference_with_trained_model(
             ]._initial_safety_supply_margin,
         )
 
-        bench_states.append(bench_states_this_game)
+        bench_states.append(bench_states_this_episode)
         scores.append(score)
         policies.append(policy)
-        states.append(state_this_game)
-        rewards.append(reward_this_game)
+        states.append(state_this_episode)
+        rewards.append(reward_this_episode)
 
     return (
         scores,
@@ -347,7 +354,7 @@ def inference_with_trained_model(
 if __name__ == "__main__":
     # show logging level at info
     logging.basicConfig(level=logging.INFO)
-    N_GAMES = 1
+    N_EPISODES = 2
 
     def tkn_price_trend_func(x, y):
         series = np.array(range(1, x + 2)).astype(float)
@@ -374,7 +381,7 @@ if __name__ == "__main__":
         training_models,
     ) = train_env(
         agent_args=agent_vars,
-        n_games=N_GAMES,
+        n_episodes=N_EPISODES,
         initial_collateral_factor=0.99,
         max_steps=360,
         compared_to_benchmark=True,

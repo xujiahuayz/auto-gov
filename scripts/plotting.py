@@ -1,8 +1,3 @@
-from functools import partial
-from itertools import product
-import logging
-import math
-import multiprocessing
 from typing import Callable
 
 # plot time series of collateral factor.
@@ -26,22 +21,22 @@ def plot_training(
     # plot scores on the left axis and epsilons on the right axis
     score_color = "blue"
     epsilon_color = "orange"
-    number_games = len(scores)
+    number_episodes = len(scores)
     attack_on = attack_func is not None
     # TODO: make font size large
     fig, ax1 = plt.subplots()
     # TODO: put specs text inside the plot
-    specs_text = f"max steps / game: {number_steps} \n attacks on: {attack_on}"
+    specs_text = f"max steps / episode: {number_steps} \n attacks on: {attack_on}"
     plt.title(specs_text)
-    plt.xlim(0, number_games - 1)
+    plt.xlim(0, number_episodes - 1)
     ax2 = ax1.twinx()
-    ax1.plot(range(number_games), scores, color=score_color)
-    ax2.plot(range(number_games), eps_history, color=epsilon_color)
+    ax1.plot(range(number_episodes), scores, color=score_color)
+    ax2.plot(range(number_episodes), eps_history, color=epsilon_color)
 
     ax2.hlines(
         y=[target_on_point],
         xmin=[(epsilon_start - target_on_point) / epsilon_decay / number_steps - 0.5],
-        xmax=[number_games],
+        xmax=[number_episodes],
         colors=[epsilon_color],
         linestyles="dashed",
     )
@@ -49,9 +44,9 @@ def plot_training(
     # TODO: specify when target is turned on by labeling it on ax2, consider logging y
 
     # label axes
-    ax1.set_xlabel("game")
+    ax1.set_xlabel("episode")
     ax1.set_ylabel("score", color=score_color)
-    ax2.set_ylabel("game-end $\epsilon$", color=epsilon_color)
+    ax2.set_ylabel("episode-end $\epsilon$", color=epsilon_color)
     ax2.set_ylim(0, 1)
     fig.tight_layout()
     fig.savefig(
