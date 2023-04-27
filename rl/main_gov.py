@@ -331,6 +331,7 @@ def inference_with_trained_model(
             init_safety_supply_margin=env.defi_env.users[
                 "alice"
             ]._initial_safety_supply_margin,
+            attack_steps=None,
         )
 
         bench_states.append(bench_states_this_episode)
