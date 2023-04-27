@@ -1,15 +1,11 @@
-from functools import partial
-from itertools import product
 import logging
 import math
-import multiprocessing
 from typing import Callable
+from scripts.plotting import plot_training
 
 # plot time series of collateral factor.
-import matplotlib.pyplot as plt
 import numpy as np
 
-from market_env.constants import FIGURES_PATH
 from market_env.utils import generate_price_series
 from rl.main_gov import train_env
 
@@ -70,39 +66,15 @@ def training_visualizing(
         attack_steps=attack_func,
     )
 
-    # plot scores on the left axis and epsilons on the right axis
-    score_color = "blue"
-    epsilon_color = "orange"
-    attack_on = attack_func is not None
-    # TODO: make font size large
-    fig, ax1 = plt.subplots()
-
-    # TODO: put specs text inside the plot
-    specs_text = f"max steps / game: {number_steps} \n attacks on: {attack_on}"
-    plt.title(specs_text)
-    plt.xlim(0, number_games - 1)
-    ax2 = ax1.twinx()
-    ax1.plot(range(len(scores)), scores, color=score_color)
-    ax2.plot(range(len(eps_history)), eps_history, color=epsilon_color)
-
-    ax2.hlines(
-        y=target_on_point,
-        xmin=(epsilon_start - target_on_point) / epsilon_decay / number_steps - 0.5,
-        xmax=number_games,
-        colors=epsilon_color,
-        linestyles="dashed",
+    plot_training(
+        number_steps=number_steps,
+        epsilon_decay=epsilon_decay,
+        epsilon_start=epsilon_start,
+        target_on_point=target_on_point,
+        attack_func=attack_func,
+        eps_history=eps_history,
+        scores=scores,
     )
-
-    # TODO: specify when target is turned on by labeling it on ax2, consider logging y
-
-    # label axes
-    ax1.set_xlabel("game")
-    ax1.set_ylabel("score", color=score_color)
-    ax2.set_ylabel("game-end $\epsilon$", color=epsilon_color)
-    ax2.set_ylim(0, 1)
-    fig.tight_layout()
-    fig.savefig(fname=FIGURES_PATH / f"{batch_size}_{number_steps}_{attack_on}.pdf")
-    plt.show()
 
     return scores, eps_history, states, rewards, time_cost, bench_states, trained_models
 
@@ -146,28 +118,6 @@ if __name__ == "__main__":
         attack_steps = np.random.randint(0, t, 3).tolist()
         attack_steps.sort()
         return attack_steps
-
-    # pool = multiprocessing.Pool()
-    # pool.map(
-    #     func=partial(
-    #         training_parallel,
-    #         epsilon_end=EPSILON_END,
-    #         epsilon_decay=EPSILON_DECAY,
-    #         batch_size=batch_size,
-    #         epsilon_start=EPSILON_START,
-    #         eps_dec_decrease_with_target=eps_dec_decrease_with_target,
-    #         tkn_prices=tkn_prices,
-    #         usdc_prices=usdc_prices,
-    #     ),
-    #     iterable=product(
-    #         [
-    #             None,
-    #             attack_func,
-    #         ],
-    #         [30 * 12, 30 * 18],
-    #         [0.4, 0.5],
-    #     ),
-    # )
 
     for attack_function in [
         None,
