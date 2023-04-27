@@ -17,11 +17,13 @@ def run_episode(
     tkn_price_trend_this_episode: np.ndarray,
     usdc_price_trend_this_episode: np.ndarray,
     training: bool,
+    attack_steps: list[int] | None,
     **add_env_kwargs,
 ) -> tuple[float, list[float], list[int], list[dict[str, Any]], list[dict[str, Any]]]:
     bench_rewards, bench_states_this_episode = bench_env(
         tkn_price_trend_func=lambda t, s: tkn_price_trend_this_episode,
         usdc_price_trend_func=lambda t, s: usdc_price_trend_this_episode,
+        attack_steps=attack_steps,
         **add_env_kwargs,
     )
 
@@ -33,6 +35,7 @@ def run_episode(
     env.defi_env.plf_pools[
         "usdc"
     ].price_trend_func = lambda t, s: usdc_price_trend_this_episode
+    env.defi_env.attack_steps = attack_steps
     score = 0
     done = False
     policy = []
