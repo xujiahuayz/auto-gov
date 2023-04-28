@@ -85,6 +85,7 @@ def attack_func(t: int) -> list[int]:
     time_cost,
     bench_states,
     trained_models,
+    losses,
 ) = train_env(
     n_games=number_games,
     compared_to_benchmark=True,

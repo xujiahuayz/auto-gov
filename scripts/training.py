@@ -57,6 +57,7 @@ def training_visualizing(
         time_cost,
         bench_states,
         trained_models,
+        losses,
     ) = train_env(
         n_games=number_episodes,
         compared_to_benchmark=True,
@@ -118,7 +119,7 @@ def training_visualizing(
     )
     plt.show()
 
-    return scores, eps_history, states, rewards, time_cost, bench_states, trained_models
+    return scores, eps_history, states, rewards, time_cost, bench_states, trained_models, losses
 
 
 if __name__ == "__main__":
@@ -138,6 +139,7 @@ if __name__ == "__main__":
                     time_cost,
                     bench_states,
                     trained_model,
+                    losses,
                 ) = training_visualizing(
                     number_steps=number_steps,
                     epsilon_end=5e-5,
