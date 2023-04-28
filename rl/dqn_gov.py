@@ -36,6 +36,8 @@ class DQN(nn.Module):
 
         # if there is a GPU, use it, otherwise use CPU
         self.device = T.device("cuda:0" if T.cuda.is_available() else "cpu")
+        # restrict the number of CPU threads used to run the model
+        T.set_num_threads(2)
         self.to(self.device)
 
     def forward(self, state):
@@ -127,9 +129,7 @@ class Agent:
         #        length: eps_start - target_on_point              length: target_on_point - eps_min
 
         if self.target_on_point:
-            return (
-                self.epsilon < self.target_on_point
-            )
+            return self.epsilon < self.target_on_point
         return False
 
     def store_transition(self, state, action, reward, state_, done: bool) -> None:
@@ -264,4 +264,3 @@ def contain_nan(model_state_dict):
         if T.isnan(model_state_dict[key]).any():
             return True
     return False
-    
