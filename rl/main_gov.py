@@ -39,6 +39,7 @@ def run_episode(
     score = 0
     done = False
     policy = []
+    loss_this_episode = []
     reward_this_episode = []
     observation = env.reset()
     state_this_episode = [env.defi_env.state_summary]
@@ -84,6 +85,11 @@ def run_episode(
             agent.store_transition(observation, action, reward, observation_, done)
             agent.learn()
         observation = observation_
+        # if agent.loss_list[-1] exists, append it to loss_this_episode, else append 0
+        if len(agent.loss_list) > 0:
+            loss_this_episode.append(agent.loss_list[-1])
+        else:
+            loss_this_episode.append(0)
 
         score += reward
         policy.append(action)
@@ -96,6 +102,8 @@ def run_episode(
         policy,
         state_this_episode,
         bench_states_this_episode,
+        # average loss of this episode
+        np.mean(loss_this_episode),
     )
 
 
@@ -174,7 +182,9 @@ def train_env(
         bench_states,
         policies,
         rewards,
+        avg_loss,
     ) = (
+        [],
         [],
         [],
         [],
@@ -196,6 +206,7 @@ def train_env(
             policy,
             state_this_episode,
             bench_states_this_episode,
+            avg_loss_this_episode,
         ) = run_episode(
             env=env,
             agent=agent,
@@ -218,6 +229,7 @@ def train_env(
         eps_history.append(agent.epsilon)
         states.append(state_this_episode)
         rewards.append(reward_this_episode)
+        avg_loss.append(avg_loss_this_episode)
         # if score is the highest, save the model
         if score >= max(scores) or (i + 1) % 100 == 0:
             trained_model.append(
@@ -250,6 +262,7 @@ def train_env(
         time_cost,
         bench_states,
         trained_model,
+        avg_loss,
     )
 
 
@@ -310,6 +323,8 @@ def inference_with_trained_model(
             policy,
             state_this_episode,
             bench_states_this_episode,
+            # loss will be all zeros in inference mode
+            avg_loss,
         ) = run_episode(
             env=env,
             agent=agent,
@@ -345,8 +360,6 @@ def inference_with_trained_model(
         states,
         rewards,
         bench_states,
-        # # return the list of history losses
-        # agent.loss_list,
     )
 
 
@@ -378,6 +391,7 @@ if __name__ == "__main__":
         training_time_cost,
         training_bench_states,
         training_models,
+        training_avg_loss,
     ) = train_env(
         agent_args=agent_vars,
         n_games=N_EPISODES,
