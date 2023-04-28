@@ -38,7 +38,7 @@ class DQN(nn.Module):
         self.device = T.device("cuda:0" if T.cuda.is_available() else "cpu")
         # restrict the number of CPU threads used to run the model
         # TODO: check
-        T.set_num_threads(1)
+        T.set_num_threads(2)
         self.to(self.device)
 
     def forward(self, state):
