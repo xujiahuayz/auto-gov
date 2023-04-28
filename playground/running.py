@@ -19,7 +19,7 @@ for attack_function in [
     None,
     ATTACK_FUNC,
 ]:
-    for NUM_STEPS in [30 * 18]:
+    for NUM_STEPS in [30 * 12, 30 * 15]:
         for target_on_point in [0.4, 0.5]:
             (
                 scores,
