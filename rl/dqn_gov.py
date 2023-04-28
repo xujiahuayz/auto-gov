@@ -37,7 +37,8 @@ class DQN(nn.Module):
         # if there is a GPU, use it, otherwise use CPU
         self.device = T.device("cuda:0" if T.cuda.is_available() else "cpu")
         # restrict the number of CPU threads used to run the model
-        T.set_num_threads(2)
+        # TODO: check
+        T.set_num_threads(1)
         self.to(self.device)
 
     def forward(self, state):
