@@ -1,5 +1,14 @@
 import logging
-from scripts.config import attack_func, tkn_prices, usdc_prices
+from scripts.config import (
+    ATTACK_FUNC,
+    TKN_PRICES,
+    USDC_PRICES,
+    BATCH_SIZE,
+    EPS_DEC_FACTOR,
+    EPSILON_START,
+    EPSILON_DECAY,
+    EPSILON_END,
+)
 
 from scripts.training import training_visualizing
 
@@ -8,9 +17,9 @@ logging.basicConfig(level=logging.INFO)
 
 for attack_function in [
     None,
-    attack_func,
+    ATTACK_FUNC,
 ]:
-    for number_steps in [30 * 18]:
+    for NUM_STEPS in [30 * 18]:
         for target_on_point in [0.4, 0.5]:
             (
                 scores,
@@ -22,14 +31,14 @@ for attack_function in [
                 trained_model,
                 losses,
             ) = training_visualizing(
-                number_steps=number_steps,
-                epsilon_end=5e-5,
-                epsilon_decay=1e-5,
-                batch_size=128,
-                epsilon_start=1,
+                number_steps=NUM_STEPS,
+                epsilon_end=EPSILON_END,
+                epsilon_decay=EPSILON_DECAY,
+                batch_size=BATCH_SIZE,
+                epsilon_start=EPSILON_START,
                 target_on_point=target_on_point,
-                eps_dec_decrease_with_target=0.3,
-                tkn_prices=tkn_prices,
-                usdc_prices=usdc_prices,
+                eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+                tkn_prices=TKN_PRICES,
+                usdc_prices=USDC_PRICES,
                 attack_func=attack_function,
             )

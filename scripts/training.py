@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 
 
 from rl.main_gov import train_env
-from scripts.config import attack_func, tkn_prices, usdc_prices
+from scripts.config import ATTACK_FUNC, TKN_PRICES, USDC_PRICES
 
 # from scripts.plotting import plot_training
 
@@ -154,9 +154,9 @@ if __name__ == "__main__":
 
     for attack_function in [
         # None,
-        attack_func,
+        ATTACK_FUNC,
     ]:
-        for number_steps in [30 * 12]:
+        for NUM_STEPS in [30 * 12]:
             for target_on_point in [0.5]:
                 (
                     scores,
@@ -168,14 +168,14 @@ if __name__ == "__main__":
                     trained_model,
                     losses,
                 ) = training_visualizing(
-                    number_steps=number_steps,
+                    number_steps=NUM_STEPS,
                     epsilon_end=5e-5,
                     epsilon_decay=5e-4,
                     batch_size=128,
                     epsilon_start=1,
                     target_on_point=target_on_point,
                     eps_dec_decrease_with_target=0.3,
-                    tkn_prices=tkn_prices,
-                    usdc_prices=usdc_prices,
+                    tkn_prices=TKN_PRICES,
+                    usdc_prices=USDC_PRICES,
                     attack_func=attack_function,
                 )
