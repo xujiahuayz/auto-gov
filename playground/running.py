@@ -10,7 +10,7 @@ from scripts.config import (
     EPSILON_END,
 )
 
-from scripts.training import training_visualizing
+from rl.training import training_visualizing
 
 
 logging.basicConfig(level=logging.INFO)

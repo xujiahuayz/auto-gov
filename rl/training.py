@@ -1,11 +1,10 @@
 import logging
 import math
 from typing import Any, Callable
-from market_env.constants import FIGURES_PATH
 
 from matplotlib import pyplot as plt
 
-
+from market_env.constants import FIGURES_PATH
 from rl.main_gov import train_env
 from scripts.config import ATTACK_FUNC, TKN_PRICES, USDC_PRICES
 
