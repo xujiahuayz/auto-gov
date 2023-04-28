@@ -4,7 +4,7 @@ from market_env.utils import generate_price_series
 
 NUM_STEPS = int(30 * 18)
 EPSILON_END = 5e-5
-EPSILON_DECAY = 3e-4
+EPSILON_DECAY = 3e-7
 BATCH_SIZE = 128
 EPSILON_START = 1.0
 TARGET_ON_POINT = 0.4
