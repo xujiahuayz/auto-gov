@@ -79,48 +79,60 @@ def training_visualizing(
         attack_steps=attack_func,
     )
 
-    # episodes_stored = [w["episode"] for w in trained_models]
-    # scores_stored = [scores[i] for i in episodes_stored]
-    # plt.plot(episodes_stored, scores_stored)
-    # plt.show()
-    # plt.close()
-
     score_color = "blue"
     epsilon_color = "orange"
-    number_episodes = len(scores)
     attack_on = attack_func is not None
-    # TODO: make font size large
-    fig, ax1 = plt.subplots()
-    # TODO: put specs text inside the plot
-    specs_text = f"max steps / episode: {number_steps} \n attacks on: {attack_on}"
-    plt.title(specs_text)
-    plt.xlim(0, number_episodes - 1)
-    ax2 = ax1.twinx()
-    ax1.plot(range(number_episodes), scores, color=score_color)
-    ax2.plot(range(number_episodes), eps_history, color=epsilon_color)
 
-    # ax2.hlines(
-    #     y=[target_on_point],
-    #     xmin=[(epsilon_start - target_on_point) / epsilon_decay / number_steps - 0.5],
-    #     xmax=[number_episodes],
-    #     colors=[epsilon_color],
-    #     linestyles="dashed",
-    # )
+    # create two subplots that share the x axis
+    # the two subplots are created on a grid with 1 column and 2 rows
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
+    x_range = range(number_episodes)
+    # make all the fonts bigger
+    plt.rcParams.update({"font.size": 16.5})
 
-    # TODO: specify when target is turned on by labeling it on ax2, consider logging y
+    ax1 = ax[0]
+    ax2 = ax[1]
+    ax3 = ax1.twinx()
+
+    ax1.plot(x_range, eps_history, color=epsilon_color)
+    ax1.set_ylabel("episode-end $\epsilon$", color=epsilon_color)
+
+    # add a second x axis to the first subplot on the top
+    ax4 = ax3.twiny()
+    # make ax3 y lable scientific notation
+    # ax3.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
+    ax3.set_ylabel("score", color=score_color)
+    ax4.plot(x_range, scores, color=score_color)
+    ax4.set_xlabel("episode")
+
+    ax2.plot(x_range, losses)
+    ax2.set_ylabel("loss")
 
     bench_bust = [
         x for x in range(len(bench_states)) if len(bench_states[x]) < number_steps
     ]
     RL_bust = [x for x in range(len(states)) if len(states[x]) < number_steps]
-    ax2.scatter(x=bench_bust, y=[0] * len(bench_bust), label="benchmark", marker=1)
-    ax2.scatter(x=RL_bust, y=[0] * len(RL_bust), label="RL", marker=2)
-    ax2.legend()
+    ax2.scatter(
+        x=bench_bust,
+        y=[1] * len(bench_bust),
+        label="benchmark",
+        marker="o",
+        facecolors="none",
+        edgecolors="g",
+    )
+    ax2.scatter(x=RL_bust, y=[1] * len(RL_bust), label="RL", marker="x", color="r")
 
-    # label axes
-    ax1.set_xlabel("episode")
-    ax1.set_ylabel("score", color=score_color)
-    ax2.set_ylabel("episode-end $\epsilon$", color=epsilon_color)
+    # surpress x-axis numbers but keep the ticks
+    plt.setp(ax2.get_xticklabels(), visible=False)
+
+    # put legend on the bottom of the plot outside of the plot area
+    ax2.legend(
+        title="bankrupt before episode end",
+        bbox_to_anchor=(0, 0),
+        loc=2,
+        ncol=2,
+    )
+
     # ax2.set_ylim(0, 1)
     fig.tight_layout()
     fig.savefig(
@@ -147,7 +159,7 @@ if __name__ == "__main__":
         # None,
         attack_func,
     ]:
-        for number_steps in [30 * 12]:
+        for number_steps in [30 * 18]:
             for target_on_point in [0.4, 0.5]:
                 (
                     scores,
@@ -161,15 +173,12 @@ if __name__ == "__main__":
                 ) = training_visualizing(
                     number_steps=number_steps,
                     epsilon_end=5e-5,
-                    epsilon_decay=1e-4,
+                    epsilon_decay=1e-5,
                     batch_size=128,
                     epsilon_start=1,
-                    target_on_point=0.3,
+                    target_on_point=target_on_point,
                     eps_dec_decrease_with_target=0.3,
                     tkn_prices=tkn_prices,
                     usdc_prices=usdc_prices,
                     attack_func=attack_function,
                 )
-
-                print([len(bench_states[x]) for x in range(len(bench_states))])
-                print([len(states[x]) for x in range(len(states))])
