@@ -385,7 +385,7 @@ if __name__ == "__main__":
         max_steps=360,
         compared_to_benchmark=True,
         tkn_price_trend_func=tkn_price_trend_func,
-        attack_steps=lambda x: [3, 358],
+        attack_steps=None,
     )
 
     test_env = init_env(
