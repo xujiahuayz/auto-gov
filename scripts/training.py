@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Callable
+from typing import Any, Callable
 from market_env.constants import FIGURES_PATH
 
 from matplotlib import pyplot as plt
@@ -24,7 +24,16 @@ def training_visualizing(
     usdc_prices: Callable,
     attack_func: Callable | None,
     models_chosen: list[int] | None = None,
-):
+) -> tuple[
+    list[float],
+    list[float],
+    list[list[dict[str, Any]]],
+    list[list[float]],
+    list[float],
+    list[list[dict[str, Any]]],
+    list[dict[str, Any]],
+    list[float],
+]:
     number_episodes = int(
         math.ceil(
             (
@@ -119,7 +128,16 @@ def training_visualizing(
     )
     plt.show()
 
-    return scores, eps_history, states, rewards, time_cost, bench_states, trained_models, losses
+    return (
+        scores,
+        eps_history,
+        states,
+        rewards,
+        time_cost,
+        bench_states,
+        trained_models,
+        losses,
+    )
 
 
 if __name__ == "__main__":
@@ -129,7 +147,7 @@ if __name__ == "__main__":
         # None,
         attack_func,
     ]:
-        for number_steps in [30 * 24]:
+        for number_steps in [30 * 12]:
             for target_on_point in [0.4, 0.5]:
                 (
                     scores,

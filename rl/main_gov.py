@@ -19,7 +19,14 @@ def run_episode(
     training: bool,
     attack_steps: list[int] | None,
     **add_env_kwargs,
-) -> tuple[float, list[float], list[int], list[dict[str, Any]], list[dict[str, Any]]]:
+) -> tuple[
+    float,
+    list[float],
+    list[int],
+    list[dict[str, Any]],
+    list[dict[str, Any]],
+    float,
+]:
     bench_rewards, bench_states_this_episode = bench_env(
         tkn_price_trend_func=lambda t, s: tkn_price_trend_this_episode,
         usdc_price_trend_func=lambda t, s: usdc_price_trend_this_episode,
@@ -150,6 +157,7 @@ def train_env(
     list[float],
     list[list[dict[str, Any]]],
     list[dict[str, Any]],
+    list[float],
 ]:
     """
     Return:
