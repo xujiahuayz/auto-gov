@@ -23,7 +23,6 @@ def training_visualizing(
     tkn_prices: Callable,
     usdc_prices: Callable,
     attack_func: Callable | None,
-    models_chosen: list[int] | None = None,
 ) -> tuple[
     list[float],
     list[float],
@@ -68,7 +67,7 @@ def training_visualizing(
         trained_models,
         losses,
     ) = train_env(
-        n_games=number_episodes,
+        n_episodes=number_episodes,
         compared_to_benchmark=True,
         agent_args=agent_vars,
         # args for init_env
@@ -85,10 +84,9 @@ def training_visualizing(
 
     # create two subplots that share the x axis
     # the two subplots are created on a grid with 1 column and 2 rows
+    plt.rcParams.update({"font.size": 16.5})
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
     x_range = range(number_episodes)
-    # make all the fonts bigger
-    plt.rcParams.update({"font.size": 16.5})
 
     ax1 = ax[0]
     ax2 = ax[1]
@@ -99,8 +97,6 @@ def training_visualizing(
 
     # add a second x axis to the first subplot on the top
     ax4 = ax3.twiny()
-    # make ax3 y lable scientific notation
-    # ax3.ticklabel_format(axis="y", style="sci", scilimits=(0, 0))
     ax3.set_ylabel("score", color=score_color)
     ax4.plot(x_range, scores, color=score_color)
     ax4.set_xlabel("episode")
@@ -108,19 +104,20 @@ def training_visualizing(
     ax2.plot(x_range, losses)
     ax2.set_ylabel("loss")
 
+    y_bust = [min(losses)]
     bench_bust = [
         x for x in range(len(bench_states)) if len(bench_states[x]) < number_steps
     ]
     RL_bust = [x for x in range(len(states)) if len(states[x]) < number_steps]
     ax2.scatter(
         x=bench_bust,
-        y=[1] * len(bench_bust),
+        y=y_bust * len(bench_bust),
         label="benchmark",
         marker="o",
         facecolors="none",
         edgecolors="g",
     )
-    ax2.scatter(x=RL_bust, y=[1] * len(RL_bust), label="RL", marker="x", color="r")
+    ax2.scatter(x=RL_bust, y=y_bust * len(RL_bust), label="RL", marker="x", color="r")
 
     # surpress x-axis numbers but keep the ticks
     plt.setp(ax2.get_xticklabels(), visible=False)
@@ -159,8 +156,8 @@ if __name__ == "__main__":
         # None,
         attack_func,
     ]:
-        for number_steps in [30 * 18]:
-            for target_on_point in [0.4, 0.5]:
+        for number_steps in [30 * 12]:
+            for target_on_point in [0.5]:
                 (
                     scores,
                     eps_history,
@@ -173,7 +170,7 @@ if __name__ == "__main__":
                 ) = training_visualizing(
                     number_steps=number_steps,
                     epsilon_end=5e-5,
-                    epsilon_decay=1e-5,
+                    epsilon_decay=5e-4,
                     batch_size=128,
                     epsilon_start=1,
                     target_on_point=target_on_point,

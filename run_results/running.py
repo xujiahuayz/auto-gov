@@ -20,7 +20,7 @@ def compute_result(params):
     (scores, eps_history, states, time_cost, _, _) = train_env(
         initial_collateral_factor=icf,
         max_steps=ms,
-        n_games=n_game,
+        n_episodes=n_game,
         lr=lr,
         eps_end=eps_end,
         eps_dec=eps_dec,

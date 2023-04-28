@@ -137,7 +137,7 @@ def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
 @cache(ttl=60 * 60 * 24 * 7, min_memory_time=0.00001, min_disk_time=0.1)
 def train_env(
     agent_args: dict[str, Any],
-    n_games: int = 2_000,
+    n_episodes: int = 2_000,
     compared_to_benchmark: bool = True,
     tkn_price_trend_func: Callable[
         [int, int | None], np.ndarray
@@ -203,7 +203,7 @@ def train_env(
         [],
     )
 
-    for i in range(n_games):
+    for i in range(n_episodes):
         start_time = time.time()
         attack_steps_this_episode = (
             attack_steps(defi_env.max_steps) if attack_steps else None
@@ -402,7 +402,7 @@ if __name__ == "__main__":
         training_avg_loss,
     ) = train_env(
         agent_args=agent_vars,
-        n_games=N_EPISODES,
+        n_episodes=N_EPISODES,
         initial_collateral_factor=0.99,
         max_steps=360,
         compared_to_benchmark=True,
