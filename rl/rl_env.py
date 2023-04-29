@@ -24,7 +24,18 @@ class ProtocolEnv(gym.Env):
             # self.asset_volatility[self.env.step],
             low=np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0] * num_pools),
             high=np.array(
-                [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
+                [
+                    np.inf,
+                    np.inf,
+                    np.inf,
+                    np.inf,
+                    1,
+                    np.inf,
+                    np.inf,
+                    np.inf,
+                    np.inf,
+                    np.inf,
+                ]
                 * num_pools
             ),
             dtype=np.float32,

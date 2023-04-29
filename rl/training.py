@@ -169,7 +169,7 @@ if __name__ == "__main__":
                 ) = training_visualizing(
                     number_steps=NUM_STEPS,
                     epsilon_end=5e-5,
-                    epsilon_decay=5e-4,
+                    epsilon_decay=1e-4,
                     batch_size=128,
                     epsilon_start=1,
                     target_on_point=target_on_point,
