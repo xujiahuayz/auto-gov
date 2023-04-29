@@ -15,6 +15,7 @@ from aavegov.utils import EPSILON, datafolder
 from market_env.constants import FIGURE_PATH
 
 index_field = ["date"]
+WINDOW = 7
 
 
 def getConfig_history_pd(entry):
@@ -45,7 +46,11 @@ def getConfig(entry):
 def plotConfig(entry, figdim=(7, 5)):
     symb = entry["symbol"]
     config_pd = getConfig(entry)
-    pricedata_pd = getPriceDF(symb)
+    # try to catch KeyError
+    try:
+        pricedata_pd = getPriceDF(symb)
+    except KeyError:
+        return
     # plotting starts
     fig, (ax2, ax1, ax4) = plt.subplots(3, sharex=True, figsize=figdim)
 
@@ -123,18 +128,18 @@ def plotConfig(entry, figdim=(7, 5)):
     ax4.plot(
         reserve_hist_coin["Date"],
         reserve_hist_coin["utilization"],
-        label="actual utilisation",
+        label="actual utilization",
         alpha=0.7,
         c="red",
     )
     ax4.axhline(
         y=int(entry["optimalUtilisationRate"]) / 1e27,
-        label="optimal utilisation",
+        label="optimal utilization",
         alpha=0.7,
         c="olive",
     )
     ax4.set_ylim([0, 1])
-    ax4.set_ylabel("Utilisation rate")
+    ax4.set_ylabel("Utilization ratio")
     ax4.legend(bbox_to_anchor=(0, 1), loc="lower left", frameon=False)
 
     ax5 = ax4.twinx()
@@ -149,11 +154,17 @@ def plotConfig(entry, figdim=(7, 5)):
     ax5.legend(bbox_to_anchor=(0.5, 1), loc="lower left", frameon=False)
     ax5.set_ylabel("Quantity in token units")
 
+    # make sure x-axis label is not overlapped
+    ax4.xaxis.set_tick_params(rotation=30)
+
     plt.tight_layout()
     plt.savefig(FIGURE_PATH / f"{symb}_ps.pdf")
+    # show plot and then close it
+    plt.show()
+    plt.close()
 
 
-def getMarketMovement(symbol: str, window: int = 30):
+def getMarketMovement(symbol: str, window: int = WINDOW):
     pricedata_pd = getPriceDF(symbol)
     monthly = DataFrame()
     monthly["std"] = pricedata_pd["close"].rolling(window).std()
@@ -161,7 +172,7 @@ def getMarketMovement(symbol: str, window: int = 30):
     return monthly
 
 
-def getRiskrelation(entry, window: int = 30):
+def getRiskrelation(entry, window: int = WINDOW):
     symb = entry["symbol"]
     config_history_pd = getConfig_history_pd(entry)
     monthly = getMarketMovement(symbol=symb, window=window)
@@ -198,21 +209,25 @@ if __name__ == "__main__":
     for entry in reserve_data:
         symb = entry["symbol"]
         if symb != "ETH":
-            risk_relation_df_rows = getRiskrelation(entry)
+            try:
+                risk_relation_df_rows = getRiskrelation(entry)
+            except KeyError:
+                # next entry
+                continue
             risk_relation_df = risk_relation_df.append(
                 risk_relation_df_rows, ignore_index=True
             )
 
     colname = config_legend.to_dict()
-    colname.update({"std": "30-day volatility", "vol": "30-day average volume"})
+    colname.update(
+        {"std": f"{WINDOW}-day volatility", "vol": f"{WINDOW}-day average volume"}
+    )
     risk_relation_df = risk_relation_df.rename(colname, axis=1)
     risk_relation_corr = risk_relation_df.corr(method="spearman")
     pval = risk_relation_df.corr(method=lambda x, y: spearmanr(x, y)[1]) - eye(
         *risk_relation_corr.shape
     )
     p = pval.applymap(lambda x: "".join(["*" for t in [0.01, 0.05, 0.1] if x <= t]))
-
-    plt.close()
 
     heatmap(
         risk_relation_corr,
