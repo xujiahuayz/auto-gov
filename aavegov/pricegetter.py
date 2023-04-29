@@ -2,10 +2,12 @@ import json
 from datetime import date
 from os import path
 from subprocess import PIPE, run
+import numpy as np
+import pandas as pd
 
 import requests
 from aavegov.utils import datapricefolder
-from pandas import json_normalize
+
 
 INFURAURL = "https://mainnet.infura.io/v3/60fa4da89e6440aea04733cf913dc59a"
 ABIFOLDER = "abis/ctoken.json"
@@ -43,9 +45,25 @@ def getPriceHistory(
 
 
 def getPriceDF(symb: str):
-    with open(path.join(datapricefolder, symb + "-price.json")) as json_file:
-        pricedata = json.load(json_file)["Data"]["Data"]
+    time_col = "time"
+    if symb == "ETH":
+        pricedata_pd = pd.DataFrame(
+            # create a list of timestamps from 2015-07-30 to today, one per day
+            {
+                time_col: pd.date_range(
+                    start="2015-07-30", end=date.today(), freq="D"
+                ).astype(int)
+                / 1e9,
+            }
+        )
+        # make the timestamp int
+        pricedata_pd[time_col] = pricedata_pd[time_col].astype(int)
+        pricedata_pd["volumeto"] = np.nan
+        pricedata_pd["close"] = 1
+    else:
+        with open(path.join(datapricefolder, symb + "-price.json")) as json_file:
+            pricedata_pd = json.load(json_file)["Data"]["Data"]
 
-    pricedata_pd = json_normalize(pricedata)
-    pricedata_pd.index = [date.fromtimestamp(w) for w in pricedata_pd["time"]]
+        pricedata_pd = pd.json_normalize(pricedata_pd)
+    pricedata_pd.index = [date.fromtimestamp(w) for w in pricedata_pd[time_col]]
     return pricedata_pd
