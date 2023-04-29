@@ -91,6 +91,128 @@ def plot_training_results(
     plt.show()
 
 
+def plot_example_state(
+    number_steps: int,
+    target_on_point: float,
+    epsilon_start: float,
+    epsilon_decay: float,
+    bench_score: float = 0,
+    **kwargs,
+):
+    (
+        agent_vars,
+        scores,
+        eps_history,
+        states,
+        rewards,
+        time_cost,
+        bench_states,
+        trained_model,
+        losses,
+    ) = training(
+        number_steps=number_steps,
+        target_on_point=target_on_point,
+        epsilon_start=epsilon_start,
+        epsilon_decay=epsilon_decay,
+        **kwargs,
+    )
+
+    # color scheme for the three assets
+    ASSET_COLORS = {
+        "tkn": "tab:blue",
+        "weth": "tab:orange",
+        "usdc": "tab:green",
+    }
+
+    stable_start = int((epsilon_start - target_on_point) / epsilon_decay / number_steps)
+    stable_scores = scores[stable_start:]
+    # find out the position or index of the top 25 percentile score among all the socres > 0
+    example_scores = sorted([x for x in stable_scores if x > bench_score], reverse=True)
+    if len(example_scores) == 0:
+        raise ValueError("no score above bench_score found")
+
+    example_score = example_scores[len(example_scores) // 4]
+    # find out the index of the median score
+    median_score_index = range(len(states))[stable_start:][
+        stable_scores.index(example_score)
+    ]
+
+    example_state = states[median_score_index]
+    bs = bench_states[median_score_index]
+
+    # create a figure with two axes
+    fig, ax1 = plt.subplots()
+    ax2 = ax1.twinx()
+    for asset in ["tkn", "weth", "usdc"]:
+        # plot the collateral factor on the left axis
+        ax1.plot(
+            [state["pools"][asset]["collateral_factor"] for state in example_state],
+            color=ASSET_COLORS[asset],
+            label=asset,
+        )
+        # plot the price on the right axis
+
+        ax2.plot(
+            [state["pools"][asset]["price"] for state in states[median_score_index]],
+            color=ASSET_COLORS[asset],
+            linestyle="dashed",
+        )
+
+    # set the labels
+    ax1.set_ylabel("collateral factor")
+    ax2.set_ylabel("price")
+
+    # set the legend outside the plot
+    ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+    # initialize the figure
+    fig, ax = plt.subplots()
+    ax3 = ax.twinx()
+    for asset in ["tkn", "weth", "usdc"]:
+        # plot reserves of each asset in area plot with semi-transparent fill
+        ax.fill_between(
+            range(len(bs)),
+            [state["pools"][asset]["reserve"] for state in bs],
+            alpha=0.5,
+            label=asset,
+            color=ASSET_COLORS[asset],
+        )
+        # plot utilization ratio
+        ax3.plot(
+            [state["pools"][asset]["utilization_ratio"] for state in bs],
+            color=ASSET_COLORS[asset],
+            linestyle="dotted",
+        )
+        ax3.set_ylabel("utilization ratio")
+
+    # set the labels
+    ax.set_xlabel("time")
+    ax.set_ylabel("reserve")
+    # calculate the env's total net position over time
+    total_net_position = [state["net_position"] for state in example_state]
+
+    # plot the total net position
+    fig, ax = plt.subplots()
+
+    # plot the benchmark case
+    ax.plot(
+        [state["net_position"] for state in bs],
+        label="benchmark",
+        lw=2,
+    )
+
+    ax.set_xlabel("time")
+    ax.set_ylabel("total net position")
+    # legend outside the plot
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+    ax.plot(total_net_position, label="RL")
+    ax.set_xlabel("time")
+    ax.set_ylabel("total net position")
+    # set the legend outside the plot
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+
 if __name__ == "__main__":
     for attack_function in [
         None,
@@ -100,6 +222,20 @@ if __name__ == "__main__":
             number_steps=NUM_STEPS,
             epsilon_end=5e-5,
             epsilon_decay=1e-4,
+            batch_size=128,
+            epsilon_start=1,
+            target_on_point=TARGET_ON_POINT,
+            eps_dec_decrease_with_target=0.3,
+            tkn_prices=TKN_PRICES,
+            usdc_prices=USDC_PRICES,
+            attack_func=attack_function,
+        )
+
+        plot_example_state(
+            number_steps=NUM_STEPS,
+            epsilon_end=5e-5,
+            epsilon_decay=1e-4,
+            bench_score=-1e5,
             batch_size=128,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
