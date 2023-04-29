@@ -89,7 +89,7 @@ def post_table(total_page_number: int) -> pd.DataFrame:
 
         new_titles = pd.concat([titles, pd.DataFrame(categories_posts)], axis=1)
 
-        all_titles = all_titles.append(new_titles, ignore_index=True)
+        all_titles = pd.concat([all_titles, new_titles], ignore_index=True)
     return all_titles
 
 
@@ -141,7 +141,7 @@ if __name__ == "__main__":
         plt.axhline(y=offset - 0.75, color="grey", lw=0.8)
 
         ytickposition_right.append(offset + 0.5 * len(category_count) - 0.5)
-        yticklabel_right.append(cat + "\n" + "{: >3d}".format(topCategory_counts[cat]))
+        yticklabel_right.append(cat + " " + "{: >3d}".format(topCategory_counts[cat]))
 
     plt.yticks(ytickposition, yticklabel)
     plt.xticks(rotation=90)

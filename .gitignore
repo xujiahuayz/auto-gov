@@ -145,7 +145,10 @@ dmypy.json
 
 .cache/*
 !.cache/.keep
-# data/
+
+data/
+aavegov/data/
+
 .vescode/
 
 figures/
