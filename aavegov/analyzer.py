@@ -3,20 +3,23 @@ from datetime import date, datetime
 from pickle import load
 
 import matplotlib.pyplot as plt
+import pandas as pd
 from numpy import eye, log
 from pandas import DataFrame, Series, json_normalize
 from scipy.stats import spearmanr
 from seaborn import diverging_palette, heatmap
 
 from aavegov.pricegetter import getPriceDF
-from aavegov.utils import datafolder
+from aavegov.utils import EPSILON, datafolder
+
+from market_env.constants import FIGURE_PATH
 
 index_field = ["date"]
 
 
 def getConfig_history_pd(entry):
     config_history = json_normalize(entry["configurationHistory"])
-    config_history[index_field] = [
+    config_history[index_field[0]] = [
         date.fromtimestamp(w) for w in config_history["timestamp"]
     ]
     config_history_pd = (
@@ -33,7 +36,9 @@ def getConfig(entry):
     config_current = json_normalize(entry)[config_fields].astype(int)
     config_current.index = [date.fromtimestamp(entry["lastUpdateTimestamp"])]
 
-    config_pd = config_current.append(config_history_pd).sort_index(ascending=True)
+    config_pd = pd.concat([config_current, config_history_pd]).sort_index(
+        ascending=True
+    )
     return config_pd
 
 
@@ -44,7 +49,7 @@ def plotConfig(entry, figdim=(7, 5)):
     # plotting starts
     fig, (ax2, ax1, ax4) = plt.subplots(3, sharex=True, figsize=figdim)
 
-    ax2.set_xlim(date(2019, 12, 1), date(2021, 1, 20))
+    ax2.set_xlim(date(2019, 12, 1), date(2023, 4, 28))
     ax2.set_title("$\\tt " + symb + "$")
 
     # upper figure is daily volume + daily volatility
@@ -145,7 +150,7 @@ def plotConfig(entry, figdim=(7, 5)):
     ax5.set_ylabel("Quantity in token units")
 
     plt.tight_layout()
-    plt.savefig("./figures/" + symb + "_ps.pdf")
+    plt.savefig(FIGURE_PATH / f"{symb}_ps.pdf")
 
 
 def getMarketMovement(symbol: str, window: int = 30):
@@ -165,11 +170,11 @@ def getRiskrelation(entry, window: int = 30):
     return risk_relation_rows
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     with open(datafolder + "aavedata.json") as json_file:
         data = json.load(json_file)
 
-    reserve_data = data[series]
+    reserve_data = data["reserves"]
     config_fields = [
         "reserveLiquidationBonus",
         "reserveLiquidationThreshold",
