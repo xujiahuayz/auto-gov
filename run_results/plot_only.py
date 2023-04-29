@@ -3,7 +3,7 @@ from os import path
 
 from matplotlib import pyplot as plt
 
-from market_env.constants import DATA_PATH, FIGURES_PATH
+from market_env.constants import DATA_PATH, FIGURE_PATH
 from run_results.plotting import plot_learning_curve, plot_time_cdf
 
 
@@ -21,7 +21,7 @@ def plot_results(results: list[dict]) -> None:
         training_collateral_factors = result["training_collateral_factors"]
 
         filename = (
-            FIGURES_PATH
+            FIGURE_PATH
             / f"defi-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf"
         )
 
@@ -48,7 +48,7 @@ def plot_results(results: list[dict]) -> None:
         # plt.title(title)
         plt.tight_layout()
         plt.savefig(
-            FIGURES_PATH
+            FIGURE_PATH
             / f"collateral_factors-{icf}-{ms}-{n_game}-{lr}-{eps_end}-{eps_dec}-{batch_size}.pdf"
         )
         plt.show()

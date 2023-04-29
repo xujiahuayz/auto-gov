@@ -5,8 +5,6 @@ from typing import Any, Callable
 from rl.config import ATTACK_FUNC, TKN_PRICES, USDC_PRICES
 from rl.main_gov import train_env
 
-# from scripts.plotting import plot_training
-
 
 def training(
     number_steps: int,
@@ -96,7 +94,7 @@ if __name__ == "__main__":
         ATTACK_FUNC,
     ]:
         for NUM_STEPS in [30 * 12]:
-            for target_on_point in [0.5]:
+            for target_on_point in [0.2]:
                 (
                     agent_vars,
                     scores,

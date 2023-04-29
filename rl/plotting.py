@@ -1,6 +1,6 @@
 from typing import Callable
 from matplotlib import pyplot as plt
-from market_env.constants import FIGURES_PATH
+from market_env.constants import FIGURE_PATH
 from rl.config import ATTACK_FUNC, TARGET_ON_POINT, TKN_PRICES, USDC_PRICES, NUM_STEPS
 from rl.training import training
 
@@ -86,7 +86,7 @@ def plot_training_results(
     # ax2.set_ylim(0, 1)
     fig.tight_layout()
     fig.savefig(
-        fname=str(FIGURES_PATH / f"{number_steps}_{target_on_point}_{attack_on}.pdf")
+        fname=str(FIGURE_PATH / f"{number_steps}_{target_on_point}_{attack_on}.pdf")
     )
     plt.show()
 

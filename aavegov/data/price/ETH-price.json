@@ -1,0 +1,9 @@
+{
+    "Response": "Error",
+    "Message": "Trade pair ETH/ETH is invalid!",
+    "HasWarning": false,
+    "Type": 2,
+    "RateLimit": {},
+    "Data": {},
+    "ParamWithError": "tsym"
+}

@@ -6,7 +6,7 @@ import logging
 from itertools import product
 
 
-from market_env.constants import FIGURES_PATH
+from market_env.constants import FIGURE_PATH
 from rl.main_gov import train_env
 
 # from run_results.plotting import plot_learning_curve
