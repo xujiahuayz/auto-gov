@@ -1,5 +1,5 @@
 import logging
-from scripts.config import (
+from rl.config import (
     ATTACK_FUNC,
     TKN_PRICES,
     USDC_PRICES,
@@ -10,7 +10,7 @@ from scripts.config import (
     EPSILON_END,
 )
 
-from rl.training import training_visualizing
+from rl.training import training
 
 
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +22,7 @@ for attack_function in [
     for NUM_STEPS in [30 * 12, 30 * 15]:
         for target_on_point in [0.4, 0.5]:
             (
+                agent_vars,
                 scores,
                 eps_history,
                 states,
@@ -30,7 +31,7 @@ for attack_function in [
                 bench_states,
                 trained_model,
                 losses,
-            ) = training_visualizing(
+            ) = training(
                 number_steps=NUM_STEPS,
                 epsilon_end=EPSILON_END,
                 epsilon_decay=EPSILON_DECAY,

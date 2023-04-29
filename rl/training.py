@@ -2,16 +2,13 @@ import logging
 import math
 from typing import Any, Callable
 
-from matplotlib import pyplot as plt
-
-from market_env.constants import FIGURES_PATH
+from rl.config import ATTACK_FUNC, TKN_PRICES, USDC_PRICES
 from rl.main_gov import train_env
-from scripts.config import ATTACK_FUNC, TKN_PRICES, USDC_PRICES
 
 # from scripts.plotting import plot_training
 
 
-def training_visualizing(
+def training(
     number_steps: int,
     epsilon_end: float,
     epsilon_decay: float,
@@ -110,7 +107,7 @@ if __name__ == "__main__":
                     bench_states,
                     trained_model,
                     losses,
-                ) = training_visualizing(
+                ) = training(
                     number_steps=NUM_STEPS,
                     epsilon_end=5e-5,
                     epsilon_decay=1e-6,

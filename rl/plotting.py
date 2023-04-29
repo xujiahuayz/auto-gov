@@ -1,7 +1,8 @@
 from typing import Callable
 from matplotlib import pyplot as plt
 from market_env.constants import FIGURES_PATH
-from rl.training import training_visualizing
+from rl.config import ATTACK_FUNC, TARGET_ON_POINT, TKN_PRICES, USDC_PRICES, NUM_STEPS
+from rl.training import training
 
 
 def plot_training_results(
@@ -20,7 +21,7 @@ def plot_training_results(
         bench_states,
         trained_model,
         losses,
-    ) = training_visualizing(
+    ) = training(
         number_steps=number_steps,
         target_on_point=target_on_point,
         attack_func=attack_func,
@@ -64,8 +65,12 @@ def plot_training_results(
         y=y_bust * len(bench_bust),
         label="benchmark",
         marker="|",
+        color="g",
+        alpha=0.5,
     )
-    ax2.scatter(x=RL_bust, y=y_bust * len(RL_bust), label="RL", marker=".", color="r")
+    ax2.scatter(
+        x=RL_bust, y=y_bust * len(RL_bust), label="RL", marker=".", color="r", alpha=0.5
+    )
 
     # surpress x-axis numbers but keep the ticks
     plt.setp(ax2.get_xticklabels(), visible=False)
@@ -84,3 +89,22 @@ def plot_training_results(
         fname=str(FIGURES_PATH / f"{number_steps}_{target_on_point}_{attack_on}.pdf")
     )
     plt.show()
+
+
+if __name__ == "__main__":
+    for attack_function in [
+        None,
+        ATTACK_FUNC,
+    ]:
+        plot_training_results(
+            number_steps=NUM_STEPS,
+            epsilon_end=5e-5,
+            epsilon_decay=1e-4,
+            batch_size=128,
+            epsilon_start=1,
+            target_on_point=TARGET_ON_POINT,
+            eps_dec_decrease_with_target=0.3,
+            tkn_prices=TKN_PRICES,
+            usdc_prices=USDC_PRICES,
+            attack_func=attack_function,
+        )

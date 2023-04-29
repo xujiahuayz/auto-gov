@@ -1,7 +1,7 @@
 import logging
 import multiprocessing
 
-from scripts.config import (
+from rl.config import (
     ATTACK_FUNC,
     BATCH_SIZE,
     EPS_DEC_FACTOR,
@@ -11,7 +11,7 @@ from scripts.config import (
     TKN_PRICES,
     USDC_PRICES,
 )
-from rl.training import training_visualizing
+from rl.training import training
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,6 +19,7 @@ logging.basicConfig(level=logging.INFO)
 def run_training_visualizing(params):
     attack_function, NUM_STEPS, target_on_point = params
     (
+        agent_vars,
         scores,
         eps_history,
         states,
@@ -27,7 +28,7 @@ def run_training_visualizing(params):
         bench_states,
         trained_model,
         losses,
-    ) = training_visualizing(
+    ) = training(
         number_steps=NUM_STEPS,
         epsilon_end=EPSILON_END,
         epsilon_decay=EPSILON_DECAY,
@@ -61,5 +62,3 @@ if __name__ == "__main__":
 
     with multiprocessing.Pool() as pool:
         pool.map(run_training_visualizing, param_combinations)
-
-    # `results` now contains the results for all parameter combinations
