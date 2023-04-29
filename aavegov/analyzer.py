@@ -158,7 +158,7 @@ def plotConfig(entry, figdim=(7, 5)):
     ax4.xaxis.set_tick_params(rotation=15)
 
     plt.tight_layout()
-    plt.savefig(FIGURE_PATH / f"{symb}_ps.pdf")
+    plt.savefig(FIGURE_PATH / f"ps_{symb}.pdf")
     # show plot and then close it
     plt.show()
     plt.close()
