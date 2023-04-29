@@ -155,7 +155,7 @@ def plotConfig(entry, figdim=(7, 5)):
     ax5.set_ylabel("Quantity in token units")
 
     # make sure x-axis label is not overlapped
-    ax4.xaxis.set_tick_params(rotation=30)
+    ax4.xaxis.set_tick_params(rotation=15)
 
     plt.tight_layout()
     plt.savefig(FIGURE_PATH / f"{symb}_ps.pdf")
