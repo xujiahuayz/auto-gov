@@ -11,6 +11,7 @@ setup(
         "gym==0.26.2",
         "opencv-python==4.7.0.68",
         "matplotlib==3.6.3",
+        "seaborn==0.11.2",
     ],
     extras_require={"dev": ["pylint", "black", "pytest"]},
 )
