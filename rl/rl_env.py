@@ -21,7 +21,8 @@ class ProtocolEnv(gym.Env):
             # self.supply_apy,
             # self.borrow_apy,
             # self.env.prices[self.asset_name],
-            low=np.array([0, 0, 0, 0, -np.inf, 0, 0, 0, 0] * num_pools),
+            # self.asset_volatility[self.env.step],
+            low=np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0] * num_pools),
             high=np.array(
                 [np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf, np.inf]
                 * num_pools

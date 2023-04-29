@@ -6,6 +6,7 @@ import logging
 from typing import Any, Callable
 
 import numpy as np
+import pandas as pd
 
 from market_env.constants import (
     DEBT_TOKEN_PREFIX,
@@ -601,6 +602,11 @@ class PlfPool:
         self.asset_price_history = self._initial_asset_price * self.price_trend_func(
             self.env.max_steps, self.seed
         )
+        # compute rolling 7-day volatility
+        self.asset_volatility = (
+            pd.Series(self.asset_price_history).rolling(window=7, min_periods=1).std()
+        )
+        self.asset_volatility[0] = 0
         self.user_i_tokens: dict[str, float] = {
             self.initiator.name: self.initial_starting_funds
         }
@@ -698,6 +704,9 @@ class PlfPool:
         self.reward = 0  # reset reward
 
     def get_state(self) -> np.ndarray:
+        """
+        get states for learning
+        """
         return np.array(
             [
                 self.total_available_funds,
@@ -709,6 +718,7 @@ class PlfPool:
                 self.supply_apy,
                 self.borrow_apy,
                 self.env.prices[self.asset_name],
+                self.asset_volatility[self.env.step],
             ]
         )
 
