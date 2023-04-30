@@ -1,6 +1,5 @@
 import logging
 import multiprocessing
-import os
 import pickle
 from typing import Callable
 
@@ -20,17 +19,7 @@ logging.basicConfig(level=logging.INFO)
 
 def run_training_visualizing(params: tuple[Callable | None, int, float, int]):
     attack_function, num_steps, target_on_point, batch_size = params
-    (
-        agent_vars,
-        scores,
-        eps_history,
-        states,
-        rewards,
-        time_cost,
-        bench_states,
-        trained_model,
-        losses,
-    ) = training(
+    return training(
         number_steps=num_steps,
         epsilon_end=EPSILON_END,
         epsilon_decay=EPSILON_DECAY,
@@ -42,28 +31,18 @@ def run_training_visualizing(params: tuple[Callable | None, int, float, int]):
         usdc_prices=USDC_PRICES,
         attack_func=attack_function,
     )
-    return (
-        scores,
-        eps_history,
-        states,
-        rewards,
-        time_cost,
-        bench_states,
-        trained_model,
-        losses,
-    )
 
 
 if __name__ == "__main__":
     param_combinations = [
-        (attack_function, num_steps, target_on_point, batch_size)
+        (this_attack_function, this_num_steps, this_target_on_point, this_batch_size)
         # for attack_function in [None, ATTACK_FUNC]
-        for attack_function in [ATTACK_FUNC]
+        for this_attack_function in [ATTACK_FUNC]
         # for NUM_STEPS in [30 * 12, 30 * 15]
-        for num_steps in [30 * 18]
+        for this_num_steps in [30 * 18]
         # for target_on_point in [0.4, 0.5]
-        for target_on_point in [0.3]
-        for batch_size in [64]
+        for this_target_on_point in [0.3]
+        for this_batch_size in [64]
     ]
 
     # with multiprocessing.Pool() as pool:
