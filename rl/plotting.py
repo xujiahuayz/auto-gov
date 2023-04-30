@@ -299,6 +299,7 @@ def plot_example_state(
     ax_20 = ax_2[0]
     ax_21 = ax_2[1]
     # add attack steps from exogenous variables to ax_20 as scatter points
+    print(example_exog_vars)
     attack_steps = example_exog_vars["attack_steps"]
     ax_20.scatter(
         x=attack_steps,
@@ -370,7 +371,7 @@ if __name__ == "__main__":
         plot_training_results_seaborn(
             number_steps=NUM_STEPS,
             epsilon_end=5e-5,
-            epsilon_decay=5e-6,
+            epsilon_decay=8e-6,
             batch_size=128,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
@@ -383,7 +384,7 @@ if __name__ == "__main__":
         plot_example_state(
             number_steps=NUM_STEPS,
             epsilon_end=5e-5,
-            epsilon_decay=5e-6,
+            epsilon_decay=8e-6,
             bench_score=-1e5,
             batch_size=128,
             epsilon_start=1,

@@ -214,7 +214,7 @@ def train_env(
             {
                 "tkn_price_trend": tkn_price_trend_this_episode,
                 "usdc_price_trend": usdc_price_trend_this_episode,
-                "aa_steps": attack_steps_this_episode,
+                "attack_steps": attack_steps_this_episode,
             }
         )
         (
@@ -397,16 +397,7 @@ if __name__ == "__main__":
         "target_on_point": 0.9,
     }
 
-    (
-        training_scores,
-        training_eps_history,
-        training_states,
-        training_rewards,
-        training_time_cost,
-        training_bench_states,
-        training_models,
-        training_avg_loss,
-    ) = train_env(
+    result_unpacked = train_env(
         agent_args=agent_vars,
         n_episodes=N_EPISODES,
         initial_collateral_factor=0.99,
@@ -423,11 +414,11 @@ if __name__ == "__main__":
         attack_steps=[6, 11, 32],
     )
 
-    test_protocol_env = ProtocolEnv(test_env)
+    # test_protocol_env = ProtocolEnv(test_env)
 
-    inference_with_trained_model(
-        model=training_models[-1],
-        env=test_protocol_env,
-        agent_args=agent_vars,
-        num_test_episodes=3,
-    )
+    # inference_with_trained_model(
+    #     model=training_models[-1],
+    #     env=test_protocol_env,
+    #     agent_args=agent_vars,
+    #     num_test_episodes=3,
+    # )
