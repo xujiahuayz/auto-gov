@@ -47,6 +47,8 @@ def plotConfig(entry, figdim=(7, 5)):
     symb = entry["symbol"]
     config_pd = getConfig(entry)
     # try to catch KeyError
+    if symb == "ETH" and (not entry["usageAsCollateralEnabled"]):
+        return
     try:
         pricedata_pd = getPriceDF(symb)
     except KeyError:
@@ -202,8 +204,7 @@ if __name__ == "__main__":
 
     for entry in reserve_data:
         symb = entry["symbol"]
-        if symb != "ETH":
-            plotConfig(entry=entry, figdim=(7, 5))
+        plotConfig(entry=entry, figdim=(7, 5))
 
     risk_relation_df = DataFrame()
     for entry in reserve_data:
