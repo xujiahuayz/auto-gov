@@ -210,6 +210,7 @@ def plot_training_results(
         fname=str(FIGURE_PATH / f"{number_steps}_{target_on_point}_{attack_on}.pdf")
     )
     plt.show()
+    plt.close()
 
 
 def plot_example_state(
@@ -360,6 +361,8 @@ def plot_example_state(
     ax_21.set_ylabel("total net position")
     # set the legend on the top left corner of the plot
     ax_21.legend(loc="upper left")
+    plt.show()
+    plt.close()
 
 
 if __name__ == "__main__":
