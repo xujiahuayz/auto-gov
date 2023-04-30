@@ -72,7 +72,7 @@ class DefiEnv:
                     "borrow_apy": p.borrow_apy,
                     "supply_apy": p.supply_apy,
                     "utilization_ratio": p.utilization_ratio,
-                    "price": p.env.prices[name],
+                    # "price": p.env.prices[name],
                 }
                 for name, p in self.plf_pools.items()
             },

@@ -1,5 +1,7 @@
+import logging
 from typing import Callable
 
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
@@ -25,12 +27,17 @@ def plot_training_results_seaborn(
         bench_states,
         trained_model,
         losses,
+        exogenous_vars,
     ) = training(
         number_steps=number_steps,
         target_on_point=target_on_point,
         attack_func=attack_func,
         **kwargs,
     )
+
+    # transform the scores through Hyperbolic tangent function
+    # NOTE: update description in paper
+    scores = np.tanh(scores)
 
     sns.set_theme(style="darkgrid")
 
@@ -55,6 +62,7 @@ def plot_training_results_seaborn(
     # add a second x axis to the first subplot on the top
     ax4 = ax3.twiny()
     ax3.set_ylabel("score", color=score_color)
+    ax3.set_ylim(-1.05, 1.05)
 
     # Add a new parameter for the window size of the rolling mean
     window_size = 5
@@ -133,6 +141,7 @@ def plot_training_results(
         bench_states,
         trained_model,
         losses,
+        exogenous_vars,
     ) = training(
         number_steps=number_steps,
         target_on_point=target_on_point,
@@ -221,6 +230,7 @@ def plot_example_state(
         bench_states,
         trained_model,
         losses,
+        exogenous_vars,
     ) = training(
         number_steps=number_steps,
         target_on_point=target_on_point,
@@ -231,9 +241,9 @@ def plot_example_state(
 
     # color scheme for the three assets
     ASSET_COLORS = {
-        "tkn": "tab:blue",
-        "weth": "tab:orange",
-        "usdc": "tab:green",
+        "tkn": ("blue", "/"),
+        "usdc": ("green", "\\"),
+        "weth": ("orange", "|"),
     }
 
     stable_start = int((epsilon_start - target_on_point) / epsilon_decay / number_steps)
@@ -244,88 +254,115 @@ def plot_example_state(
         raise ValueError("no score above bench_score found")
 
     example_score = example_scores[len(example_scores) // 4]
-    # find out the index of the median score
-    median_score_index = range(len(states))[stable_start:][
+    # find out the index of the example score
+    example_score_index = range(len(states))[stable_start:][
         stable_scores.index(example_score)
     ]
 
-    example_state = states[median_score_index]
-    bs = bench_states[median_score_index]
+    example_state = states[example_score_index]
+    example_exog_vars = exogenous_vars[example_score_index]
+    bench_state = bench_states[example_score_index]
 
-    # create a figure with two axes
-    fig, ax1 = plt.subplots()
-    ax2 = ax1.twinx()
-    for asset in ["tkn", "weth", "usdc"]:
-        # plot the collateral factor on the left axis
+    # create 2 subfigures that share the x axis
+    fig, ax_21 = plt.subplots(nrows=2, ncols=1, sharex=True)
+    ax1 = ax_21[0]
+    ax2 = ax_21[1]
+    for asset, style in ASSET_COLORS.items():
+        if asset == "weth":
+            log_return = [0] * len(example_exog_vars)
+        else:
+            log_return = np.diff(np.log(example_exog_vars[f"{asset}_price_trend"]))
         ax1.plot(
+            # calculate log return of the price
+            log_return,
+            color=style[0],
+            label=asset,
+        )
+        # plot the collateral factor
+        ax2.plot(
             [state["pools"][asset]["collateral_factor"] for state in example_state],
-            color=ASSET_COLORS[asset],
+            color=style[0],
             label=asset,
         )
         # plot the price on the right axis
 
-        ax2.plot(
-            [state["pools"][asset]["price"] for state in states[median_score_index]],
-            color=ASSET_COLORS[asset],
-            linestyle="dashed",
-        )
-
     # set the labels
-    ax1.set_ylabel("collateral factor")
-    ax2.set_ylabel("price")
 
-    # set the legend outside the plot
-    ax1.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+    ax1.set_ylabel("Log return of price in $\\tt ETH$")
+    ax2.set_ylabel("collateral factor")
+    ax2.set_xlabel("step")
+    # put legend on the top left corner of the plot
+    ax1.legend(loc="upper left", ncol=3)
 
-    # initialize the figure
-    fig, ax = plt.subplots()
-    ax3 = ax.twinx()
-    for asset in ["tkn", "weth", "usdc"]:
-        # plot reserves of each asset in area plot with semi-transparent fill
-        ax.fill_between(
-            range(len(bs)),
-            [state["pools"][asset]["reserve"] for state in bs],
+    # create 2 subfigures that share the x axis
+    fig, ax_2 = plt.subplots(nrows=2, ncols=1, sharex=True)
+    ax_20 = ax_2[0]
+    ax_21 = ax_2[1]
+    # add attack steps from exogenous variables to ax_20 as scatter points
+    attack_steps = example_exog_vars["attack_steps"]
+    ax_20.scatter(
+        x=attack_steps,
+        y=1,
+        marker="x",
+        color="r",
+        label="attack",
+    )
+    # set the legend for ax_20 above the plot out of the plot area
+    ax_20.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.15),
+    )
+    for asset, style in ASSET_COLORS.items():
+        # plot utilization ratio
+        ax_20.plot(
+            [state["pools"][asset]["utilization_ratio"] for state in bench_state],
+            color=style[0],
+        )
+        ax_20.set_ylabel("utilization ratio")
+
+        ax_21.fill_between(
+            range(len(example_state)),
+            [state["pools"][asset]["reserve"] for state in example_state],
             alpha=0.5,
             label=asset,
-            color=ASSET_COLORS[asset],
+            color=style[0],
+            # fill pattern
+            hatch=style[1],
         )
-        # plot utilization ratio
-        ax3.plot(
-            [state["pools"][asset]["utilization_ratio"] for state in bs],
-            color=ASSET_COLORS[asset],
-            linestyle="dotted",
-        )
-        ax3.set_ylabel("utilization ratio")
+        # legend on the top left corner of the plot
+
+    ax_21.legend(loc="upper left")
 
     # set the labels
-    ax.set_xlabel("time")
-    ax.set_ylabel("reserve")
+    ax_21.set_xlabel("step")
+    ax_21.set_ylabel("reserve in token quantity")
     # calculate the env's total net position over time
     total_net_position = [state["net_position"] for state in example_state]
 
     # plot the total net position
-    fig, ax = plt.subplots()
+    fig, ax_21 = plt.subplots()
 
     # plot the benchmark case
-    ax.plot(
-        [state["net_position"] for state in bs],
+    ax_21.plot(
+        [state["net_position"] for state in bench_state],
         label="benchmark",
         lw=2,
     )
 
-    ax.set_xlabel("time")
-    ax.set_ylabel("total net position")
+    ax_21.set_xlabel("time")
+    ax_21.set_ylabel("total net position in $\\tt ETH$")
     # legend outside the plot
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+    ax_21.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
-    ax.plot(total_net_position, label="RL")
-    ax.set_xlabel("time")
-    ax.set_ylabel("total net position")
-    # set the legend outside the plot
-    ax.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+    ax_21.plot(total_net_position, label="RL")
+    ax_21.set_xlabel("time")
+    ax_21.set_ylabel("total net position")
+    # set the legend on the top left corner of the plot
+    ax_21.legend(loc="upper left")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     for attack_function in [
         None,
         ATTACK_FUNC,
@@ -333,7 +370,7 @@ if __name__ == "__main__":
         plot_training_results_seaborn(
             number_steps=NUM_STEPS,
             epsilon_end=5e-5,
-            epsilon_decay=1e-4,
+            epsilon_decay=5e-6,
             batch_size=128,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
@@ -346,7 +383,7 @@ if __name__ == "__main__":
         plot_example_state(
             number_steps=NUM_STEPS,
             epsilon_end=5e-5,
-            epsilon_decay=1e-4,
+            epsilon_decay=5e-6,
             bench_score=-1e5,
             batch_size=128,
             epsilon_start=1,

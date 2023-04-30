@@ -27,6 +27,7 @@ def training(
     list[list[dict[str, Any]]],
     list[dict[str, Any]],
     list[float],
+    list[dict[str, Any]],
 ]:
     number_episodes = int(
         math.ceil(
@@ -62,6 +63,7 @@ def training(
         bench_states,
         trained_models,
         losses,
+        exogenous_vars,
     ) = train_env(
         n_episodes=number_episodes,
         compared_to_benchmark=True,
@@ -84,6 +86,7 @@ def training(
         bench_states,
         trained_models,
         losses,
+        exogenous_vars,
     )
 
 
@@ -96,17 +99,7 @@ if __name__ == "__main__":
     ]:
         for NUM_STEPS in [30 * 12]:
             for target_on_point in [0.2]:
-                (
-                    agent_vars,
-                    scores,
-                    eps_history,
-                    states,
-                    rewards,
-                    time_cost,
-                    bench_states,
-                    trained_model,
-                    losses,
-                ) = training(
+                results_unpacked = training(
                     number_steps=NUM_STEPS,
                     epsilon_end=5e-5,
                     epsilon_decay=1e-6,

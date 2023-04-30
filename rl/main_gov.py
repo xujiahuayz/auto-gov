@@ -43,6 +43,7 @@ def run_episode(
         "usdc"
     ].price_trend_func = lambda t, s: usdc_price_trend_this_episode
     env.defi_env.attack_steps = attack_steps
+
     score = 0
     done = False
     policy = []
@@ -158,6 +159,7 @@ def train_env(
     list[list[dict[str, Any]]],
     list[dict[str, Any]],
     list[float],
+    list[dict[str, Any]],
 ]:
     """
     Return:
@@ -168,6 +170,8 @@ def train_env(
         time_cost,
         bench_states,
         trained_model,
+        losses,
+        exogenous_states,
     """
     # initialize environment
     defi_env = init_env(**add_env_kwargs)
@@ -191,22 +195,27 @@ def train_env(
         policies,
         rewards,
         avg_loss,
-    ) = (
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-        [],
-    )
+        exogenous_states,
+    ) = ([], [], [], [], [], [], [], [], [], [])
 
     for i in range(n_episodes):
         start_time = time.time()
         attack_steps_this_episode = (
             attack_steps(defi_env.max_steps) if attack_steps else None
+        )
+        tkn_price_trend_this_episode = tkn_price_trend_func(
+            defi_env.max_steps, tkn_seed
+        )
+        usdc_price_trend_this_episode = usdc_price_trend_func(
+            defi_env.max_steps, usdc_seed
+        )
+
+        exogenous_states.append(
+            {
+                "tkn_price_trend": tkn_price_trend_this_episode,
+                "usdc_price_trend": usdc_price_trend_this_episode,
+                "aa_steps": attack_steps_this_episode,
+            }
         )
         (
             score,
@@ -219,12 +228,8 @@ def train_env(
             env=env,
             agent=agent,
             compared_to_benchmark=compared_to_benchmark,
-            tkn_price_trend_this_episode=tkn_price_trend_func(
-                defi_env.max_steps, tkn_seed
-            ),
-            usdc_price_trend_this_episode=usdc_price_trend_func(
-                defi_env.max_steps, usdc_seed
-            ),
+            tkn_price_trend_this_episode=tkn_price_trend_this_episode,
+            usdc_price_trend_this_episode=usdc_price_trend_this_episode,
             training=True,
             attack_steps=attack_steps_this_episode,
             **add_env_kwargs,
@@ -271,6 +276,7 @@ def train_env(
         bench_states,
         trained_model,
         avg_loss,
+        exogenous_states,
     )
 
 

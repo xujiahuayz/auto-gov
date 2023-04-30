@@ -18,7 +18,7 @@ def TKN_PRICES(time_steps: int, seed: int | None = None) -> np.ndarray:
         time_steps=time_steps,
         seed=seed,
         mu_func=lambda t: 0.00001,
-        sigma_func=lambda t: 0.05 + ((t - 200) ** 2) ** 0.01 / 20,
+        sigma_func=lambda t: 0.05 + ((t - 200) ** 2) / 5e5,
     )
     return series
 
