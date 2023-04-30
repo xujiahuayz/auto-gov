@@ -2,7 +2,7 @@ import logging
 import math
 from typing import Any, Callable
 
-from rl.config import ATTACK_FUNC, TKN_PRICES, USDC_PRICES
+from rl.config import ATTACK_FUNC, TKN_PRICES, USDC_PRICES, LEARNING_RATE, GAMMA
 from rl.main_gov import train_env
 
 
@@ -44,9 +44,9 @@ def training(
     logging.info(f"number of episodes: {number_episodes}")
 
     agent_vars = {
-        "gamma": 0.95,
+        "gamma": GAMMA,
         "epsilon": epsilon_start,
-        "lr": 0.00015,
+        "lr": LEARNING_RATE,
         "eps_end": epsilon_end,
         "eps_dec": epsilon_decay,
         "batch_size": batch_size,
