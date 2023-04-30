@@ -1,13 +1,12 @@
 from typing import Callable
-from matplotlib import pyplot as plt
-from market_env.constants import FIGURE_PATH
-import numpy as np
-import math
+
 import pandas as pd
 import seaborn as sns
-from rl.config import ATTACK_FUNC, TARGET_ON_POINT, TKN_PRICES, USDC_PRICES, NUM_STEPS
-from rl.training import training
+from matplotlib import pyplot as plt
 
+from market_env.constants import FIGURE_PATH
+from rl.config import ATTACK_FUNC, NUM_STEPS, TARGET_ON_POINT, TKN_PRICES, USDC_PRICES
+from rl.training import training
 
 
 def plot_training_results_seaborn(
@@ -75,7 +74,7 @@ def plot_training_results_seaborn(
         scores_rolling_mean + scores_rolling_std,
         color=score_color,
         alpha=0.1,
-        edgecolor='none',
+        edgecolor="none",
     )
     ax4.set_xlabel("episode")
 

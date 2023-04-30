@@ -2,10 +2,10 @@ import logging
 import multiprocessing
 import os
 import pickle
+from typing import Callable
 
 from rl.config import (
     ATTACK_FUNC,
-    BATCH_SIZE,
     EPS_DEC_FACTOR,
     EPSILON_DECAY,
     EPSILON_END,
@@ -18,8 +18,8 @@ from rl.training import training
 logging.basicConfig(level=logging.INFO)
 
 
-def run_training_visualizing(params):
-    attack_function, NUM_STEPS, target_on_point = params
+def run_training_visualizing(params: tuple[Callable | None, int, float, int]):
+    attack_function, num_steps, target_on_point, batch_size = params
     (
         agent_vars,
         scores,
@@ -31,10 +31,10 @@ def run_training_visualizing(params):
         trained_model,
         losses,
     ) = training(
-        number_steps=NUM_STEPS,
+        number_steps=num_steps,
         epsilon_end=EPSILON_END,
         epsilon_decay=EPSILON_DECAY,
-        batch_size=BATCH_SIZE,
+        batch_size=batch_size,
         epsilon_start=EPSILON_START,
         target_on_point=target_on_point,
         eps_dec_decrease_with_target=EPS_DEC_FACTOR,
@@ -56,14 +56,14 @@ def run_training_visualizing(params):
 
 if __name__ == "__main__":
     param_combinations = [
-        (attack_function, NUM_STEPS, target_on_point)
+        (attack_function, num_steps, target_on_point, batch_size)
         # for attack_function in [None, ATTACK_FUNC]
         for attack_function in [ATTACK_FUNC]
         # for NUM_STEPS in [30 * 12, 30 * 15]
-        for NUM_STEPS in [30 * 15]
+        for num_steps in [30 * 18]
         # for target_on_point in [0.4, 0.5]
-        for target_on_point in [0.3, 0.7]
-        for BATCH_SIZE in [64, 128, 256]
+        for target_on_point in [0.3]
+        for batch_size in [64]
     ]
 
     # with multiprocessing.Pool() as pool:
@@ -73,14 +73,15 @@ if __name__ == "__main__":
 
     for params in param_combinations:
         results = run_training_visualizing(params)
-        
+
         # store results to file
-        attack_function, NUM_STEPS, target_on_point, BATCH_SIZE = params
-        attack_str = "NoAttack" if attack_function is None else "WithAttack"
-        filename = f"results_{attack_str}_{NUM_STEPS}_{target_on_point}_{BATCH_SIZE}.pickle"
+        attack_function, num_steps, target_on_point, batch_size = params
+        attack_str = "WithAttack" if attack_function else "NoAttack"
+        filename = (
+            f"results_{attack_str}_{num_steps}_{target_on_point}_{batch_size}.pickle"
+        )
 
         with open(filename, "wb") as f:
             pickle.dump(results, f)
 
         print(f"Results saved to {filename}")
-
