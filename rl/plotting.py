@@ -300,20 +300,20 @@ def plot_example_state(
     ax_20 = ax_2[0]
     ax_21 = ax_2[1]
     # add attack steps from exogenous variables to ax_20 as scatter points
-    print(example_exog_vars)
     attack_steps = example_exog_vars["attack_steps"]
-    ax_20.scatter(
-        x=attack_steps,
-        y=1,
-        marker="x",
-        color="r",
-        label="attack",
-    )
-    # set the legend for ax_20 above the plot out of the plot area
-    ax_20.legend(
-        loc="upper center",
-        bbox_to_anchor=(0.5, 1.15),
-    )
+    if attack_steps:
+        ax_20.scatter(
+            x=attack_steps,
+            y=[1] * len(attack_steps),
+            marker="x",
+            color="r",
+            label="attack",
+        )
+        # set the legend for ax_20 above the plot out of the plot area
+        ax_20.legend(
+            loc="upper center",
+            bbox_to_anchor=(0.5, 1.2),
+        )
     for asset, style in ASSET_COLORS.items():
         # plot utilization ratio
         ax_20.plot(
