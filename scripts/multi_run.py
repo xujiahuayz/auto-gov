@@ -1,5 +1,7 @@
 import logging
 import multiprocessing
+import os
+import pickle
 
 from rl.config import (
     ATTACK_FUNC,
@@ -64,5 +66,21 @@ if __name__ == "__main__":
         for BATCH_SIZE in [64, 128, 256]
     ]
 
-    with multiprocessing.Pool() as pool:
-        pool.map(run_training_visualizing, param_combinations)
+    # with multiprocessing.Pool() as pool:
+    #     pool.map(run_training_visualizing, param_combinations)
+    # do not use multiprocessing, it will cause the program to crash.
+    # let it run one by one.
+
+    for params in param_combinations:
+        results = run_training_visualizing(params)
+        
+        # store results to file
+        attack_function, NUM_STEPS, target_on_point, BATCH_SIZE = params
+        attack_str = "NoAttack" if attack_function is None else "WithAttack"
+        filename = f"results_{attack_str}_{NUM_STEPS}_{target_on_point}_{BATCH_SIZE}.pickle"
+
+        with open(filename, "wb") as f:
+            pickle.dump(results, f)
+
+        print(f"Results saved to {filename}")
+
