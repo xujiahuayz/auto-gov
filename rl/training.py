@@ -35,7 +35,7 @@ def training(
                 + (target_on_point - epsilon_end)
                 / (epsilon_decay * eps_dec_decrease_with_target)
             )
-            / number_steps
+            / number_steps * 1.6
         )
     )
 

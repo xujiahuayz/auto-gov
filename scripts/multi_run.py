@@ -55,9 +55,12 @@ def run_training_visualizing(params):
 if __name__ == "__main__":
     param_combinations = [
         (attack_function, NUM_STEPS, target_on_point)
-        for attack_function in [None, ATTACK_FUNC]
-        for NUM_STEPS in [30 * 12, 30 * 15]
-        for target_on_point in [0.4, 0.5]
+        # for attack_function in [None, ATTACK_FUNC]
+        for attack_function in [ATTACK_FUNC]
+        # for NUM_STEPS in [30 * 12, 30 * 15]
+        for NUM_STEPS in [30 * 15]
+        # for target_on_point in [0.4, 0.5]
+        for target_on_point in [0.3]
     ]
 
     with multiprocessing.Pool() as pool:
