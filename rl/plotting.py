@@ -373,9 +373,9 @@ if __name__ == "__main__":
     ]:
         plot_training_results_seaborn(
             number_steps=NUM_STEPS,
-            epsilon_end=5e-5,
-            epsilon_decay=8e-6,
-            batch_size=128,
+            epsilon_end=2e-3,
+            epsilon_decay=5e-6,
+            batch_size=64,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
             eps_dec_decrease_with_target=0.3,
@@ -386,10 +386,10 @@ if __name__ == "__main__":
 
         plot_example_state(
             number_steps=NUM_STEPS,
-            epsilon_end=5e-5,
-            epsilon_decay=8e-6,
+            epsilon_end=2e-3,
+            epsilon_decay=5e-6,
             bench_score=-1e5,
-            batch_size=128,
+            batch_size=64,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
             eps_dec_decrease_with_target=0.3,
