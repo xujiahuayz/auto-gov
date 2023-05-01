@@ -388,7 +388,7 @@ if __name__ == "__main__":
             number_steps=NUM_STEPS,
             epsilon_end=2e-3,
             epsilon_decay=5e-6,
-            bench_score=-1e5,
+            bench_score=0,
             batch_size=64,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
