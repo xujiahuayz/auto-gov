@@ -240,13 +240,6 @@ def plot_example_state(
         **kwargs,
     )
 
-    # color scheme for the three assets
-    ASSET_COLORS = {
-        "tkn": ("blue", "/"),
-        "usdc": ("green", "\\"),
-        "weth": ("orange", "|"),
-    }
-
     stable_start = int((epsilon_start - target_on_point) / epsilon_decay / number_steps)
     stable_scores = scores[stable_start:]
     # find out the position or index of the top 25 percentile score among all the socres > 0
@@ -256,113 +249,157 @@ def plot_example_state(
 
     example_score = example_scores[len(example_scores) // 4]
     # find out the index of the example score
-    example_score_index = range(len(states))[stable_start:][
+    good_example_score_index = range(len(states))[stable_start:][
         stable_scores.index(example_score)
     ]
 
-    example_state = states[example_score_index]
-    example_exog_vars = exogenous_vars[example_score_index]
-    bench_state = bench_states[example_score_index]
+    start_scores = scores[:stable_start]
+    bad_example_scores = sorted(start_scores, reverse=True)
+    bad_example_score = bad_example_scores[len(bad_example_scores) // 2]
+    bad_example_score_index = range(len(states))[:stable_start][
+        start_scores.index(bad_example_score)
+    ]
 
-    # create 2 subfigures that share the x axis
-    fig, ax_21 = plt.subplots(nrows=2, ncols=1, sharex=True)
-    ax1 = ax_21[0]
-    ax2 = ax_21[1]
-    for asset, style in ASSET_COLORS.items():
-        if asset == "weth":
-            log_return = [0] * len(example_exog_vars)
-        else:
-            log_return = np.diff(np.log(example_exog_vars[f"{asset}_price_trend"]))
-        ax1.plot(
-            # calculate log return of the price
-            log_return,
-            color=style[0],
-            label=asset,
+    for example_score_index in [good_example_score_index, bad_example_score_index]:
+        example_state = states[example_score_index]
+        example_exog_vars = exogenous_vars[example_score_index]
+        bench_state = bench_states[example_score_index]
+
+        # color scheme for the three assets
+        ASSET_COLORS = {
+            "tkn": ("blue", "/"),
+            "usdc": ("green", "\\"),
+            "weth": ("orange", "|"),
+        }
+
+        # create 2 subfigures that share the x axis
+        fig, ax_21 = plt.subplots(nrows=2, ncols=1, sharex=True)
+        ax1 = ax_21[0]
+        ax2 = ax_21[1]
+        for asset, style in ASSET_COLORS.items():
+            if asset == "weth":
+                log_return = [0] * len(example_exog_vars)
+            else:
+                log_return = np.diff(np.log(example_exog_vars[f"{asset}_price_trend"]))
+            ax1.plot(
+                # calculate log return of the price
+                log_return,
+                color=style[0],
+                label=asset,
+            )
+            # plot the collateral factor
+            ax2.plot(
+                [state["pools"][asset]["collateral_factor"] for state in example_state],
+                color=style[0],
+                label=asset,
+            )
+            # plot the price on the right axis
+
+        # set the labels
+
+        x_lable = "step"
+
+        ax1.set_ylabel("Log return of price in $\\tt ETH$")
+        ax2.set_ylabel("collateral factor")
+        ax2.set_xlabel(x_lable)
+        # put legend on the top left corner of the plot
+        ax1.legend(loc="upper left", ncol=3)
+        fig.tight_layout()
+        fig.savefig(
+            fname=str(
+                FIGURE_PATH
+                / f"colfact{example_score_index}_{number_steps}_{target_on_point}.pdf"
+            )
         )
-        # plot the collateral factor
-        ax2.plot(
-            [state["pools"][asset]["collateral_factor"] for state in example_state],
-            color=style[0],
-            label=asset,
+        plt.show()
+        plt.close()
+
+        # create 2 subfigures that share the x axis
+        fig, ax_2 = plt.subplots(nrows=2, ncols=1, sharex=True)
+        ax_20 = ax_2[0]
+        ax_21 = ax_2[1]
+        # add attack steps from exogenous variables to ax_20 as scatter points
+        attack_steps = example_exog_vars["attack_steps"]
+        if attack_steps:
+            ax_20.scatter(
+                x=attack_steps,
+                y=[1] * len(attack_steps),
+                marker="x",
+                color="r",
+                label="attack",
+            )
+            # set the legend for ax_20 above the plot out of the plot area
+            ax_20.legend(
+                loc="upper center",
+                bbox_to_anchor=(0.5, 1.23),
+            )
+        for asset, style in ASSET_COLORS.items():
+            # plot utilization ratio
+            ax_20.plot(
+                [state["pools"][asset]["utilization_ratio"] for state in bench_state],
+                color=style[0],
+            )
+            ax_20.set_ylabel("utilization ratio")
+
+            ax_21.fill_between(
+                range(len(example_state)),
+                [state["pools"][asset]["reserve"] for state in example_state],
+                alpha=0.5,
+                label=asset,
+                color=style[0],
+                # fill pattern
+                hatch=style[1],
+            )
+            # legend on the top left corner of the plot
+
+        ax_21.legend(loc="upper left")
+
+        # set the labels
+        ax_21.set_xlabel(x_lable)
+        ax_21.set_ylabel("reserve in token quantity")
+
+        fig.tight_layout()
+        fig.savefig(
+            fname=str(
+                FIGURE_PATH
+                / f"state{example_score_index}_{number_steps}_{target_on_point}.pdf"
+            )
         )
-        # plot the price on the right axis
+        plt.show()
+        plt.close()
 
-    # set the labels
+        # calculate the env's total net position over time
+        total_net_position = [state["net_position"] for state in example_state]
 
-    ax1.set_ylabel("Log return of price in $\\tt ETH$")
-    ax2.set_ylabel("collateral factor")
-    ax2.set_xlabel("step")
-    # put legend on the top left corner of the plot
-    ax1.legend(loc="upper left", ncol=3)
+        # plot the total net position
+        fig, ax_np = plt.subplots()
 
-    # create 2 subfigures that share the x axis
-    fig, ax_2 = plt.subplots(nrows=2, ncols=1, sharex=True)
-    ax_20 = ax_2[0]
-    ax_21 = ax_2[1]
-    # add attack steps from exogenous variables to ax_20 as scatter points
-    attack_steps = example_exog_vars["attack_steps"]
-    if attack_steps:
-        ax_20.scatter(
-            x=attack_steps,
-            y=[1] * len(attack_steps),
-            marker="x",
-            color="r",
-            label="attack",
+        # plot the benchmark case
+        ax_np.plot(
+            [state["net_position"] for state in bench_state],
+            label="benchmark",
+            lw=2,
         )
-        # set the legend for ax_20 above the plot out of the plot area
-        ax_20.legend(
-            loc="upper center",
-            bbox_to_anchor=(0.5, 1.2),
+
+        ax_np.set_ylabel("total net position in $\\tt ETH$")
+        # legend outside the plot
+        ax_np.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+        ax_np.plot(total_net_position, label="RL")
+        ax_np.set_xlabel(x_lable)
+        ax_np.set_ylabel("total net position")
+        # set the legend on the top left corner of the plot
+        ax_np.legend(loc="upper left")
+
+        fig.tight_layout()
+        fig.savefig(
+            fname=str(
+                FIGURE_PATH
+                / f"netpos{example_score_index}_{number_steps}_{target_on_point}.pdf"
+            )
         )
-    for asset, style in ASSET_COLORS.items():
-        # plot utilization ratio
-        ax_20.plot(
-            [state["pools"][asset]["utilization_ratio"] for state in bench_state],
-            color=style[0],
-        )
-        ax_20.set_ylabel("utilization ratio")
-
-        ax_21.fill_between(
-            range(len(example_state)),
-            [state["pools"][asset]["reserve"] for state in example_state],
-            alpha=0.5,
-            label=asset,
-            color=style[0],
-            # fill pattern
-            hatch=style[1],
-        )
-        # legend on the top left corner of the plot
-
-    ax_21.legend(loc="upper left")
-
-    # set the labels
-    ax_21.set_xlabel("step")
-    ax_21.set_ylabel("reserve in token quantity")
-    # calculate the env's total net position over time
-    total_net_position = [state["net_position"] for state in example_state]
-
-    # plot the total net position
-    fig, ax_21 = plt.subplots()
-
-    # plot the benchmark case
-    ax_21.plot(
-        [state["net_position"] for state in bench_state],
-        label="benchmark",
-        lw=2,
-    )
-
-    ax_21.set_xlabel("time")
-    ax_21.set_ylabel("total net position in $\\tt ETH$")
-    # legend outside the plot
-    ax_21.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
-
-    ax_21.plot(total_net_position, label="RL")
-    ax_21.set_xlabel("time")
-    ax_21.set_ylabel("total net position")
-    # set the legend on the top left corner of the plot
-    ax_21.legend(loc="upper left")
-    plt.show()
-    plt.close()
+        plt.show()
+        plt.close()
 
 
 if __name__ == "__main__":
