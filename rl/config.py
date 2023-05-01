@@ -3,14 +3,14 @@ import numpy as np
 from market_env.utils import generate_price_series
 
 NUM_STEPS = int(30 * 18)
-EPSILON_END = 5e-3
+EPSILON_END = 2e-3
 EPSILON_DECAY = 5e-7
 BATCH_SIZE = 128
 EPSILON_START = 1.0
 TARGET_ON_POINT = 0.2
 EPS_DEC_FACTOR = 0.3
 GAMMA = 0.95
-LEARNING_RATE = 0.0002
+LEARNING_RATE = 0.001
 
 
 def TKN_PRICES(time_steps: int, seed: int | None = None) -> np.ndarray:
