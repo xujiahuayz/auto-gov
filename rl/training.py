@@ -17,6 +17,7 @@ def training(
     tkn_prices: Callable,
     usdc_prices: Callable,
     attack_func: Callable | None,
+    PrioritizedReplay_switch: bool = False,
 ) -> tuple[
     dict[str, Any],
     list[float],
@@ -52,6 +53,7 @@ def training(
         "batch_size": batch_size,
         "target_on_point": target_on_point,
         "eps_dec_decrease_with_target": eps_dec_decrease_with_target,
+        "PrioritizedReplay_switch": PrioritizedReplay_switch,
     }
 
     (

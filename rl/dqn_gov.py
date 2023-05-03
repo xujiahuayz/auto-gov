@@ -1,17 +1,17 @@
 import os
-
 import numpy as np
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from rl.data_structure import SumTree
 
 
 class DQN(nn.Module):
-    # agent for DQN
+    """Agent for DQN"""
 
     def __init__(self, lr, input_dims, fc1_dims, fc2_dims, n_actions):
-        # initialize agent
+        """Initialize agent."""
         super(DQN, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -47,12 +47,61 @@ class DQN(nn.Module):
         # layer2 = F.leaky_relu(self.fc2(layer1))
         # actions = self.fc3(layer2)
 
+        # state = state.to(self.fc1.weight.dtype)
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
         actions = self.fc3(x)
 
         return actions
 
+class PrioritizedReplayBuffer:
+    # replay buffer for DQN
+    def __init__(self, max_size: int, input_shape: tuple, n_actions: int, alpha: float = 0.6):
+        self.mem_size = max_size
+        self.mem_cntr = 0
+        self.alpha = alpha
+        self.sumtree = SumTree(max_size)
+
+        self.input_shape = input_shape
+        self.n_actions = n_actions
+    
+    def store_transition(self, state, action, reward: float, next_state, done: bool):
+        # calculate priority
+        # priority = np.max(self.sumtree.tree[-self.sumtree.capacity:])
+        priority = self.sumtree.total() / self.sumtree.capacity
+        if priority == 0:
+            priority = 1
+        data = (state, action, reward, next_state, done)
+        self.sumtree.add(priority, data)
+        self.mem_cntr += 1
+    
+    def sample(self, batch_size: int, beta):
+        idxs, experiences, priorities = [], [], []
+        segment_length = self.sumtree.total() / batch_size
+
+        for i in range(batch_size):
+            a = segment_length * i
+            b = segment_length * (i + 1)
+            s = np.random.uniform(a, b)
+            idx, priority, data = self.sumtree.get(s)
+            idxs.append(idx)
+            experiences.append(data)
+            priorities.append(priority)
+        
+        max_priority = max(priorities)
+        scaling_factor = np.array(priorities) / max_priority
+        is_weights = (self.mem_cntr * scaling_factor) ** (-beta)
+        is_weights /= is_weights.max()
+
+        return idxs, experiences, is_weights
+    
+    def update_priority(self, idx, td_error):
+        priority = td_error + 1e-5  # Small constant to ensure nonzero priority
+        priority = priority ** self.alpha
+        self.sumtree.update(idx, priority)
+
+    def __len__(self):
+        return self.mem_cntr if self.mem_cntr < self.mem_size else self.mem_size
 
 class Agent:
     def __init__(
@@ -71,6 +120,10 @@ class Agent:
         layer2_size: int = 256,
         target_on_point: int | None = None,
         target_update: int = 100,
+        alpha: float = 0.6,
+        beta: float = 0.4,
+        beta_increment_per_sampling: float = 1e-4,
+        PrioritizedReplay_switch: bool = False,
     ):
         self.gamma = gamma
         self.epsilon = epsilon
@@ -121,6 +174,12 @@ class Agent:
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
         self.loss_list = []
 
+        self.PrioritizedReplay_switch = PrioritizedReplay_switch
+        if PrioritizedReplay_switch:
+            self.beta = beta
+            self.beta_increment_per_sampling = beta_increment_per_sampling
+            self.buffer = PrioritizedReplayBuffer(max_mem_size, input_dims, n_actions, alpha=alpha)
+
     @property
     def target_net_enabled(self) -> bool:
         # eps_start -----eps_dec-----> target_on_point -----eps_dec*eps_dec_decrease_with_target-----> eps_min
@@ -134,21 +193,24 @@ class Agent:
         return False
 
     def store_transition(self, state, action, reward, state_, done: bool) -> None:
-        index = self.mem_cntr % self.mem_size
+        if self.PrioritizedReplay_switch == False:
+            index = self.mem_cntr % self.mem_size
 
-        # ===============================
-        # for i in state:
-        #     print(i)
-        # print("=====")
-        # print(np.array(state).shape)
-        # ===============================
-        self.state_memory[index] = state
-        self.new_state_memory[index] = state_
-        self.reward_memory[index] = reward
-        self.action_memory[index] = action
-        self.terminal_memory[index] = done
+            # ===============================
+            # for i in state:
+            #     print(i)
+            # print("=====")
+            # print(np.array(state).shape)
+            # ===============================
+            self.state_memory[index] = state
+            self.new_state_memory[index] = state_
+            self.reward_memory[index] = reward
+            self.action_memory[index] = action
+            self.terminal_memory[index] = done
 
-        self.mem_cntr += 1
+            self.mem_cntr += 1
+        else:
+            self.buffer.store_transition(state, action, reward, state_, done)
 
     def choose_action(self, observation, evaluate=False) -> int:
         if np.random.random() > self.epsilon or evaluate:
@@ -162,39 +224,76 @@ class Agent:
 
     def learn(self) -> None:
         # if there is not enough memory, do not learn
-        if self.mem_cntr < self.batch_size:
-            return
+        if self.PrioritizedReplay_switch == False:
+            # when prioritized replay is off
+            if self.mem_cntr < self.batch_size:
+                return
+        else:
+            # when prioritized replay is on
+            if self.buffer.mem_cntr < self.batch_size:
+                return
 
         # set the gradients of all the model parameters (weights and biases) in the Q_eval network to zero.
         self.Q_eval.optimizer.zero_grad()
 
-        # sample a batch of transitions
-        max_mem = min(self.mem_cntr, self.mem_size)
-        batch = np.random.choice(max_mem, self.batch_size, replace=False)
+        if self.PrioritizedReplay_switch == False:
+            # when prioritized replay is off
+            # sample a batch of transitions
+            max_mem = min(self.mem_cntr, self.mem_size)
+            batch = np.random.choice(max_mem, self.batch_size, replace=False)
 
-        # create an index for each element of the current batch
-        batch_index = np.arange(self.batch_size, dtype=np.int32)
+            # create an index for each element of the current batch
+            batch_index = np.arange(self.batch_size, dtype=np.int32)
 
-        state_batch = T.tensor(self.state_memory[batch]).to(self.Q_eval.device)
-        new_state_batch = T.tensor(self.new_state_memory[batch]).to(self.Q_eval.device)
+            state_batch = T.tensor(self.state_memory[batch]).to(self.Q_eval.device)
+            new_state_batch = T.tensor(self.new_state_memory[batch]).to(self.Q_eval.device)
 
-        reward_batch = T.tensor(self.reward_memory[batch]).to(self.Q_eval.device)
-        terminal_batch = T.tensor(self.terminal_memory[batch]).to(self.Q_eval.device)
+            reward_batch = T.tensor(self.reward_memory[batch]).to(self.Q_eval.device)
+            terminal_batch = T.tensor(self.terminal_memory[batch]).to(self.Q_eval.device)
 
-        action_batch = self.action_memory[batch]
+            action_batch = self.action_memory[batch]
 
-        q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
+            q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
+        
+        else:
+            # when prioritized replay is on
+            idxs, experiences, is_weights = self.buffer.sample(self.batch_size, self.beta)
+            is_weights = T.tensor(is_weights).to(self.Q_eval.device)
+
+            states, actions, rewards, next_states, dones = zip(*experiences)
+            print("states: ", states)
+
+            states = T.tensor(states).to(self.Q_eval.device)
+            next_states = T.tensor(next_states).to(self.Q_eval.device)
+            rewards = T.tensor(rewards).to(self.Q_eval.device)
+            actions = T.tensor(actions).to(self.Q_eval.device)
+            dones = T.tensor(dones).to(self.Q_eval.device)
+            # make sure the variables are with the same names
+            terminal_batch = dones
+            new_state_batch = next_states
+            reward_batch = rewards
+
+            q_eval = self.Q_eval(states).gather(1, actions.unsqueeze(1)).squeeze(1)
+            # q_eval = self.Q_eval.forward(states)[T.arange(self.batch_size), actions]
+
         # if self.target_net_enabled, Double DQN with target network enabled
         if self.target_net_enabled:
-            q_next = self.Q_target.forward(new_state_batch)
+            # try delete the detach() function if it does not work
+            q_next = self.Q_target.forward(new_state_batch).detach()
         else:
-            q_next = self.Q_eval.forward(new_state_batch)
+            # try delete the detach() function if it does not work
+            q_next = self.Q_eval.forward(new_state_batch).detach()
         q_next[terminal_batch] = 0.0
 
         q_target = reward_batch + self.gamma * T.max(q_next, dim=1)[0]
 
         # calculate the loss
-        loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
+        if self.PrioritizedReplay_switch == False:
+            loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
+        else:
+            td_errors = F.mse_loss(q_target, q_eval, reduction="none")
+            weighted_td_errors = is_weights * td_errors
+            loss = T.mean(weighted_td_errors)
         # if loss is inf, print the target and prediction
         if loss == float("inf"):
             print("!!! loss is inf !!!")
@@ -205,6 +304,15 @@ class Agent:
         # nn.utils.clip_grad_norm_(self.Q_eval.parameters(), max_norm=1.0)
         self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
+
+        if self.PrioritizedReplay_switch == True:
+            # when prioritized replay is on
+            self.beta += self.beta_increment_per_sampling
+            self.beta = min(self.beta, 1.0)
+
+            # update the priorities
+            for idx, td_error in zip(idxs, td_errors.detach().numpy()):
+                self.buffer.update_priority(idx, td_error)
 
         if self.target_on_point:
             self.update_counter += 1
