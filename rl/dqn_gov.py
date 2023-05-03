@@ -222,28 +222,53 @@ class Agent:
 
     def learn(self) -> None:
         # if there is not enough memory, do not learn
-        if self.mem_cntr < self.batch_size:
-            return
+        if self.PrioritizedReplay_switch == False:
+            # when prioritized replay is off
+            if self.mem_cntr < self.batch_size:
+                return
+        else:
+            # when prioritized replay is on
+            if self.buffer.mem_cntr < self.batch_size:
+                return
 
         # set the gradients of all the model parameters (weights and biases) in the Q_eval network to zero.
         self.Q_eval.optimizer.zero_grad()
 
-        # sample a batch of transitions
-        max_mem = min(self.mem_cntr, self.mem_size)
-        batch = np.random.choice(max_mem, self.batch_size, replace=False)
+        if self.PrioritizedReplay_switch == False:
+            # when prioritized replay is off
+            # sample a batch of transitions
+            max_mem = min(self.mem_cntr, self.mem_size)
+            batch = np.random.choice(max_mem, self.batch_size, replace=False)
 
-        # create an index for each element of the current batch
-        batch_index = np.arange(self.batch_size, dtype=np.int32)
+            # create an index for each element of the current batch
+            batch_index = np.arange(self.batch_size, dtype=np.int32)
 
-        state_batch = T.tensor(self.state_memory[batch]).to(self.Q_eval.device)
-        new_state_batch = T.tensor(self.new_state_memory[batch]).to(self.Q_eval.device)
+            state_batch = T.tensor(self.state_memory[batch]).to(self.Q_eval.device)
+            new_state_batch = T.tensor(self.new_state_memory[batch]).to(self.Q_eval.device)
 
-        reward_batch = T.tensor(self.reward_memory[batch]).to(self.Q_eval.device)
-        terminal_batch = T.tensor(self.terminal_memory[batch]).to(self.Q_eval.device)
+            reward_batch = T.tensor(self.reward_memory[batch]).to(self.Q_eval.device)
+            terminal_batch = T.tensor(self.terminal_memory[batch]).to(self.Q_eval.device)
 
-        action_batch = self.action_memory[batch]
+            action_batch = self.action_memory[batch]
 
-        q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
+            q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
+        
+        else:
+            # when prioritized replay is on
+            idxs, experiences, is_weights = self.buffer.sample(self.batch_size, self.beta)
+            is_weights = T.tensor(is_weights).to(self.Q_eval.device)
+
+            states, actions, rewards, next_states, dones = zip(*experiences)
+
+            states = T.tensor(states).to(self.Q_eval.device)
+            next_states = T.tensor(next_states).to(self.Q_eval.device)
+            rewards = T.tensor(rewards).to(self.Q_eval.device)
+            actions = T.tensor(actions).to(self.Q_eval.device)
+            dones = T.tensor(dones).to(self.Q_eval.device)
+
+            # q_eval = self.Q_eval(states).gather(1, actions.unsqueeze(1)).squeeze(1)
+            q_eval = self.Q_eval.forward(states)[T.arange(self.batch_size), actions]
+
         # if self.target_net_enabled, Double DQN with target network enabled
         if self.target_net_enabled:
             q_next = self.Q_target.forward(new_state_batch)
