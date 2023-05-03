@@ -265,21 +265,32 @@ class Agent:
             rewards = T.tensor(rewards).to(self.Q_eval.device)
             actions = T.tensor(actions).to(self.Q_eval.device)
             dones = T.tensor(dones).to(self.Q_eval.device)
+            # make sure the variables are with the same names
+            terminal_batch = dones
+            new_state_batch = next_states
+            reward_batch = rewards
 
             # q_eval = self.Q_eval(states).gather(1, actions.unsqueeze(1)).squeeze(1)
             q_eval = self.Q_eval.forward(states)[T.arange(self.batch_size), actions]
 
         # if self.target_net_enabled, Double DQN with target network enabled
         if self.target_net_enabled:
-            q_next = self.Q_target.forward(new_state_batch)
+            # try delete the detach() function if it does not work
+            q_next = self.Q_target.forward(new_state_batch).detach()
         else:
-            q_next = self.Q_eval.forward(new_state_batch)
+            # try delete the detach() function if it does not work
+            q_next = self.Q_eval.forward(new_state_batch).detach()
         q_next[terminal_batch] = 0.0
 
         q_target = reward_batch + self.gamma * T.max(q_next, dim=1)[0]
 
         # calculate the loss
-        loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
+        if self.PrioritizedReplay_switch == False:
+            loss = self.Q_eval.loss(q_target, q_eval).to(self.Q_eval.device)
+        else:
+            td_errors = F.mse_loss(q_target, q_eval, reduction="none")
+            weighted_td_errors = is_weights * td_errors
+            loss = T.mean(weighted_td_errors)
         # if loss is inf, print the target and prediction
         if loss == float("inf"):
             print("!!! loss is inf !!!")
@@ -290,6 +301,15 @@ class Agent:
         # nn.utils.clip_grad_norm_(self.Q_eval.parameters(), max_norm=1.0)
         self.loss_list.append(loss.item())
         self.Q_eval.optimizer.step()
+
+        if self.PrioritizedReplay_switch == True:
+            # when prioritized replay is on
+            self.beta += self.beta_increment_per_sampling
+            self.beta = min(self.beta, 1.0)
+
+            # update the priorities
+            for idx, td_error in zip(idxs, td_errors.detach().numpy()):
+                self.buffer.update_priority(idx, td_error)
 
         if self.target_on_point:
             self.update_counter += 1
