@@ -4,14 +4,14 @@ import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from sumtree import SumTree
+from rl.data_structure import SumTree
 
 
 class DQN(nn.Module):
-    # agent for DQN
+    """Agent for DQN"""
 
     def __init__(self, lr, input_dims, fc1_dims, fc2_dims, n_actions):
-        # initialize agent
+        """Initialize agent."""
         super(DQN, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -47,6 +47,7 @@ class DQN(nn.Module):
         # layer2 = F.leaky_relu(self.fc2(layer1))
         # actions = self.fc3(layer2)
 
+        # state = state.to(self.fc1.weight.dtype)
         x = F.relu(self.fc1(state))
         x = F.relu(self.fc2(x))
         actions = self.fc3(x)
@@ -66,7 +67,8 @@ class PrioritizedReplayBuffer:
     
     def store_transition(self, state, action, reward: float, next_state, done: bool):
         # calculate priority
-        priority = np.max(self.sumtree.tree[-self.sumtree.capacity:])
+        # priority = np.max(self.sumtree.tree[-self.sumtree.capacity:])
+        priority = self.sumtree.total() / self.sumtree.capacity
         if priority == 0:
             priority = 1
         data = (state, action, reward, next_state, done)
@@ -172,8 +174,8 @@ class Agent:
         self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool_)
         self.loss_list = []
 
+        self.PrioritizedReplay_switch = PrioritizedReplay_switch
         if PrioritizedReplay_switch:
-            self.PrioritizedReplay_switch = PrioritizedReplay_switch
             self.beta = beta
             self.beta_increment_per_sampling = beta_increment_per_sampling
             self.buffer = PrioritizedReplayBuffer(max_mem_size, input_dims, n_actions, alpha=alpha)
@@ -259,6 +261,7 @@ class Agent:
             is_weights = T.tensor(is_weights).to(self.Q_eval.device)
 
             states, actions, rewards, next_states, dones = zip(*experiences)
+            print("states: ", states)
 
             states = T.tensor(states).to(self.Q_eval.device)
             next_states = T.tensor(next_states).to(self.Q_eval.device)
@@ -270,8 +273,8 @@ class Agent:
             new_state_batch = next_states
             reward_batch = rewards
 
-            # q_eval = self.Q_eval(states).gather(1, actions.unsqueeze(1)).squeeze(1)
-            q_eval = self.Q_eval.forward(states)[T.arange(self.batch_size), actions]
+            q_eval = self.Q_eval(states).gather(1, actions.unsqueeze(1)).squeeze(1)
+            # q_eval = self.Q_eval.forward(states)[T.arange(self.batch_size), actions]
 
         # if self.target_net_enabled, Double DQN with target network enabled
         if self.target_net_enabled:

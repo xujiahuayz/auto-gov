@@ -419,6 +419,7 @@ if __name__ == "__main__":
             tkn_prices=TKN_PRICES,
             usdc_prices=USDC_PRICES,
             attack_func=attack_function,
+            PrioritizedReplay_switch = False,
         )
 
         plot_example_state(
