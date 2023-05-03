@@ -10,6 +10,8 @@ from market_env.constants import FIGURE_PATH
 from rl.config import ATTACK_FUNC, NUM_STEPS, TARGET_ON_POINT, TKN_PRICES, USDC_PRICES
 from rl.training import training
 
+FONT_SIZE = 18
+
 
 def plot_training_results_seaborn(
     number_steps: int,
@@ -48,7 +50,7 @@ def plot_training_results_seaborn(
 
     # create two subplots that share the x axis
     # the two subplots are created on a grid with 1 column and 2 rows
-    plt.rcParams.update({"font.size": 16.5})
+    plt.rcParams.update({"font.size": FONT_SIZE})
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
     x_range = range(len(scores))
 
@@ -156,7 +158,7 @@ def plot_training_results(
 
     # create two subplots that share the x axis
     # the two subplots are created on a grid with 1 column and 2 rows
-    plt.rcParams.update({"font.size": 16.5})
+    plt.rcParams.update({"font.size": FONT_SIZE})
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
     x_range = range(len(scores))
 
@@ -419,7 +421,7 @@ if __name__ == "__main__":
             tkn_prices=TKN_PRICES,
             usdc_prices=USDC_PRICES,
             attack_func=attack_function,
-            PrioritizedReplay_switch = False,
+            PrioritizedReplay_switch=False,
         )
 
         plot_example_state(
