@@ -12,7 +12,7 @@ from rl.training import training
 
 
 sns.set_theme(style="darkgrid")
-sns.set(font_scale=1.1)
+sns.set(font_scale=1.4)
 
 
 def plot_training_results_seaborn(
@@ -221,7 +221,7 @@ def plot_example_state(
 
         x_lable = "step"
 
-        ax1.set_ylabel("Log return of price in $\\tt ETH$")
+        ax1.set_ylabel("Log return of \n price in $\\tt ETH$")
         ax2.set_ylabel("collateral factor")
         ax2.set_xlabel(x_lable)
         # put legend on the top left corner of the plot
@@ -261,6 +261,7 @@ def plot_example_state(
                 color=style[0],
             )
             ax_20.set_ylabel("utilization ratio")
+            ax_20.set_ylim(0, 1.1)
 
             ax_21.fill_between(
                 range(len(example_state)),
@@ -277,7 +278,7 @@ def plot_example_state(
 
         # set the labels
         ax_21.set_xlabel(x_lable)
-        ax_21.set_ylabel("reserve in token quantity")
+        ax_21.set_ylabel("reserve in token units")
 
         fig.tight_layout()
         fig.savefig(
