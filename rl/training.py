@@ -41,6 +41,7 @@ def training(
             * 1.5
         )
     )
+    # number_episodes = 500
 
     logging.info(f"number of episodes: {number_episodes}")
 
@@ -99,7 +100,7 @@ if __name__ == "__main__":
         # None,
         ATTACK_FUNC,
     ]:
-        for NUM_STEPS in [30 * 15]:
+        for NUM_STEPS in [30*10, 30 * 15, 30*20]:
             for target_on_point in [0.2]:
                 results_unpacked = training(
                     number_steps=NUM_STEPS,
@@ -113,3 +114,7 @@ if __name__ == "__main__":
                     usdc_prices=USDC_PRICES,
                     attack_func=attack_function,
                 )
+
+                # time_cost = results_unpacked[5]
+                # with open(f"time_cost_{NUM_STEPS}.txt", "w") as f:
+                #     f.write(str(time_cost))
