@@ -1,6 +1,9 @@
 import numpy as np
 
 class SumTree(object):
+    """
+    SumTree is a binary tree data structure where the parent’s value is the sum of its children.
+    """
     
     def __init__(self, capacity):
         self.capacity = capacity
@@ -10,6 +13,9 @@ class SumTree(object):
         self.n_entries = 0
     
     def add(self, priority, data):
+        """
+        Add priority and data to the tree.
+        """
         tree_idx = self.write + self.capacity - 1
         self.data[self.write] = data
         self.update(tree_idx, priority)
@@ -22,6 +28,9 @@ class SumTree(object):
             self.n_entries += 1
     
     def update(self, tree_idx, priority):
+        """
+        Update priority of the tree.
+        """
         change = priority - self.tree[tree_idx]
         self.tree[tree_idx] = priority
         
@@ -30,9 +39,15 @@ class SumTree(object):
             self.tree[tree_idx] += change
     
     def total(self):
+        """
+        Return the root node value.
+        """
         return self.tree[0]
     
     def get(self, s):
+        """
+        Get the leaf_idx, priority and data of the given value.
+        """
         parent_idx = 0
         
         while True:
@@ -70,5 +85,3 @@ class SumTree(object):
     def __setitem__(self, idx, priority):
 
         self.update(idx, priority)
-
-        
