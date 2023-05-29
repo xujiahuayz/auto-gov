@@ -36,9 +36,8 @@ class DQN(nn.Module):
 
         # if there is a GPU, use it, otherwise use CPU
         self.device = T.device("cuda:0" if T.cuda.is_available() else "cpu")
-        # restrict the number of CPU threads used to run the model
-        # TODO: check
-        T.set_num_threads(3)
+        # # restrict the number of CPU threads used to run the model
+        # T.set_num_threads(3)
         self.to(self.device)
 
     def forward(self, state):
@@ -82,6 +81,9 @@ class PrioritizedReplayBuffer:
         for i in range(batch_size):
             a = segment_length * i
             b = segment_length * (i + 1)
+            # a could be equal to b, check first
+            if a == b:
+                s = a
             s = np.random.uniform(a, b)
             idx, priority, data = self.sumtree.get(s)
             idxs.append(idx)
