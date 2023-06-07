@@ -1,6 +1,6 @@
 # auto.gov
 
-![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/xujiahuayz/auto-gov)
+[![Python Version](https://img.shields.io/badge/python-v3.11.3-brightgreen)](https://github.com/xujiahuayz/auto-gov/)
 
 ## Setup
 
