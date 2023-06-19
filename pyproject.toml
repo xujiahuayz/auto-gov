@@ -27,6 +27,9 @@ dependencies = [
     "sumtree==0.2.2",
 ]
 
+[project.optional-dependencies]
+dev = ["pylint", "black", "pytest"]
+
 [tool.black]
 line-length = 88
 target_version = ['py36']

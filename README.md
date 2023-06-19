@@ -58,7 +58,7 @@ venv\Scripts\activate.bat
 #### Install the project in editable mode
 
 ```bash
-pip install .
+pip install -e ".[dev]"
 ```
 
 ## Running the simulation
