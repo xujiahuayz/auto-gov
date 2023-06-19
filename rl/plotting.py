@@ -10,7 +10,9 @@ from market_env.constants import FIGURE_PATH
 from rl.config import ATTACK_FUNC, NUM_STEPS, TARGET_ON_POINT, TKN_PRICES, USDC_PRICES
 from rl.training import training
 
-FONT_SIZE = 18
+
+sns.set_theme(style="darkgrid")
+sns.set(font_scale=1.4)
 
 
 def plot_training_results_seaborn(
@@ -36,12 +38,18 @@ def plot_training_results_seaborn(
         attack_func=attack_func,
         **kwargs,
     )
+    # TODO: check kosher
+    # find the index of the last positive score
+    last_positive_score: int = next(
+        (i for i in reversed(range(len(scores))) if scores[i] > 0), 0
+    )
+    scores = scores[: last_positive_score + 1]
+    eps_history = eps_history[: last_positive_score + 1]
+    losses = losses[: last_positive_score + 1]
 
     # transform the scores through Hyperbolic tangent function
     # NOTE: update description in paper
     scores = np.tanh(scores)
-
-    sns.set_theme(style="darkgrid")
 
     #  start plotting training results
     score_color = "blue"
@@ -50,8 +58,8 @@ def plot_training_results_seaborn(
 
     # create two subplots that share the x axis
     # the two subplots are created on a grid with 1 column and 2 rows
-    plt.rcParams.update({"font.size": FONT_SIZE})
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
+
     x_range = range(len(scores))
 
     ax1 = ax[0]
@@ -63,7 +71,7 @@ def plot_training_results_seaborn(
 
     # add a second x axis to the first subplot on the top
     ax4 = ax3.twiny()
-    ax3.set_ylabel("score", color=score_color)
+    ax3.set_ylabel(r"$\tanh (\mathrm{score})$", color=score_color)
     ax3.set_ylim(-1.05, 1.05)
 
     # Add a new parameter for the window size of the rolling mean
@@ -287,25 +295,25 @@ def plot_example_state(
                 # calculate log return of the price
                 log_return,
                 color=style[0],
-                label=asset,
+                label=asset.upper(),
             )
             # plot the collateral factor
             ax2.plot(
                 [state["pools"][asset]["collateral_factor"] for state in example_state],
                 color=style[0],
-                label=asset,
+                label=asset.upper(),
             )
-            # plot the price on the right axis
+            ax2.set_ylim(0, 1)
 
         # set the labels
 
         x_lable = "step"
 
-        ax1.set_ylabel("Log return of price in $\\tt ETH$")
+        ax1.set_ylabel("Log return of \n price in $\\tt ETH$")
         ax2.set_ylabel("collateral factor")
         ax2.set_xlabel(x_lable)
         # put legend on the top left corner of the plot
-        ax1.legend(loc="upper left", ncol=3)
+        ax1.legend(loc="lower left", ncol=3)
         fig.tight_layout()
         fig.savefig(
             fname=str(
@@ -332,8 +340,7 @@ def plot_example_state(
             )
             # set the legend for ax_20 above the plot out of the plot area
             ax_20.legend(
-                loc="upper center",
-                bbox_to_anchor=(0.5, 1.23),
+                loc="lower left",
             )
         for asset, style in ASSET_COLORS.items():
             # plot utilization ratio
@@ -342,12 +349,13 @@ def plot_example_state(
                 color=style[0],
             )
             ax_20.set_ylabel("utilization ratio")
+            ax_20.set_ylim(0, 1.1)
 
             ax_21.fill_between(
                 range(len(example_state)),
                 [state["pools"][asset]["reserve"] for state in example_state],
                 alpha=0.5,
-                label=asset,
+                label=asset.upper(),
                 color=style[0],
                 # fill pattern
                 hatch=style[1],
@@ -358,7 +366,7 @@ def plot_example_state(
 
         # set the labels
         ax_21.set_xlabel(x_lable)
-        ax_21.set_ylabel("reserve in token quantity")
+        ax_21.set_ylabel("reserve in token units")
 
         fig.tight_layout()
         fig.savefig(
