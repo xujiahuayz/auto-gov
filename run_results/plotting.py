@@ -5,6 +5,7 @@ Plotting results from training
 
 import matplotlib.pyplot as plt
 import numpy as np
+import seaborn as sns
 
 
 def plot_learning(scores, filename: str, x=int | None, window: int = 5):
@@ -22,6 +23,7 @@ def plot_learning(scores, filename: str, x=int | None, window: int = 5):
 
 
 def plot_time_cdf(times1, times2, times3, bin, filename: str):
+    sns.set()
     curve1 = [t * 1000 for t in times1]
     curve1 = np.asarray(curve1)
     count, bins_count1 = np.histogram(curve1, bins=bin)
@@ -41,21 +43,37 @@ def plot_time_cdf(times1, times2, times3, bin, filename: str):
     cdf3 = np.cumsum(curve3)
 
     size = 13
-    fig, ax = plt.subplots(figsize=(6, 3.87))
-    ax.plot(bins_count1[1:], cdf1, color="r", linewidth=3, label="30 action/step")
-    ax.plot(bins_count2[1:], cdf2, color="g", linewidth=3, label="45 action/step")
-    ax.plot(bins_count3[1:], cdf3, color="b", linewidth=3, label="60 action/step")
+    fig, ax = plt.subplots(figsize=(3.8, 3.8))
+    ax.plot(bins_count1[1:], cdf1, color="r", linewidth=3, label="300 action/eps")
+    ax.plot(bins_count2[1:], cdf2, color="g", linewidth=3, label="450 action/eps")
+    ax.plot(bins_count3[1:], cdf3, color="b", linewidth=3, label="600 action/eps")
     ax.set_ylabel("CDF", fontsize=size)
-    ax.set_xlabel("Training time per step (ms)", fontsize=size)
+    ax.set_xlabel("Training time per episode (ms)", fontsize=size)
     ax.tick_params(axis="both", which="major", labelsize=size)
     # ax.set_xlim(0, 400)
-    ax.legend(fontsize=size)
+    ax.legend(loc="lower right", fontsize=size)
     # ax.grid(True)
     fig.tight_layout()
-    plt.savefig(filename)
+    # plt.savefig(filename)
     plt.show()
     plt.close()
 
 
 if __name__ == "__main__":
-    pass
+    with open("time_cost_300_no_target.txt", "r") as f:
+        time_cost_300_no_target = eval(f.read())
+    with open("time_cost_450_no_target.txt", "r") as f:
+        time_cost_450_no_target = eval(f.read())
+    with open("time_cost_600_no_target.txt", "r") as f:
+        time_cost_600_no_target = eval(f.read())
+
+    plot_time_cdf(time_cost_300_no_target, time_cost_450_no_target, time_cost_600_no_target, 500, "time_cost_no_target.png")
+
+    # with open("time_cost_300_target.txt", "r") as f:
+    #     time_cost_300_target = eval(f.read())
+    # with open("time_cost_450_target.txt", "r") as f:
+    #     time_cost_450_target = eval(f.read())
+    # with open("time_cost_600_target.txt", "r") as f:
+    #     time_cost_600_target = eval(f.read())
+
+    # plot_time_cdf(time_cost_300_target, time_cost_450_target, time_cost_600_target, 500, "time_cost_target.png")

@@ -17,6 +17,7 @@ def training(
     tkn_prices: Callable,
     usdc_prices: Callable,
     attack_func: Callable | None,
+    PrioritizedReplay_switch: bool = False,
 ) -> tuple[
     dict[str, Any],
     list[float],
@@ -40,6 +41,7 @@ def training(
             * 1.5
         )
     )
+    # number_episodes = 500
 
     logging.info(f"number of episodes: {number_episodes}")
 
@@ -52,6 +54,7 @@ def training(
         "batch_size": batch_size,
         "target_on_point": target_on_point,
         "eps_dec_decrease_with_target": eps_dec_decrease_with_target,
+        "PrioritizedReplay_switch": PrioritizedReplay_switch,
     }
 
     (
@@ -97,7 +100,7 @@ if __name__ == "__main__":
         # None,
         ATTACK_FUNC,
     ]:
-        for NUM_STEPS in [30 * 15]:
+        for NUM_STEPS in [30*10, 30 * 15, 30*20]:
             for target_on_point in [0.2]:
                 results_unpacked = training(
                     number_steps=NUM_STEPS,
@@ -111,3 +114,7 @@ if __name__ == "__main__":
                     usdc_prices=USDC_PRICES,
                     attack_func=attack_function,
                 )
+
+                # time_cost = results_unpacked[5]
+                # with open(f"time_cost_{NUM_STEPS}.txt", "w") as f:
+                #     f.write(str(time_cost))

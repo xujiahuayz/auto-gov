@@ -1,5 +1,7 @@
 # auto.gov
 
+[![python](https://img.shields.io/badge/Python-v3.11.3-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
+
 ## Setup
 
 ```
