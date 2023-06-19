@@ -9,9 +9,13 @@ git clone https://github.com/xujiahuayz/auto-gov.git
 cd auto-gov
 ```
 
-### Give execute permission to your script and then run `setup_repo.sh`
+## Installation
 
-<!-- TODO: use non-deprecated setup -->
+```
+pip install toml
+```
+
+### Give execute permission to your script and then run `setup_repo.sh`
 
 ```
 chmod +x setup_repo.sh

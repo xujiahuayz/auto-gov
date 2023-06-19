@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages]
+find = {}
+
+[project]
+name = "market_env"
+version = "0.0.1" 
+readme = "README.md"
+requires-python = ">=3.11.3"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy==1.24.2",
+    "pandas==1.5.3",
+    "tqdm==4.64.1",
+    "torch",
+    "gym==0.26.2",
+    "opencv-python==4.7.0.68",
+    "matplotlib==3.6.3",
+    "seaborn==0.11.2",
+    "sumtree==0.2.2",
+]
+
+[project.optional-dependencies]
+dev = ["pylint", "black", "pytest"]
+
+[tool.black]
+line-length = 88
+target_version = ['py36']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         
+    | \.git          
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+  | foo.py       
+)
+'''
