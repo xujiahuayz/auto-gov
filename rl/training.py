@@ -100,7 +100,7 @@ if __name__ == "__main__":
         # None,
         ATTACK_FUNC,
     ]:
-        for NUM_STEPS in [30*10, 30 * 15, 30*20]:
+        for NUM_STEPS in [30 * 10, 30 * 15, 30 * 20]:
             for target_on_point in [0.2]:
                 results_unpacked = training(
                     number_steps=NUM_STEPS,
