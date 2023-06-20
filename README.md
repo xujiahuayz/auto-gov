@@ -2,6 +2,20 @@
 
 [![python](https://img.shields.io/badge/Python-v3.11.3-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 
+## Preperation
+
+Install Rust for sumtree if you do not have this in your local machine.
+
+- MacOS / Linux
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+- Windows
+
+Visit https://doc.rust-lang.org/cargo/getting-started/installation.html and follow downloading instructions.
+
 ## Setup
 
 ```
