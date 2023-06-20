@@ -9,12 +9,6 @@ git clone https://github.com/xujiahuayz/auto-gov.git
 cd auto-gov
 ```
 
-## Installation
-
-```
-pip install toml
-```
-
 ### Give execute permission to your script and then run `setup_repo.sh`
 
 ```
@@ -53,6 +47,11 @@ python -m venv venv
 
 ```bash
 venv\Scripts\activate.bat
+```
+### Installation toml
+
+```
+pip install toml
 ```
 
 #### Install the project in editable mode
