@@ -48,7 +48,7 @@ python -m venv venv
 ```bash
 venv\Scripts\activate.bat
 ```
-### Installation toml
+#### Install toml
 
 ```
 pip install toml
