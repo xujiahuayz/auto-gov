@@ -6,10 +6,19 @@ class SumTree(object):
     """
     
     def __init__(self, capacity):
+        """
+        Initialize the SumTree.
+        """
+
+        # capacity: the number of leaf nodes (must be a power of 2)
         self.capacity = capacity
+        # tree: the sum tree with the size of 2 * capacity - 1
         self.tree = np.zeros(2 * capacity - 1)
+        # data: the data stored in the leaf nodes
         self.data = np.zeros(capacity, dtype=object)
+        # write: the index of the leaf node to write next
         self.write = 0
+        # n_entries: the number of entries in the tree
         self.n_entries = 0
     
     def add(self, priority, data):
