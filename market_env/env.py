@@ -719,6 +719,7 @@ class PlfPool:
                 self.borrow_apy,
                 self.env.prices[self.asset_name],
                 self.asset_volatility[self.env.step],
+                self.env.step,
             ]
         )
 

@@ -55,8 +55,8 @@ def run_episode(
         # for debug!
         arr = np.array(observation, dtype=np.float32)
         if np.any(~np.isfinite(arr)):
-            print("Index number: " + str(len(agent.loss_list)))
             print("Array contains NaN or infinity!!!!!!!!!!!!!")
+            print("Index number: " + str(len(agent.loss_list)))
             print("=" * 20 + "Before converting to float32" + "=" * 20)
             for num in observation:
                 print(f"{num:.20f}")
@@ -68,9 +68,9 @@ def run_episode(
         # for debug!
         # check whether the agent model contains nan
         if contain_nan(agent.Q_eval.state_dict()):
+            print("Model contains nan !!!")
             print("Model:")
             print(agent.Q_eval.state_dict())
-            print("Model contains nan !!!")
             print("Index number: " + str(len(agent.loss_list)))
             print("the last 20 losses:")
             print(agent.loss_list[-20:])
