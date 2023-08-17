@@ -55,7 +55,7 @@ def plot_training_results_seaborn(
     # NORMALIZE SCORES
     # transform the scores through Hyperbolic tangent function
     scores = np.tanh(scores)
-    # TODO: maybe use another function to normalize scores
+    # TODO: determine the correct normalization method
     # # Linear normalization of scores
     # scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
 

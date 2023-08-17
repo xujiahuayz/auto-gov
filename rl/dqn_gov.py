@@ -10,22 +10,25 @@ from rl.data_structure import SumTree
 class DQN(nn.Module):
     """Agent for DQN"""
 
-    def __init__(self, lr, input_dims, fc1_dims, fc2_dims, n_actions):
+    def __init__(self, lr, input_dims, fc1_dims, fc2_dims, fc3_dims, n_actions):
         """Initialize agent."""
         super(DQN, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
+        self.fc3_dims = fc3_dims
         self.n_actions = n_actions
 
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
-        self.fc3 = nn.Linear(self.fc2_dims, self.n_actions)
+        self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
+        self.fc4 = nn.Linear(self.fc3_dims, self.n_actions)
 
         # weight initialization
         nn.init.xavier_uniform_(self.fc1.weight)
         nn.init.xavier_uniform_(self.fc2.weight)
         nn.init.xavier_uniform_(self.fc3.weight)
+        nn.init.xavier_uniform_(self.fc4.weight)
 
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
         # # use MAE loss (L1 loss) function
@@ -120,6 +123,7 @@ class Agent:
         eps_dec_decrease_with_target: float = 0.2,
         layer1_size: int = 256,
         layer2_size: int = 256,
+        layer3_size: int = 256,
         target_on_point: int | None = None,
         target_update: int = 100,
         alpha: float = 0.6,
@@ -146,6 +150,7 @@ class Agent:
             input_dims=input_dims,
             fc1_dims=layer1_size,
             fc2_dims=layer2_size,
+            fc3_dims=layer3_size,
         )
 
         self.target_on_point = target_on_point
@@ -162,6 +167,7 @@ class Agent:
                 input_dims=input_dims,
                 fc1_dims=layer1_size,
                 fc2_dims=layer2_size,
+                fc3_dims=layer3_size,
             )
 
             self.Q_target.load_state_dict(self.Q_eval.state_dict())
