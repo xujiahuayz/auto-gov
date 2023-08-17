@@ -50,9 +50,11 @@ class DQN(nn.Module):
         # actions = self.fc3(layer2)
 
         # state = state.to(self.fc1.weight.dtype)
-        x = F.relu(self.fc1(state))
-        x = F.relu(self.fc2(x))
-        actions = self.fc3(x)
+
+        layer1 = F.relu(self.fc1(state))
+        layer2 = F.relu(self.fc2(layer1))
+        layer3 = F.relu(self.fc3(layer2))
+        actions = self.fc4(layer3)
 
         return actions
 
