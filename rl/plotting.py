@@ -52,9 +52,12 @@ def plot_training_results_seaborn(
     # select all the losses up to the last positive score
     losses = losses[: last_positive_score + 1]
 
+    # NORMALIZE SCORES
     # transform the scores through Hyperbolic tangent function
-    # NOTE: update description in paper
     scores = np.tanh(scores)
+    # TODO: maybe use another function to normalize scores
+    # # Linear normalization of scores
+    # scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
 
     #  start plotting training results
     score_color = "blue"

@@ -54,7 +54,9 @@ if __name__ == "__main__":
     # let it run one by one.
 
     for params in param_combinations:
+        print(f"Starting training with params: {params}")
         results = run_training_visualizing(params)
+        print(f"Finished training with params: {params}")
 
         # store results to file
         attack_function, num_steps, target_on_point, batch_size = params
