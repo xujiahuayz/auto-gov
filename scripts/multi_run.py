@@ -39,10 +39,10 @@ if __name__ == "__main__":
         # for attack_function in [None, ATTACK_FUNC]
         for this_attack_function in [ATTACK_FUNC]
         # for NUM_STEPS in [30 * 12, 30 * 15]
-        for this_num_steps in [30 * 18]
+        for this_num_steps in [30 * 20]
         # for target_on_point in [0.4, 0.5]
         for this_target_on_point in [0.3]
-        for this_batch_size in [128]
+        for this_batch_size in [32]
     ]
 
     # with multiprocessing.Pool() as pool:
