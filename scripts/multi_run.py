@@ -37,13 +37,16 @@ if __name__ == "__main__":
     param_combinations = [
         (this_attack_function, this_num_steps, this_target_on_point, this_batch_size)
         # for attack_function in [None, ATTACK_FUNC]
-        for this_attack_function in [ATTACK_FUNC]
+        # for this_attack_function in [ATTACK_FUNC]
+        for this_attack_function in [None]
         # for NUM_STEPS in [30 * 12, 30 * 15]
         for this_num_steps in [30 * 20]
         # for target_on_point in [0.4, 0.5]
         for this_target_on_point in [0.3]
-        for this_batch_size in [32]
+        for this_batch_size in [32, 64, 128, 256, 512]
     ]
+
+    print(f"Running {len(param_combinations)} combinations of parameters")
 
     # with multiprocessing.Pool() as pool:
     #     pool.map(run_training_visualizing, param_combinations)

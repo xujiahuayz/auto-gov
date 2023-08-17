@@ -9,7 +9,9 @@ import seaborn as sns
 
 
 def plot_learning(scores, filename: str, x=int | None, window: int = 5):
+    # plot the scores
     # for policy gradient algorithms
+    
     N = len(scores)
     running_avg = np.empty(N)
     for t in range(N):
@@ -23,6 +25,8 @@ def plot_learning(scores, filename: str, x=int | None, window: int = 5):
 
 
 def plot_time_cdf(times1, times2, times3, bin, filename: str):
+    # plot cdf of time cost
+
     sns.set()
     curve1 = [t * 1000 for t in times1]
     curve1 = np.asarray(curve1)

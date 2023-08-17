@@ -8,6 +8,8 @@ from run_results.plotting import plot_learning_curve, plot_time_cdf
 
 
 def plot_results(results: list[dict]) -> None:
+    # plot results from training
+    
     for result in results:
         ms = result["max_steps"]
         icf = result["initial_collateral_factor"]

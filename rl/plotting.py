@@ -39,12 +39,17 @@ def plot_training_results_seaborn(
         **kwargs,
     )
     # TODO: check kosher
+
     # find the index of the last positive score
     last_positive_score: int = next(
         (i for i in reversed(range(len(scores))) if scores[i] > 0), 0
     )
+
+    # select all the scores up to the last positive score
     scores = scores[: last_positive_score + 1]
+    # select all the epsilons up to the last positive score
     eps_history = eps_history[: last_positive_score + 1]
+    # select all the losses up to the last positive score
     losses = losses[: last_positive_score + 1]
 
     # transform the scores through Hyperbolic tangent function
