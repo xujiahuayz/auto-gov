@@ -19,6 +19,7 @@ class DQN(nn.Module):
         self.fc3_dims = fc3_dims
         self.n_actions = n_actions
 
+        # define layers
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
@@ -30,7 +31,9 @@ class DQN(nn.Module):
         nn.init.xavier_uniform_(self.fc3.weight)
         nn.init.xavier_uniform_(self.fc4.weight)
 
+        # use Adam optimizer
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
+        
         # # use MAE loss (L1 loss) function
         # self.loss = nn.L1Loss()
 
@@ -48,8 +51,6 @@ class DQN(nn.Module):
         # layer1 = F.leaky_relu(self.fc1(state))
         # layer2 = F.leaky_relu(self.fc2(layer1))
         # actions = self.fc3(layer2)
-
-        # state = state.to(self.fc1.weight.dtype)
 
         layer1 = F.relu(self.fc1(state))
         layer2 = F.relu(self.fc2(layer1))

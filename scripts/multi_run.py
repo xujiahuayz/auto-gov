@@ -43,7 +43,7 @@ if __name__ == "__main__":
         for this_num_steps in [30 * 20]
         # for target_on_point in [0.4, 0.5]
         for this_target_on_point in [0.3]
-        for this_batch_size in [32, 64, 128, 256, 512]
+        for this_batch_size in [128, 256, 512]
     ]
 
     print(f"Running {len(param_combinations)} combinations of parameters")
