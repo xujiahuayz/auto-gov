@@ -14,7 +14,8 @@ def plot_training(
     eps_history: list[float],
     losses: list[float],
 ):
-
+    
+    sns.set_style("darkgrid")
     # find the index of the last positive score
     last_positive_score: int = next(
         (i for i in reversed(range(len(scores))) if scores[i] > 0), 0
@@ -28,10 +29,10 @@ def plot_training(
     losses = losses[: last_positive_score + 1]
 
     # NORMALIZE SCORES
-    # # transform the scores through Hyperbolic tangent function
-    # scores = np.tanh(scores)
-    # Linear normalization of scores
-    scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
+    # transform the scores through Hyperbolic tangent function
+    scores = np.tanh(scores)
+    # # Linear normalization of scores
+    # scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
 
     #  start plotting training results
     score_color = "blue"
@@ -59,7 +60,7 @@ def plot_training(
     ax3.set_ylim(-1.05, 1.05)
 
     # Add a new parameter for the window size of the rolling mean
-    window_size = 5
+    window_size = 10
     # Compute the rolling mean and standard deviation for scores
     scores_series = pd.Series(scores)
     scores_rolling_mean = scores_series.rolling(window=window_size).mean()
@@ -179,6 +180,7 @@ def draw_learning(filename: str):
     # 9: exogenous_vars,
     
     scores = results[1]
+    print(scores)
     eps = results[2]
     loss = results[8]
     step_num = [i + 1 for i in range(len(scores))]
@@ -187,4 +189,4 @@ def draw_learning(filename: str):
 
 if __name__ == "__main__":
     # draw_delay()
-    draw_learning("/Users/yebof/Documents/auto-gov/results_NoAttack_600_0.3_32_3layers.pickle")
+    draw_learning("/Users/yebof/Documents/auto-gov/results_NoAttack_600_0.3_256_4layers.pickle")
