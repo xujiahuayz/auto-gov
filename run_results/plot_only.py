@@ -1,5 +1,8 @@
 import pickle
 from os import path
+import numpy as np
+import pandas as pd
+import seaborn as sns
 
 from matplotlib import pyplot as plt
 
@@ -7,10 +10,9 @@ from market_env.constants import DATA_PATH, FIGURE_PATH
 from run_results.plotting import plot_learning, plot_time_cdf
 
 def plot_training(
-    number_steps: int,
-    target_on_point: float,
-    attack_func: Callable | None,
-    **kwargs,
+    scores: list[float],
+    eps_history: list[float],
+    losses: list[float],
 ):
 
     # find the index of the last positive score
@@ -26,16 +28,14 @@ def plot_training(
     losses = losses[: last_positive_score + 1]
 
     # NORMALIZE SCORES
-    # transform the scores through Hyperbolic tangent function
-    scores = np.tanh(scores)
-    # TODO: determine the correct normalization method
-    # # Linear normalization of scores
-    # scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
+    # # transform the scores through Hyperbolic tangent function
+    # scores = np.tanh(scores)
+    # Linear normalization of scores
+    scores = (scores - np.min(scores)) / (np.max(scores) - np.min(scores))
 
     #  start plotting training results
     score_color = "blue"
     epsilon_color = "orange"
-    attack_on = attack_func is not None
 
     # create two subplots that share the x axis
     # the two subplots are created on a grid with 1 column and 2 rows
@@ -43,16 +43,19 @@ def plot_training(
 
     x_range = range(len(scores))
 
+    # ax1 is for the epsilon
     ax1 = ax[0]
+    # ax2 is for the loss
     ax2 = ax[1]
+    # ax3 is for the score
     ax3 = ax1.twinx()
 
     ax1.plot(x_range, eps_history, color=epsilon_color)
-    ax1.set_ylabel("episode-end $\epsilon$", color=epsilon_color)
+    ax1.set_ylabel("Epsilon", color=epsilon_color)
 
     # add a second x axis to the first subplot on the top
     ax4 = ax3.twiny()
-    ax3.set_ylabel(r"$\tanh (\mathrm{score})$", color=score_color)
+    ax3.set_ylabel("Score (normalized)", color=score_color)
     ax3.set_ylim(-1.05, 1.05)
 
     # Add a new parameter for the window size of the rolling mean
@@ -75,44 +78,18 @@ def plot_training(
         alpha=0.1,
         edgecolor="none",
     )
-    ax4.set_xlabel("episode")
+    ax4.set_xlabel("Episode")
 
     ax2.plot(x_range, losses)
     ax2.set_ylabel("loss")
-
-    y_bust = [min(losses)]
-    bench_bust = [
-        x for x in range(len(bench_states)) if len(bench_states[x]) < number_steps
-    ]
-    RL_bust = [x for x in range(len(states)) if len(states[x]) < number_steps]
-    ax2.scatter(
-        x=bench_bust,
-        y=y_bust * len(bench_bust),
-        label="benchmark",
-        marker="|",
-        color="g",
-        alpha=0.5,
-    )
-    ax2.scatter(
-        x=RL_bust, y=y_bust * len(RL_bust), label="RL", marker=".", color="r", alpha=0.5
-    )
 
     # surpress x-axis numbers but keep the ticks
     plt.setp(ax2.get_xticklabels(), visible=False)
 
     # put legend on the bottom of the plot outside of the plot area
-    ax2.legend(
-        title="bankrupt before episode end",
-        bbox_to_anchor=(0, 0),
-        loc=2,
-        ncol=2,
-    )
 
     # ax2.set_ylim(0, 1)
     fig.tight_layout()
-    fig.savefig(
-        fname=str(FIGURE_PATH / f"{number_steps}_{target_on_point}_{attack_on}.pdf")
-    )
     plt.show()
 
 def plot_results(results: list[dict]) -> None:
@@ -188,12 +165,24 @@ def draw_delay():
 def draw_learning(filename: str):
     with open(filename, "rb") as f:
         results = pickle.load(f)
-    for result in results:
-        scores = result["scores"]
-        eps = result["eps_history"]
-        loss = result["loss_history"]
-    step_num = [i + 1 for i in range(len(scores))]
+    print("Input loaded!")
 
+    # 0: agent_vars,
+    # 1: scores,
+    # 2: eps_history,
+    # 3: states,
+    # 4: rewards,
+    # 5: time_cost,
+    # 6: bench_states,
+    # 7: trained_models,
+    # 8: losses,
+    # 9: exogenous_vars,
+    
+    scores = results[1]
+    eps = results[2]
+    loss = results[8]
+    step_num = [i + 1 for i in range(len(scores))]
+    plot_training(scores, eps, loss)
         
 
 if __name__ == "__main__":
