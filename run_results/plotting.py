@@ -11,7 +11,7 @@ import seaborn as sns
 def plot_learning(scores, filename: str, x=int | None, window: int = 5):
     # plot the scores
     # for policy gradient algorithms
-    
+
     N = len(scores)
     running_avg = np.empty(N)
     for t in range(N):
@@ -21,6 +21,7 @@ def plot_learning(scores, filename: str, x=int | None, window: int = 5):
     plt.ylabel("Score")
     plt.xlabel("Game")
     plt.plot(x, running_avg)
+    plt.show()
     plt.savefig(filename)
 
 
