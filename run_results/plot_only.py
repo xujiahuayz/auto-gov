@@ -1,5 +1,4 @@
 import pickle
-from os import path
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -8,6 +7,8 @@ from matplotlib import pyplot as plt
 
 from market_env.constants import DATA_PATH, FIGURE_PATH
 from run_results.plotting import plot_learning, plot_time_cdf
+from market_env.constants import FIGURE_PATH
+from market_env.constants import DATA_PATH
 
 def plot_training(
     scores: list[float],
@@ -27,6 +28,9 @@ def plot_training(
     eps_history = eps_history[: last_positive_score + 1]
     # select all the losses up to the last positive score
     losses = losses[: last_positive_score + 1]
+
+    # # log normalization for losses
+    # losses = np.log(losses)
 
     # NORMALIZE SCORES
     # transform the scores through Hyperbolic tangent function
@@ -81,7 +85,9 @@ def plot_training(
     )
     ax4.set_xlabel("Episode")
 
-    ax2.plot(x_range, losses)
+    # ax2.plot(x_range, losses)
+    # ax2 log y axis
+    ax2.semilogy(x_range, losses)
     ax2.set_ylabel("loss")
 
     # surpress x-axis numbers but keep the ticks
@@ -189,4 +195,7 @@ def draw_learning(filename: str):
 
 if __name__ == "__main__":
     # draw_delay()
-    draw_learning("/Users/yebof/Documents/auto-gov/results_NoAttack_600_0.3_256_4layers.pickle")
+    
+    data_path = DATA_PATH / "results-2023-02-18-00-20-02.pkl"
+    draw_learning(data_path)
+
