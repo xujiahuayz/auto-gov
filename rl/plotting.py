@@ -357,6 +357,7 @@ def plot_example_state(
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    batchsize = 64
     for attack_function in [
         None,
         # ATTACK_FUNC,
@@ -365,7 +366,7 @@ if __name__ == "__main__":
             number_steps=NUM_STEPS,
             epsilon_end=EPSILON_END,
             epsilon_decay=EPSILON_DECAY,
-            batch_size=128,
+            batch_size=batchsize,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
             eps_dec_decrease_with_target=EPS_DEC_FACTOR,
@@ -380,7 +381,7 @@ if __name__ == "__main__":
             epsilon_end=EPSILON_END,
             epsilon_decay=EPSILON_DECAY,
             bench_score=0,
-            batch_size=64,
+            batch_size=batchsize,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
             eps_dec_decrease_with_target=EPS_DEC_FACTOR,
