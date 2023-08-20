@@ -91,14 +91,12 @@ def plot_training_results_seaborn(
     ax3.set_ylim(-1.05, 1.05)
 
     # Add a new parameter for the window size of the rolling mean
-    window_size = 5
+    window_size = 50
     # Compute the rolling mean and standard deviation for scores
     scores_series = pd.Series(scores)
     scores_rolling_mean = scores_series.rolling(window=window_size).mean()
     scores_rolling_std = scores_series.rolling(window=window_size).std()
 
-    # sns.lineplot(x=x_range, y=scores, color=score_color, ax=ax4)
-    # ax4.plot(x_range, scores, color=score_color)
     sns.lineplot(x=x_range, y=scores_rolling_mean, color=score_color, ax=ax4)
 
     # Add shaded error bounds using the rolling standard deviation
@@ -144,18 +142,13 @@ def plot_training_results_seaborn(
     #     ncol=2,
     # )
 
-    # if attack fun is not none
     if attack_func is not None:
         # put legend on the top right of the bottom plot inside of the bottom plot area
         ax2.legend(
             title="bankrupt before episode end",
-            bbox_to_anchor=(1.05, 1),
-            loc="upper left",
-            ncol=1,
+            loc="upper right",
+            ncol=2,
         )
-    else:
-        # don't show legend
-        ax2.legend().set_visible(False)
 
     # ax2.set_ylim(0, 1)
     fig.tight_layout()
@@ -357,10 +350,10 @@ def plot_example_state(
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    batchsize = 512
+    batchsize = 64
     for attack_function in [
-        None,
-        # ATTACK_FUNC,
+        # None,
+        ATTACK_FUNC,
     ]:
         plot_training_results_seaborn(
             number_steps=NUM_STEPS,
