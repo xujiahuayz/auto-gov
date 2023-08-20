@@ -676,7 +676,7 @@ class PlfPool:
         else:
             self.collateral_factor = new_collateral_factor
             for user in self.env.users.values():
-                user.safety_borrow_buffer += 0.05
+                user.safety_borrow_buffer += 0.001 # 30*20 = 600
             self.update_market()
 
     def keep_collateral_factor(self) -> None:
@@ -694,7 +694,7 @@ class PlfPool:
             self.collateral_factor = new_collateral_factor
             # affect users who are supplying to this pool with higher exposure to default risk
             for user in self.env.users.values():
-                user.safety_supply_buffer += 0.05
+                user.safety_supply_buffer += 0.001 # 30*20 = 600
             self.update_market()
 
     def update_market(self) -> None:
