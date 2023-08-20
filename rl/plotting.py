@@ -47,7 +47,6 @@ def plot_training_results_seaborn(
         attack_func=attack_func,
         **kwargs,
     )
-    # TODO: check kosher
 
     # find the index of the last positive score
     last_positive_score: int = next(
@@ -137,13 +136,26 @@ def plot_training_results_seaborn(
     # surpress x-axis numbers but keep the ticks
     plt.setp(ax2.get_xticklabels(), visible=False)
 
-    # put legend on the bottom of the plot outside of the plot area
-    ax2.legend(
-        title="bankrupt before episode end",
-        bbox_to_anchor=(0, 0),
-        loc=2,
-        ncol=2,
-    )
+    # # put legend on the bottom of the plot outside of the plot area
+    # ax2.legend(
+    #     title="bankrupt before episode end",
+    #     bbox_to_anchor=(0, 0),
+    #     loc=2,
+    #     ncol=2,
+    # )
+
+    # if attack fun is not none
+    if attack_func is not None:
+        # put legend on the top right of the bottom plot inside of the bottom plot area
+        ax2.legend(
+            title="bankrupt before episode end",
+            bbox_to_anchor=(1.05, 1),
+            loc="upper left",
+            ncol=1,
+        )
+    else:
+        # don't show legend
+        ax2.legend().set_visible(False)
 
     # ax2.set_ylim(0, 1)
     fig.tight_layout()
@@ -346,14 +358,14 @@ def plot_example_state(
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     for attack_function in [
-        # None,
-        ATTACK_FUNC,
+        None,
+        # ATTACK_FUNC,
     ]:
         plot_training_results_seaborn(
             number_steps=NUM_STEPS,
             epsilon_end=EPSILON_END,
             epsilon_decay=EPSILON_DECAY,
-            batch_size=64,
+            batch_size=128,
             epsilon_start=1,
             target_on_point=TARGET_ON_POINT,
             eps_dec_decrease_with_target=EPS_DEC_FACTOR,
