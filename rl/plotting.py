@@ -357,7 +357,7 @@ def plot_example_state(
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    batchsize = 64
+    batchsize = 512
     for attack_function in [
         None,
         # ATTACK_FUNC,
