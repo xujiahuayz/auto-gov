@@ -16,8 +16,13 @@ from rl.config import (
     TARGET_ON_POINT,
     TKN_PRICES,
     USDC_PRICES,
+    GAMMA,
+    LEARNING_RATE,
+    BATCH_SIZE,
 )
 from rl.training import training
+from rl.main_gov import inference_with_trained_model
+from rl.rl_env import ProtocolEnv
 
 
 sns.set_theme(style="darkgrid")
@@ -157,6 +162,8 @@ def plot_training_results_seaborn(
     )
     plt.show()
     plt.close()
+
+    return trained_model
 
 
 def plot_example_state(
@@ -355,7 +362,7 @@ if __name__ == "__main__":
         None,
         # ATTACK_FUNC,
     ]:
-        plot_training_results_seaborn(
+        training_models = plot_training_results_seaborn(
             number_steps=NUM_STEPS,
             epsilon_end=EPSILON_END,
             epsilon_decay=EPSILON_DECAY,
@@ -367,6 +374,32 @@ if __name__ == "__main__":
             usdc_prices=USDC_PRICES,
             attack_func=attack_function,
             PrioritizedReplay_switch=False,
+        )
+
+        # test
+        test_env = init_env(
+            initial_collateral_factor=0.99,
+            max_steps=30,
+            tkn_price_trend_func=tkn_price_trend_func,
+            attack_steps=[6, 11, 32],
+        )
+        
+        test_protocol_env = ProtocolEnv(test_env)
+        agent_vars = {
+            "eps_dec": EPSILON_DECAY,
+            "eps_end": EPSILON_END,
+            "lr": LEARNING_RATE,
+            "gamma": GAMMA,
+            "epsilon": 1,
+            "batch_size": BATCH_SIZE,
+            "target_on_point": TARGET_ON_POINT,
+        }
+
+        inference_with_trained_model(
+            model=training_models[-1],
+            env=test_protocol_env,
+            agent_args=agent_vars,
+            num_test_episodes=3,
         )
 
         plot_example_state(

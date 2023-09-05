@@ -410,6 +410,7 @@ if __name__ == "__main__":
         attack_steps=None,
     )
 
+    # also in rl.plotting
     test_env = init_env(
         initial_collateral_factor=0.99,
         max_steps=20,
