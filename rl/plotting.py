@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+from rl.utils import init_env
 
 from market_env.constants import FIGURE_PATH
 from rl.config import (
@@ -377,6 +378,11 @@ if __name__ == "__main__":
         )
 
         # test
+        def tkn_price_trend_func(x, y):
+            series = np.array(range(1, x + 2)).astype(float)
+            series[9] = series[8] * 10
+            return series
+        
         test_env = init_env(
             initial_collateral_factor=0.99,
             max_steps=30,
