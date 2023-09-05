@@ -729,6 +729,7 @@ class PlfPool:
             return 0
         previous_reserve = self.previous_reserve
         self.previous_reserve = self.reserve
+        # profit is the difference between the reserve at the current time and the previous time
         return (
             self.reserve * self.asset_price_history[current_time]
             - previous_reserve * self.asset_price_history[current_time - 1]

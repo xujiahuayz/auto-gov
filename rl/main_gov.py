@@ -86,6 +86,9 @@ def run_episode(
         action = agent.choose_action(
             observation.astype(np.float32), evaluate=not training
         )
+        # observation_ is the next state
+        # reward is the reward of the current state
+        # done is whether the game is over
         observation_, reward, done, _ = env.step(action)
         reward -= bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
 

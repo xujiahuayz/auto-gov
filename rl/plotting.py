@@ -352,8 +352,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     batchsize = 64
     for attack_function in [
-        # None,
-        ATTACK_FUNC,
+        None,
+        # ATTACK_FUNC,
     ]:
         plot_training_results_seaborn(
             number_steps=NUM_STEPS,
