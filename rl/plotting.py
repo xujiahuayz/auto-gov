@@ -363,8 +363,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     batchsize = 64
     for attack_function in [
-        # None,
-        ATTACK_FUNC,
+        None,
+        # ATTACK_FUNC,
     ]:
         training_models = plot_training_results_seaborn(
             number_steps=NUM_STEPS,
@@ -414,10 +414,15 @@ if __name__ == "__main__":
         )
         test_protocol_env = ProtocolEnv(test_env)
 
-        x = inference_with_trained_model(
-            model=training_models[-1],
+        (
+            test_scores,
+            test_states,
+            test_rewards,
+            test_bench_states,
+        )= inference_with_trained_model(
+            model=training_models[3],
             env=test_protocol_env,
-            num_test_episodes=90,
+            num_test_episodes=1,
             agent_args={
                 "eps_dec": EPSILON_DECAY,
                 "eps_end": EPSILON_END,
@@ -428,6 +433,12 @@ if __name__ == "__main__":
                 "target_on_point": TARGET_ON_POINT,
             },
         )
+
+        print(f"test_scores: {test_scores}")
+        print(f"test_rewards: {test_rewards}")
+        # print(f"test_states: {test_states}")
+        # print(f"test_bench_states: {test_bench_states}")
+
 
         # def tkn_price_trend_func(x, y):
         #     series = np.array(range(1, x + 2)).astype(float)
