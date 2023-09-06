@@ -9,14 +9,15 @@ from rl.utils import init_env
 
 from market_env.constants import FIGURE_PATH
 from rl.config import (
+    TKN_PRICES,
+    USDC_PRICES,
     ATTACK_FUNC,
     EPS_DEC_FACTOR,
     EPSILON_DECAY,
     EPSILON_END,
     NUM_STEPS,
+    TEST_NUM_STEPS,
     TARGET_ON_POINT,
-    TKN_PRICES,
-    USDC_PRICES,
     GAMMA,
     LEARNING_RATE,
     BATCH_SIZE,
@@ -422,5 +423,3 @@ if __name__ == "__main__":
             agent_args=agent_vars,
             num_test_episodes=3,
         )
-
-        
