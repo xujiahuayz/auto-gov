@@ -380,20 +380,20 @@ if __name__ == "__main__":
             PrioritizedReplay_switch=False,
         )
 
-        # chosse a well-trained model and a bad-trained model to plot example state
-        plot_example_state(
-            number_steps=NUM_STEPS,
-            epsilon_end=EPSILON_END,
-            epsilon_decay=EPSILON_DECAY,
-            bench_score=0,
-            batch_size=batchsize,
-            epsilon_start=1,
-            target_on_point=TARGET_ON_POINT,
-            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
-            tkn_prices=TKN_PRICES,
-            usdc_prices=USDC_PRICES,
-            attack_func=attack_function,
-        )
+        # # chosse a well-trained model and a bad-trained model to plot example state
+        # plot_example_state(
+        #     number_steps=NUM_STEPS,
+        #     epsilon_end=EPSILON_END,
+        #     epsilon_decay=EPSILON_DECAY,
+        #     bench_score=0,
+        #     batch_size=batchsize,
+        #     epsilon_start=1,
+        #     target_on_point=TARGET_ON_POINT,
+        #     eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+        #     tkn_prices=TKN_PRICES,
+        #     usdc_prices=USDC_PRICES,
+        #     attack_func=attack_function,
+        # )
 
         # test the trained model on a real-world environment
         test_steps = TEST_NUM_STEPS
@@ -407,7 +407,7 @@ if __name__ == "__main__":
                 ]
 
         test_env = init_env(
-            initial_collateral_factor=0.75,
+            initial_collateral_factor=0.95,
             max_steps=test_steps,
             tkn_price_trend_func=lambda x, y: prices["link"],
             usdc_price_trend_func=lambda x, y: prices["usdc"],
@@ -417,6 +417,7 @@ if __name__ == "__main__":
         (
             test_scores,
             test_states,
+            test_policies,
             test_rewards,
             test_bench_states,
         )= inference_with_trained_model(
@@ -436,6 +437,7 @@ if __name__ == "__main__":
 
         print(f"test_scores: {test_scores}")
         print(f"test_rewards: {test_rewards}")
+        print(f"test_policies: {test_policies}")
         # print(f"test_states: {test_states}")
         # print(f"test_bench_states: {test_bench_states}")
 

@@ -375,6 +375,7 @@ def inference_with_trained_model(
     return (
         scores,
         states,
+        policies,
         rewards,
         bench_states,
     )
