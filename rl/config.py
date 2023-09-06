@@ -3,6 +3,7 @@ import numpy as np
 from market_env.utils import generate_price_series
 
 NUM_STEPS = int(30 * 20)
+TEST_NUM_STEPS = 360
 EPSILON_END = 2e-3
 EPSILON_DECAY = 5e-7
 BATCH_SIZE = 128

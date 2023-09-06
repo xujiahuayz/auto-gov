@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 from rl.utils import init_env
 
 from market_env.constants import FIGURE_PATH
+from market_env.constants impprt DATA_PATH
 from rl.config import (
     TKN_PRICES,
     USDC_PRICES,
@@ -394,32 +395,42 @@ if __name__ == "__main__":
         )
 
         # test the trained model on a real-world environment
-        def tkn_price_trend_func(x, y):
-            series = np.array(range(1, x + 2)).astype(float)
-            series[9] = series[8] * 10
-            return series
-        
-        test_env = init_env(
-            initial_collateral_factor=0.99,
-            max_steps=30,
-            tkn_price_trend_func=tkn_price_trend_func,
-            attack_steps=[6, 11, 32],
-        )
-        
-        test_protocol_env = ProtocolEnv(test_env)
-        agent_vars = {
-            "eps_dec": EPSILON_DECAY,
-            "eps_end": EPSILON_END,
-            "lr": LEARNING_RATE,
-            "gamma": GAMMA,
-            "epsilon": 1,
-            "batch_size": BATCH_SIZE,
-            "target_on_point": TARGET_ON_POINT,
-        }
+        test_steps = TEST_NUM_STEPS
+        prices = {}
+        for asset in ["link", "usdc"]:
+            # get price data in json from data folder
+            with open(DATA_PATH / f"{asset}.json") as f:
+                prices[asset] = [
+                    w["close"] for w in json.load(f)["data"]["data"][-(test_steps + 2) :]
+                ]
 
-        inference_with_trained_model(
-            model=training_models[-1],
-            env=test_protocol_env,
-            agent_args=agent_vars,
-            num_test_episodes=3,
-        )
+
+        # def tkn_price_trend_func(x, y):
+        #     series = np.array(range(1, x + 2)).astype(float)
+        #     series[9] = series[8] * 10
+        #     return series
+        
+        # test_env = init_env(
+        #     initial_collateral_factor=0.99,
+        #     max_steps=30,
+        #     tkn_price_trend_func=tkn_price_trend_func,
+        #     attack_steps=[6, 11, 32],
+        # )
+        
+        # test_protocol_env = ProtocolEnv(test_env)
+        # agent_vars = {
+        #     "eps_dec": EPSILON_DECAY,
+        #     "eps_end": EPSILON_END,
+        #     "lr": LEARNING_RATE,
+        #     "gamma": GAMMA,
+        #     "epsilon": 1,
+        #     "batch_size": BATCH_SIZE,
+        #     "target_on_point": TARGET_ON_POINT,
+        # }
+
+        # inference_with_trained_model(
+        #     model=training_models[-1],
+        #     env=test_protocol_env,
+        #     agent_args=agent_vars,
+        #     num_test_episodes=3,
+        # )
