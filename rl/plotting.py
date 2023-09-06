@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from rl.utils import init_env
 
 from market_env.constants import FIGURE_PATH
-from market_env.constants impprt DATA_PATH
+from market_env.constants import DATA_PATH
 from rl.config import (
     TKN_PRICES,
     USDC_PRICES,
@@ -403,6 +403,29 @@ if __name__ == "__main__":
                 prices[asset] = [
                     w["close"] for w in json.load(f)["data"]["data"][-(test_steps + 2) :]
                 ]
+
+        test_env = init_env(
+            initial_collateral_factor=0.75,
+            max_steps=test_steps,
+            tkn_price_trend_func=lambda x, y: prices["link"],
+            usdc_price_trend_func=lambda x, y: prices["usdc"],
+        )
+        test_protocol_env = ProtocolEnv(test_env)
+
+        x = inference_with_trained_model(
+            model=training_models[-1],
+            env=test_protocol_env,
+            num_test_episodes=90,
+            agent_args={
+                "eps_dec": EPSILON_DECAY,
+                "eps_end": EPSILON_END,
+                "lr": LEARNING_RATE,
+                "gamma": GAMMA,
+                "epsilon": 1,
+                "batch_size": BATCH_SIZE,
+                "target_on_point": TARGET_ON_POINT,
+            },
+        )
 
 
         # def tkn_price_trend_func(x, y):
