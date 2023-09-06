@@ -376,8 +376,23 @@ if __name__ == "__main__":
             attack_func=attack_function,
             PrioritizedReplay_switch=False,
         )
+        
+        # chosse a well-trained model and a bad-trained model to plot example state
+        plot_example_state(
+            number_steps=NUM_STEPS,
+            epsilon_end=EPSILON_END,
+            epsilon_decay=EPSILON_DECAY,
+            bench_score=0,
+            batch_size=batchsize,
+            epsilon_start=1,
+            target_on_point=TARGET_ON_POINT,
+            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+            tkn_prices=TKN_PRICES,
+            usdc_prices=USDC_PRICES,
+            attack_func=attack_function,
+        )
 
-        # test
+        # test the trained model on a real-world environment
         def tkn_price_trend_func(x, y):
             series = np.array(range(1, x + 2)).astype(float)
             series[9] = series[8] * 10
@@ -408,16 +423,4 @@ if __name__ == "__main__":
             num_test_episodes=3,
         )
 
-        plot_example_state(
-            number_steps=NUM_STEPS,
-            epsilon_end=EPSILON_END,
-            epsilon_decay=EPSILON_DECAY,
-            bench_score=0,
-            batch_size=batchsize,
-            epsilon_start=1,
-            target_on_point=TARGET_ON_POINT,
-            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
-            tkn_prices=TKN_PRICES,
-            usdc_prices=USDC_PRICES,
-            attack_func=attack_function,
-        )
+        
