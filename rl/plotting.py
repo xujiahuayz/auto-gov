@@ -363,8 +363,8 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     batchsize = 64
     for attack_function in [
-        None,
-        # ATTACK_FUNC,
+        # None,
+        ATTACK_FUNC,
     ]:
         training_models = plot_training_results_seaborn(
             number_steps=NUM_STEPS,
@@ -379,7 +379,7 @@ if __name__ == "__main__":
             attack_func=attack_function,
             PrioritizedReplay_switch=False,
         )
-        
+
         # chosse a well-trained model and a bad-trained model to plot example state
         plot_example_state(
             number_steps=NUM_STEPS,
@@ -402,7 +402,8 @@ if __name__ == "__main__":
             # get price data in json from data folder
             with open(DATA_PATH / f"{asset}.json") as f:
                 prices[asset] = [
-                    w["close"] for w in json.load(f)["data"]["data"][-(test_steps + 2) :]
+                    w["close"]
+                    for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
                 ]
 
         test_env = init_env(
@@ -428,19 +429,18 @@ if __name__ == "__main__":
             },
         )
 
-
         # def tkn_price_trend_func(x, y):
         #     series = np.array(range(1, x + 2)).astype(float)
         #     series[9] = series[8] * 10
         #     return series
-        
+
         # test_env = init_env(
         #     initial_collateral_factor=0.99,
         #     max_steps=30,
         #     tkn_price_trend_func=tkn_price_trend_func,
         #     attack_steps=[6, 11, 32],
         # )
-        
+
         # test_protocol_env = ProtocolEnv(test_env)
         # agent_vars = {
         #     "eps_dec": EPSILON_DECAY,
