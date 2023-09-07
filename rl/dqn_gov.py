@@ -147,6 +147,7 @@ class Agent:
         self.batch_size = batch_size
         self.mem_cntr = 0
 
+        # initialize the Q_eval network
         self.Q_eval = DQN(
             self.lr,
             n_actions=n_actions,

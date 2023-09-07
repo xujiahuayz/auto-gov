@@ -1,12 +1,15 @@
 import logging
 import json
 from typing import Callable
+import pickle
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from rl.utils import init_env
+from rl.utils import save_the_nth_model
+from rl.utils import load_saved_model
 
 from market_env.constants import FIGURE_PATH
 from market_env.constants import DATA_PATH
@@ -380,6 +383,7 @@ if __name__ == "__main__":
             PrioritizedReplay_switch=False,
         )
 
+
         # # chosse a well-trained model and a bad-trained model to plot example state
         # plot_example_state(
         #     number_steps=NUM_STEPS,
@@ -414,34 +418,42 @@ if __name__ == "__main__":
         )
         test_protocol_env = ProtocolEnv(test_env)
 
-        (
-            test_scores,
-            test_states,
-            test_policies,
-            test_rewards,
-            test_bench_states,
-        )= inference_with_trained_model(
-            model=training_models[3],
-            env=test_protocol_env,
-            num_test_episodes=1,
-            agent_args={
-                "eps_dec": EPSILON_DECAY,
-                "eps_end": EPSILON_END,
-                "lr": LEARNING_RATE,
-                "gamma": GAMMA,
-                "epsilon": 1,
-                "batch_size": BATCH_SIZE,
-                "target_on_point": TARGET_ON_POINT,
-            },
-        )
+        # save a trained model
+        save_the_nth_model(3, "trained_model_", training_models)
 
-        print(f"test_scores: {test_scores}")
-        print(f"test_rewards: {test_rewards}")
-        print(f"test_policies: {test_policies}")
+        # load a trained model
+        trained_model = load_saved_model(3, "trained_model_")
+        print(trained_model)
+
+        # (
+        #     test_scores,
+        #     test_states,
+        #     test_policies,
+        #     test_rewards,
+        #     test_bench_states,
+        # )= inference_with_trained_model(
+        #     model=trained_model,
+        #     env=test_protocol_env,
+        #     num_test_episodes=1,
+        #     agent_args={
+        #         "eps_dec": EPSILON_DECAY,
+        #         "eps_end": EPSILON_END,
+        #         "lr": LEARNING_RATE,
+        #         "gamma": GAMMA,
+        #         "epsilon": 1,
+        #         "batch_size": BATCH_SIZE,
+        #         "target_on_point": TARGET_ON_POINT,
+        #     },
+        # )
+
+        # print(f"test_scores: {test_scores}")
+        # print(f"test_rewards: {test_rewards}")
+        # print(f"test_policies: {test_policies}")
         # print(f"test_states: {test_states}")
         # print(f"test_bench_states: {test_bench_states}")
 
 
+        ########## previous test code ##########
         # def tkn_price_trend_func(x, y):
         #     series = np.array(range(1, x + 2)).astype(float)
         #     series[9] = series[8] * 10
