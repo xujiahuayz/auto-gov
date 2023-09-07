@@ -418,12 +418,16 @@ if __name__ == "__main__":
         )
         test_protocol_env = ProtocolEnv(test_env)
 
+        print(len(training_models))
+
         # save a trained model
-        save_the_nth_model(3, "trained_model_", training_models)
+        save_the_nth_model(4, "trained_model_", training_models)
 
         # load a trained model
-        trained_model = load_saved_model(3, "trained_model_")
+        trained_model = load_saved_model(4, "trained_model_")
         print(trained_model)
+
+        # compare whether two models are the same
 
         # (
         #     test_scores,

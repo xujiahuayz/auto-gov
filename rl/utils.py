@@ -84,3 +84,12 @@ def load_saved_model(num, prefix_name):
     """
     with open(str(DATA_PATH / prefix_name) + str(num) + ".pkl", "rb") as f:
         return pickle.load(f)
+    
+
+def are_models_identical(model1, model2):
+    # TODO
+
+    """
+    model1 and model2 are two models to be compared
+    """
+    return model1.state_dict() == model2.state_dict()

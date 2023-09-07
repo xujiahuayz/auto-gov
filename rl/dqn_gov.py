@@ -206,6 +206,8 @@ class Agent:
 
     def store_transition(self, state, action, reward, state_, done: bool) -> None:
         if self.PrioritizedReplay_switch == False:
+            # when prioritized replay is off
+            # calculate the index of the memory
             index = self.mem_cntr % self.mem_size
 
             # ===============================
@@ -245,7 +247,19 @@ class Agent:
             if self.buffer.mem_cntr < self.batch_size:
                 return
 
-        # set the gradients of all the model parameters (weights and biases) in the Q_eval network to zero.
+        """
+        set the gradients of all the model parameters (weights and biases) in the Q_eval network to zero.
+        should generally be called before calculating the loss,
+        specifically at the beginning of each training iteration, and before the forward pass.
+
+        The typical order of operations within a training loop is as follows:
+        1. Zero Gradients: Reset gradients to zero before any forward pass or loss calculation.
+            This is done to ensure that gradients from the previous iteration or batch do not affect the current batch's gradients.
+        2. Forward Pass: Compute predictions (forward pass) using the current model weights.
+        3. Loss Calculation: Calculate the loss based on the predictions and the target values.
+        4. Backpropagation: Perform backpropagation to compute gradients with respect to the loss.
+        5. Gradient Update: Update the model weights using an optimization algorithm (e.g., SGD, Adam) based on the computed gradients.
+        """
         self.Q_eval.optimizer.zero_grad()
 
         if self.PrioritizedReplay_switch == False:
@@ -254,7 +268,7 @@ class Agent:
             max_mem = min(self.mem_cntr, self.mem_size)
             batch = np.random.choice(max_mem, self.batch_size, replace=False)
 
-            # create an index for each element of the current batch
+            # create an index for each element of the current batch (from 0 to self.batch_size - 1)
             batch_index = np.arange(self.batch_size, dtype=np.int32)
 
             state_batch = T.tensor(self.state_memory[batch]).to(self.Q_eval.device)
