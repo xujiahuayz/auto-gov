@@ -25,6 +25,8 @@ dependencies = [
     "matplotlib==3.6.3",
     "seaborn==0.11.2",
     "sumtree==0.2.3",
+    "requests",
+    "bs4",
 ]
 
 [project.optional-dependencies]

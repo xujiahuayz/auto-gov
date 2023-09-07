@@ -364,7 +364,7 @@ def plot_example_state(
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    batchsize = 64
+    batchsize = 32
     for attack_function in [
         None,
         # ATTACK_FUNC,
@@ -384,48 +384,48 @@ if __name__ == "__main__":
         )
 
 
-        # # chosse a well-trained model and a bad-trained model to plot example state
-        # plot_example_state(
-        #     number_steps=NUM_STEPS,
-        #     epsilon_end=EPSILON_END,
-        #     epsilon_decay=EPSILON_DECAY,
-        #     bench_score=0,
-        #     batch_size=batchsize,
-        #     epsilon_start=1,
-        #     target_on_point=TARGET_ON_POINT,
-        #     eps_dec_decrease_with_target=EPS_DEC_FACTOR,
-        #     tkn_prices=TKN_PRICES,
-        #     usdc_prices=USDC_PRICES,
-        #     attack_func=attack_function,
-        # )
-
-        # test the trained model on a real-world environment
-        test_steps = TEST_NUM_STEPS
-        prices = {}
-        for asset in ["link", "usdc"]:
-            # get price data in json from data folder
-            with open(DATA_PATH / f"{asset}.json") as f:
-                prices[asset] = [
-                    w["close"]
-                    for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
-                ]
-
-        test_env = init_env(
-            initial_collateral_factor=0.95,
-            max_steps=test_steps,
-            tkn_price_trend_func=lambda x, y: prices["link"],
-            usdc_price_trend_func=lambda x, y: prices["usdc"],
+        # chosse a well-trained model and a bad-trained model to plot example state
+        plot_example_state(
+            number_steps=NUM_STEPS,
+            epsilon_end=EPSILON_END,
+            epsilon_decay=EPSILON_DECAY,
+            bench_score=0,
+            batch_size=batchsize,
+            epsilon_start=1,
+            target_on_point=TARGET_ON_POINT,
+            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+            tkn_prices=TKN_PRICES,
+            usdc_prices=USDC_PRICES,
+            attack_func=attack_function,
         )
-        test_protocol_env = ProtocolEnv(test_env)
 
-        print(len(training_models))
+        # # test the trained model on a real-world environment
+        # test_steps = TEST_NUM_STEPS
+        # prices = {}
+        # for asset in ["link", "usdc"]:
+        #     # get price data in json from data folder
+        #     with open(DATA_PATH / f"{asset}.json") as f:
+        #         prices[asset] = [
+        #             w["close"]
+        #             for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
+        #         ]
 
-        # save a trained model
-        save_the_nth_model(4, "trained_model_", training_models)
+        # test_env = init_env(
+        #     initial_collateral_factor=0.95,
+        #     max_steps=test_steps,
+        #     tkn_price_trend_func=lambda x, y: prices["link"],
+        #     usdc_price_trend_func=lambda x, y: prices["usdc"],
+        # )
+        # test_protocol_env = ProtocolEnv(test_env)
 
-        # load a trained model
-        trained_model = load_saved_model(4, "trained_model_")
-        print(trained_model)
+        # print(len(training_models))
+
+        # # save a trained model
+        # save_the_nth_model(4, "trained_model_", training_models)
+
+        # # load a trained model
+        # trained_model = load_saved_model(4, "trained_model_")
+        # print(trained_model)
 
         # compare whether two models are the same
 

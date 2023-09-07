@@ -3,6 +3,7 @@ import time
 from typing import Any, Callable
 
 import numpy as np
+import copy
 
 from market_env.caching import cache
 from rl.dqn_gov import Agent, contain_nan
@@ -201,6 +202,9 @@ def train_env(
         exogenous_states,
     ) = ([], [], [], [], [], [], [], [], [], [])
 
+    previous_model = False
+    current_model = False
+
     for i in range(n_episodes):
         start_time = time.time()
         attack_steps_this_episode = (
@@ -251,9 +255,10 @@ def train_env(
             trained_model.append(
                 {
                     "episode": i,
-                    "model": agent.Q_eval.state_dict(),
+                    # attention. deep copy agent.Q_eval.state_dict().
+                    "model": copy.deepcopy(agent.Q_eval.state_dict()),
                 }
-            )
+            )   
 
         chunk_size = 50
 

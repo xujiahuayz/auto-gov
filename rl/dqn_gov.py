@@ -264,7 +264,7 @@ class Agent:
 
         if self.PrioritizedReplay_switch == False:
             # when prioritized replay is off
-            # sample a batch of transitions
+            # sample a batch of transitions, generates a random batch of indices from the range [0, max_mem - 1] 
             max_mem = min(self.mem_cntr, self.mem_size)
             batch = np.random.choice(max_mem, self.batch_size, replace=False)
 
@@ -279,6 +279,7 @@ class Agent:
 
             action_batch = self.action_memory[batch]
 
+            # q_eval is the Q value of the action taken
             q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
         
         else:
@@ -340,9 +341,11 @@ class Agent:
             for idx, td_error in zip(idxs, td_errors.detach().numpy()):
                 self.buffer.update_priority(idx, td_error)
 
+        # check if target network should be updated
         if self.target_on_point:
             self.update_counter += 1
             if self.update_counter % self.target_update == 0:
+                # update the target network with the weights and biases of the Q_eval network
                 self.Q_target.load_state_dict(self.Q_eval.state_dict())
 
         # check if epsilon decay should be decreased

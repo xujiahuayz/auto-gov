@@ -1,4 +1,5 @@
 from typing import Callable
+import torch
 
 import numpy as np
 import pickle
@@ -86,10 +87,21 @@ def load_saved_model(num, prefix_name):
         return pickle.load(f)
     
 
-def are_models_identical(model1, model2):
-    # TODO
+def are_state_dicts_the_same(state_dict1, state_dict2):
+    """
+    state_dict1 and state_dict2 are two state_dicts
+    """
+    # Check if the keys (parameter names) are the same
+    if state_dict1.keys() == state_dict2.keys():
+        # Compare the values (tensors) for each parameter
+        all_equal = all(
+            torch.equal(state_dict1[key], state_dict2[key])
+            for key in state_dict1.keys()
+        )
 
-    """
-    model1 and model2 are two models to be compared
-    """
-    return model1.state_dict() == model2.state_dict()
+        if all_equal:
+            return True
+        else:
+            return False
+    else:
+        return False
