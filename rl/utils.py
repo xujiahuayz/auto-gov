@@ -73,7 +73,7 @@ def save_the_nth_model(num, prefix_name, models):
     prefix_name is the prefix of the file name (prefix_name + num + ".pkl")
     models is the list of models
     """
-    with open(DATA_PATH / prefix_name + str(num) + ".pkl", "wb") as f:
+    with open(str(DATA_PATH / prefix_name) + str(num) + ".pkl", "wb") as f:
         pickle.dump(models[num], f)
 
 
@@ -82,5 +82,5 @@ def load_saved_model(num, prefix_name):
     num is the num-th model to be loaded
     prefix_name is the prefix of the file name (prefix_name + num + ".pkl")
     """
-    with open(DATA_PATH / prefix_name + str(num) + ".pkl", "rb") as f:
+    with open(str(DATA_PATH / prefix_name) + str(num) + ".pkl", "rb") as f:
         return pickle.load(f)
