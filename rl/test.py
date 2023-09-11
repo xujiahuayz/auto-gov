@@ -1,5 +1,6 @@
 import json
 import logging
+import numpy as np
 
 def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     series = generate_price_series(

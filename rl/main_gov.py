@@ -85,6 +85,8 @@ def run_episode(
 
         # get states for plotting
         action = agent.choose_action(
+            # evaluate = not training
+            # if 
             observation.astype(np.float32), evaluate=not training
         )
         # observation_ is the next state
