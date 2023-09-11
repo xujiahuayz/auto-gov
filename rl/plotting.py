@@ -369,56 +369,35 @@ if __name__ == "__main__":
         None,
         # ATTACK_FUNC,
     ]:
-        # training_models = plot_training_results_seaborn(
-        #     number_steps=NUM_STEPS,
-        #     epsilon_end=EPSILON_END,
-        #     epsilon_decay=EPSILON_DECAY,
-        #     batch_size=batchsize,
-        #     epsilon_start=1,
-        #     target_on_point=TARGET_ON_POINT,
-        #     eps_dec_decrease_with_target=EPS_DEC_FACTOR,
-        #     tkn_prices=TKN_PRICES,
-        #     usdc_prices=USDC_PRICES,
-        #     attack_func=attack_function,
-        #     PrioritizedReplay_switch=False,
-        # )
-
-        # # chosse a well-trained model and a bad-trained model to plot example state
-        # plot_example_state(
-        #     number_steps=NUM_STEPS,
-        #     epsilon_end=EPSILON_END,
-        #     epsilon_decay=EPSILON_DECAY,
-        #     bench_score=0,
-        #     batch_size=batchsize,
-        #     epsilon_start=1,
-        #     target_on_point=TARGET_ON_POINT,
-        #     eps_dec_decrease_with_target=EPS_DEC_FACTOR,
-        #     tkn_prices=TKN_PRICES,
-        #     usdc_prices=USDC_PRICES,
-        #     attack_func=attack_function,
-        # )
-
-
-        # test the trained model on a real-world environment
-        test_steps = TEST_NUM_STEPS
-        prices = {}
-        for asset in ["link", "usdc"]:
-            # get price data in json from data folder
-            with open(DATA_PATH / f"{asset}.json") as f:
-                prices[asset] = [
-                    w["close"]
-                    for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
-                ]
-
-        test_env = init_env(
-            initial_collateral_factor=0.75,
-            max_steps=test_steps,
-            tkn_price_trend_func=lambda x, y: prices["link"],
-            usdc_price_trend_func=lambda x, y: prices["usdc"],
+        training_models = plot_training_results_seaborn(
+            number_steps=NUM_STEPS,
+            epsilon_end=EPSILON_END,
+            epsilon_decay=EPSILON_DECAY,
+            batch_size=batchsize,
+            epsilon_start=1,
+            target_on_point=TARGET_ON_POINT,
+            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+            tkn_prices=TKN_PRICES,
+            usdc_prices=USDC_PRICES,
+            attack_func=attack_function,
+            PrioritizedReplay_switch=False,
         )
-        test_protocol_env = ProtocolEnv(test_env)
 
-        # print(len(training_models))
+        # chosse a well-trained model and a bad-trained model to plot example state
+        plot_example_state(
+            number_steps=NUM_STEPS,
+            epsilon_end=EPSILON_END,
+            epsilon_decay=EPSILON_DECAY,
+            bench_score=0,
+            batch_size=batchsize,
+            epsilon_start=1,
+            target_on_point=TARGET_ON_POINT,
+            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+            tkn_prices=TKN_PRICES,
+            usdc_prices=USDC_PRICES,
+            attack_func=attack_function,
+        )
+
 
         # # save a trained model
         # save_the_nth_model(1, "trained_model_", training_models)
@@ -436,64 +415,5 @@ if __name__ == "__main__":
 
 
         # load a trained model
-        trained_model = load_saved_model(31, "trained_model_")
+        # trained_model = load_saved_model(31, "trained_model_")
         # print(trained_model)
-
-        (
-            test_scores,
-            test_states,
-            test_policies,
-            test_rewards,
-            test_bench_states,
-        )= inference_with_trained_model(
-            model=trained_model,
-            env=test_protocol_env,
-            num_test_episodes=1,
-            agent_args={
-                "eps_dec": EPSILON_DECAY,
-                "eps_end": EPSILON_END,
-                "lr": LEARNING_RATE,
-                "gamma": GAMMA,
-                "epsilon": 1,
-                "batch_size": BATCH_SIZE,
-                "target_on_point": TARGET_ON_POINT,
-            },
-        )
-
-        print(f"test_scores: {test_scores}")
-        print(f"test_rewards: {test_rewards}")
-        # print(f"test_policies: {test_policies}")
-        # print(f"test_states: {test_states}")
-        # print(f"test_bench_states: {test_bench_states}")
-
-
-        ########## previous test code ##########
-        # def tkn_price_trend_func(x, y):
-        #     series = np.array(range(1, x + 2)).astype(float)
-        #     series[9] = series[8] * 10
-        #     return series
-
-        # test_env = init_env(
-        #     initial_collateral_factor=0.99,
-        #     max_steps=30,
-        #     tkn_price_trend_func=tkn_price_trend_func,
-        #     attack_steps=[6, 11, 32],
-        # )
-
-        # test_protocol_env = ProtocolEnv(test_env)
-        # agent_vars = {
-        #     "eps_dec": EPSILON_DECAY,
-        #     "eps_end": EPSILON_END,
-        #     "lr": LEARNING_RATE,
-        #     "gamma": GAMMA,
-        #     "epsilon": 1,
-        #     "batch_size": BATCH_SIZE,
-        #     "target_on_point": TARGET_ON_POINT,
-        # }
-
-        # inference_with_trained_model(
-        #     model=training_models[-1],
-        #     env=test_protocol_env,
-        #     agent_args=agent_vars,
-        #     num_test_episodes=3,
-        # )
