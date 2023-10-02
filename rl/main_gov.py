@@ -6,6 +6,7 @@ import numpy as np
 import copy
 
 from market_env.caching import cache
+from market_env.constants import COLLATERAL_FACTOR_INCREMENT
 from rl.dqn_gov import Agent, contain_nan
 from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
@@ -19,6 +20,7 @@ def run_episode(
     usdc_price_trend_this_episode: np.ndarray,
     training: bool,
     attack_steps: list[int] | None,
+    constant_fol_factor: bool,
     **add_env_kwargs,
 ) -> tuple[
     float,
@@ -29,6 +31,7 @@ def run_episode(
     float,
 ]:
     bench_rewards, bench_states_this_episode = bench_env(
+        constant_fol_factor=constant_fol_factor,
         tkn_price_trend_func=lambda t, s: tkn_price_trend_this_episode,
         usdc_price_trend_func=lambda t, s: usdc_price_trend_this_episode,
         attack_steps=attack_steps,
@@ -86,8 +89,9 @@ def run_episode(
         # get states for plotting
         action = agent.choose_action(
             # evaluate = not training
-            # if 
-            observation.astype(np.float32), evaluate=not training
+            # if
+            observation.astype(np.float32),
+            evaluate=not training,
         )
         # observation_ is the next state
         # reward is the reward of the current state
@@ -121,7 +125,9 @@ def run_episode(
     )
 
 
-def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
+def bench_env(
+    constant_fol_factor: bool = True, **kwargs
+) -> tuple[list[float], list[dict[str, Any]]]:
     defi_env = init_env(**kwargs)
     env = ProtocolEnv(defi_env)
     state_this_episode = [defi_env.state_summary]
@@ -130,13 +136,46 @@ def bench_env(**kwargs) -> tuple[list[float], list[dict[str, Any]]]:
     rewards = [0.0]
     defi_env.reset()
 
-    while not done:
-        # get states for plotting
-        # never change collateral factor
-        _, reward, done, _ = env.step(0)
-        score += reward
-        state_this_episode.append(defi_env.state_summary)
-        rewards.append(reward)
+    if constant_fol_factor:
+        while not done:
+            # get states for plotting
+            # never change collateral factor
+            _, reward, done, _ = env.step(0)
+            score += reward
+            state_this_episode.append(defi_env.state_summary)
+            rewards.append(reward)
+    else:
+        while not done:
+            # decide step according to volatility every 7 steps after 0
+            num_pools: int = len(defi_env.plf_pools)
+            action = 0
+            if defi_env.step > 0 and defi_env.step % 7 == 0:
+                for i, plf in enumerate(defi_env.plf_pools.values()):
+                    # plf's last 7 days' volatility
+                    theoretical_col_factor = 0.75 - 0.2 * np.std(
+                        plf.asset_price_history[-7:]
+                    )
+                    # check whether the collateral factor is below or above the theoretical collateral factor
+                    if (
+                        plf.collateral_factor
+                        <= theoretical_col_factor - COLLATERAL_FACTOR_INCREMENT
+                    ):
+                        this_action = 1
+                    elif (
+                        plf.collateral_factor
+                        >= theoretical_col_factor + COLLATERAL_FACTOR_INCREMENT
+                    ):
+                        this_action = 2
+                    else:
+                        this_action = 0
+                    action += this_action * defi_env.num_action_pool ** (
+                        num_pools - i - 1
+                    )
+
+            _, reward, done, _ = env.step(action)
+            score += reward
+            state_this_episode.append(defi_env.state_summary)
+            rewards.append(reward)
 
     return rewards, state_this_episode
 
@@ -155,6 +194,7 @@ def train_env(
     tkn_seed: int | None = None,
     usdc_seed: int | None = None,
     attack_steps: Callable[[int], list[int]] | None = None,
+    constant_fol_factor: bool = True,
     **add_env_kwargs,
 ) -> tuple[
     list[float],
@@ -241,6 +281,7 @@ def train_env(
             usdc_price_trend_this_episode=usdc_price_trend_this_episode,
             training=True,
             attack_steps=attack_steps_this_episode,
+            constant_fol_factor=constant_fol_factor,
             **add_env_kwargs,
         )
 
@@ -260,7 +301,7 @@ def train_env(
                     # attention. deep copy agent.Q_eval.state_dict().
                     "model": copy.deepcopy(agent.Q_eval.state_dict()),
                 }
-            )   
+            )
 
         chunk_size = 50
 
@@ -296,11 +337,13 @@ def inference_with_trained_model(
     agent_args: dict[str, Any],
     num_test_episodes: int = 1,
     compared_to_benchmark: bool = True,
+    constant_fol_factor: bool = True,
 ) -> tuple[
     list[float],
     list[list[dict[str, Any]]],
-    list[list[dict[str, Any]]],
+    list[list[int]],
     list[list[float]],
+    list[list[dict[str, Any]]],
 ]:
     """
     Interact with the environment using the loaded model.
@@ -370,6 +413,7 @@ def inference_with_trained_model(
             init_safety_supply_margin=env.defi_env.users[
                 "alice"
             ]._initial_safety_supply_margin,
+            constant_fol_factor=constant_fol_factor,
             attack_steps=None,
         )
 

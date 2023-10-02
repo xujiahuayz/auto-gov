@@ -40,6 +40,7 @@ def plot_training_results_seaborn(
     number_steps: int,
     target_on_point: float,
     attack_func: Callable | None,
+    constant_fol_factor: bool = True,
     **kwargs,
 ):
     (
@@ -57,6 +58,7 @@ def plot_training_results_seaborn(
         number_steps=number_steps,
         target_on_point=target_on_point,
         attack_func=attack_func,
+        constant_fol_factor=constant_fol_factor,
         **kwargs,
     )
 
@@ -179,6 +181,7 @@ def plot_example_state(
     epsilon_start: float,
     epsilon_decay: float,
     bench_score: float = 0,
+    constant_fol_factor: bool = True,
     **kwargs,
 ):
     (
@@ -197,6 +200,7 @@ def plot_example_state(
         target_on_point=target_on_point,
         epsilon_start=epsilon_start,
         epsilon_decay=epsilon_decay,
+        constant_fol_factor=constant_fol_factor,
         **kwargs,
     )
 
@@ -398,7 +402,6 @@ if __name__ == "__main__":
             attack_func=attack_function,
         )
 
-
         # # save a trained model
         # save_the_nth_model(1, "trained_model_", training_models)
         # save_the_nth_model(3, "trained_model_", training_models)
@@ -412,7 +415,6 @@ if __name__ == "__main__":
         # # save all the trained models
         # for i in range(len(training_models)):
         #     save_the_nth_model(i, "trained_model_", training_models)
-
 
         # load a trained model
         # trained_model = load_saved_model(31, "trained_model_")

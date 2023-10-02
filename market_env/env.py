@@ -12,6 +12,7 @@ from market_env.constants import (
     DEBT_TOKEN_PREFIX,
     INTEREST_TOKEN_PREFIX,
     PENALTY_REWARD,
+    COLLATERAL_FACTOR_INCREMENT
 )
 from market_env.utils import PriceDict, borrow_lend_rates
 
@@ -84,7 +85,7 @@ class DefiEnv:
     def act_update_react(self, action: int) -> None:
         num_pools: int = len(self.plf_pools)
         if not 0 <= action < self.num_action_pool**num_pools:
-            raise ValueError("action must be between 0 and {num_pools**3 -1}")
+            raise ValueError(f"action must be between 0 and {num_pools**3 -1}")
 
         for i, plf in enumerate(self.plf_pools.values()):
             exponent = num_pools - i
@@ -666,7 +667,7 @@ class PlfPool:
     # actions
     def lower_collateral_factor(self) -> None:
         # affect users who are borrowing from this pool
-        new_collateral_factor = self.collateral_factor - 0.025
+        new_collateral_factor = self.collateral_factor - COLLATERAL_FACTOR_INCREMENT
         # Constrain check
         # if the new collateral factor is less than 0
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor
@@ -683,7 +684,7 @@ class PlfPool:
         self.update_market()
 
     def raise_collateral_factor(self) -> None:
-        new_collateral_factor = self.collateral_factor + 0.025
+        new_collateral_factor = self.collateral_factor + COLLATERAL_FACTOR_INCREMENT
         # Constrain check
         # if the new collateral factor is greater than 1
         # if it is out of bounds, then return a very small negative reward and do not update the collateral factor

@@ -1,6 +1,7 @@
-from typing import Callable
-import numpy as np
 from collections.abc import MutableMapping
+from typing import Callable
+
+import numpy as np
 
 from market_env.constants import DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX
 
@@ -112,11 +113,11 @@ def advantage_factor(advantage: float, multiplier: float = 1) -> float:
     calculate the advantage factor based on the advantage
     """
     return (2 / (1 + np.exp(-advantage * multiplier))) - 1
-    if advantage > 0:
-        factor = 1 - np.exp(-advantage)
-    else:
-        factor = np.exp(advantage) - 1
-    return factor
+    # if advantage > 0:
+    #     factor = 1 - np.exp(-advantage)
+    # else:
+    #     factor = np.exp(advantage) - 1
+    # return factor
 
 
 if __name__ == "__main__":
