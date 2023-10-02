@@ -1,36 +1,32 @@
-import logging
 import json
-from typing import Callable
+import logging
 import pickle
+from typing import Callable
 
 import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
-from rl.utils import init_env
-from rl.utils import save_the_nth_model
-from rl.utils import load_saved_model
 
-from market_env.constants import FIGURE_PATH
-from market_env.constants import DATA_PATH
+from market_env.constants import DATA_PATH, FIGURE_PATH
 from rl.config import (
-    TKN_PRICES,
-    USDC_PRICES,
     ATTACK_FUNC,
+    BATCH_SIZE,
     EPS_DEC_FACTOR,
     EPSILON_DECAY,
     EPSILON_END,
-    NUM_STEPS,
-    TEST_NUM_STEPS,
-    TARGET_ON_POINT,
     GAMMA,
     LEARNING_RATE,
-    BATCH_SIZE,
+    NUM_STEPS,
+    TARGET_ON_POINT,
+    TEST_NUM_STEPS,
+    TKN_PRICES,
+    USDC_PRICES,
 )
-from rl.training import training
 from rl.main_gov import inference_with_trained_model
 from rl.rl_env import ProtocolEnv
-
+from rl.training import training
+from rl.utils import init_env, load_saved_model, save_the_nth_model
 
 sns.set_theme(style="darkgrid")
 sns.set(font_scale=1.4)
@@ -40,7 +36,7 @@ def plot_training_results_seaborn(
     number_steps: int,
     target_on_point: float,
     attack_func: Callable | None,
-    constant_fol_factor: bool = True,
+    constant_col_factor: bool = True,
     **kwargs,
 ):
     (
@@ -58,7 +54,7 @@ def plot_training_results_seaborn(
         number_steps=number_steps,
         target_on_point=target_on_point,
         attack_func=attack_func,
-        constant_fol_factor=constant_fol_factor,
+        constant_col_factor=constant_col_factor,
         **kwargs,
     )
 
@@ -181,7 +177,7 @@ def plot_example_state(
     epsilon_start: float,
     epsilon_decay: float,
     bench_score: float = 0,
-    constant_fol_factor: bool = True,
+    constant_col_factor: bool = True,
     **kwargs,
 ):
     (
@@ -200,7 +196,7 @@ def plot_example_state(
         target_on_point=target_on_point,
         epsilon_start=epsilon_start,
         epsilon_decay=epsilon_decay,
-        constant_fol_factor=constant_fol_factor,
+        constant_col_factor=constant_col_factor,
         **kwargs,
     )
 

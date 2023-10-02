@@ -20,7 +20,7 @@ def run_episode(
     usdc_price_trend_this_episode: np.ndarray,
     training: bool,
     attack_steps: list[int] | None,
-    constant_fol_factor: bool,
+    constant_col_factor: bool,
     **add_env_kwargs,
 ) -> tuple[
     float,
@@ -31,7 +31,7 @@ def run_episode(
     float,
 ]:
     bench_rewards, bench_states_this_episode = bench_env(
-        constant_fol_factor=constant_fol_factor,
+        constant_col_factor=constant_col_factor,
         tkn_price_trend_func=lambda t, s: tkn_price_trend_this_episode,
         usdc_price_trend_func=lambda t, s: usdc_price_trend_this_episode,
         attack_steps=attack_steps,
@@ -126,7 +126,7 @@ def run_episode(
 
 
 def bench_env(
-    constant_fol_factor: bool = True, **kwargs
+    constant_col_factor: bool = True, **kwargs
 ) -> tuple[list[float], list[dict[str, Any]]]:
     defi_env = init_env(**kwargs)
     env = ProtocolEnv(defi_env)
@@ -136,7 +136,7 @@ def bench_env(
     rewards = [0.0]
     defi_env.reset()
 
-    if constant_fol_factor:
+    if constant_col_factor:
         while not done:
             # get states for plotting
             # never change collateral factor
@@ -160,12 +160,12 @@ def bench_env(
                         plf.collateral_factor
                         <= theoretical_col_factor - COLLATERAL_FACTOR_INCREMENT
                     ):
-                        this_action = 1
+                        this_action = 2  # raise
                     elif (
                         plf.collateral_factor
                         >= theoretical_col_factor + COLLATERAL_FACTOR_INCREMENT
                     ):
-                        this_action = 2
+                        this_action = 1  # lower
                     else:
                         this_action = 0
                     action += this_action * defi_env.num_action_pool ** (
@@ -194,7 +194,7 @@ def train_env(
     tkn_seed: int | None = None,
     usdc_seed: int | None = None,
     attack_steps: Callable[[int], list[int]] | None = None,
-    constant_fol_factor: bool = True,
+    constant_col_factor: bool = True,
     **add_env_kwargs,
 ) -> tuple[
     list[float],
@@ -281,7 +281,7 @@ def train_env(
             usdc_price_trend_this_episode=usdc_price_trend_this_episode,
             training=True,
             attack_steps=attack_steps_this_episode,
-            constant_fol_factor=constant_fol_factor,
+            constant_col_factor=constant_col_factor,
             **add_env_kwargs,
         )
 
@@ -337,7 +337,7 @@ def inference_with_trained_model(
     agent_args: dict[str, Any],
     num_test_episodes: int = 1,
     compared_to_benchmark: bool = True,
-    constant_fol_factor: bool = True,
+    constant_col_factor: bool = True,
 ) -> tuple[
     list[float],
     list[list[dict[str, Any]]],
@@ -413,7 +413,7 @@ def inference_with_trained_model(
             init_safety_supply_margin=env.defi_env.users[
                 "alice"
             ]._initial_safety_supply_margin,
-            constant_fol_factor=constant_fol_factor,
+            constant_col_factor=constant_col_factor,
             attack_steps=None,
         )
 

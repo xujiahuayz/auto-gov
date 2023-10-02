@@ -17,7 +17,7 @@ def training(
     tkn_prices: Callable,
     usdc_prices: Callable,
     attack_func: Callable | None,
-    constant_fol_factor: bool = True,
+    constant_col_factor: bool = True,
     PrioritizedReplay_switch: bool = False,
 ) -> tuple[
     dict[str, Any],
@@ -78,7 +78,7 @@ def training(
         tkn_price_trend_func=tkn_prices,
         usdc_price_trend_func=usdc_prices,
         attack_steps=attack_func,
-        constant_fol_factor=constant_fol_factor,
+        constant_col_factor=constant_col_factor,
     )
 
     return (
