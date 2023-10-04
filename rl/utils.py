@@ -1,12 +1,12 @@
+import pickle
 from typing import Callable
-import torch
 
 import numpy as np
-import pickle
+import torch
 
+from market_env.constants import DATA_PATH
 from market_env.env import DefiEnv, PlfPool, User
 from market_env.utils import PriceDict
-from market_env.constants import DATA_PATH
 
 
 def init_env(
@@ -85,7 +85,7 @@ def load_saved_model(num, prefix_name):
     """
     with open(str(DATA_PATH / prefix_name) + str(num) + ".pkl", "rb") as f:
         return pickle.load(f)
-    
+
 
 def are_state_dicts_the_same(state_dict1, state_dict2):
     """

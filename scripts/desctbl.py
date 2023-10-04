@@ -3,16 +3,15 @@ TODO: to be cleaned up
 script to generate a table of posts in Aave Governance Forum
 """
 
-from os import path
-import matplotlib.pyplot as plt
 import time
+from os import path
 
-
+import matplotlib.pyplot as plt
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
 from dateutil.parser import parse
 
-import requests
-import pandas as pd
-from bs4 import BeautifulSoup
 from market_env.constants import DATA_PATH, FIGURE_PATH
 
 

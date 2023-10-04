@@ -1,7 +1,9 @@
 # fetch price from cryptocompare
 
-import requests
 import json
+
+import requests
+
 from market_env.constants import DATA_PATH
 
 

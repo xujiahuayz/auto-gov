@@ -8,12 +8,9 @@ from typing import Any, Callable
 import numpy as np
 import pandas as pd
 
-from market_env.constants import (
-    DEBT_TOKEN_PREFIX,
-    INTEREST_TOKEN_PREFIX,
-    PENALTY_REWARD,
-    COLLATERAL_FACTOR_INCREMENT
-)
+from market_env.constants import (COLLATERAL_FACTOR_INCREMENT,
+                                  DEBT_TOKEN_PREFIX, INTEREST_TOKEN_PREFIX,
+                                  PENALTY_REWARD)
 from market_env.utils import PriceDict, borrow_lend_rates
 
 
@@ -596,6 +593,9 @@ class PlfPool:
         # deterministically generate price history
         self.price_trend_func = price_trend_func
 
+        self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_name
+        self.borrow_token_name = DEBT_TOKEN_PREFIX + self.asset_name
+
         self.reset()
 
     def reset(self):
@@ -620,8 +620,7 @@ class PlfPool:
 
         # start with no funds borrowed, actual underlying that's been borrowed, not the interest-accruing debt tokens
 
-        self.interest_token_name = INTEREST_TOKEN_PREFIX + self.asset_name
-        self.borrow_token_name = DEBT_TOKEN_PREFIX + self.asset_name
+
 
         # deduct funds from user balance
         self.initiator.funds_available[self.asset_name] -= self.initial_starting_funds

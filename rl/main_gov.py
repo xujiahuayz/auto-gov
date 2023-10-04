@@ -1,9 +1,9 @@
+import copy
 import logging
 import time
 from typing import Any, Callable
 
 import numpy as np
-import copy
 
 from market_env.caching import cache
 from market_env.constants import COLLATERAL_FACTOR_INCREMENT

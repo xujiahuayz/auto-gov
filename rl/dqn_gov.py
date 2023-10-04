@@ -1,9 +1,11 @@
 import os
+
 import numpy as np
 import torch as T
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
 from rl.data_structure import SumTree
 
 
@@ -33,7 +35,7 @@ class DQN(nn.Module):
 
         # use Adam optimizer
         self.optimizer = optim.Adam(self.parameters(), lr=lr)
-        
+
         # # use MAE loss (L1 loss) function
         # self.loss = nn.L1Loss()
 
@@ -59,9 +61,12 @@ class DQN(nn.Module):
 
         return actions
 
+
 class PrioritizedReplayBuffer:
     # replay buffer for DQN
-    def __init__(self, max_size: int, input_shape: tuple, n_actions: int, alpha: float = 0.6):
+    def __init__(
+        self, max_size: int, input_shape: tuple, n_actions: int, alpha: float = 0.6
+    ):
         self.mem_size = max_size
         self.mem_cntr = 0
         self.alpha = alpha
@@ -69,7 +74,7 @@ class PrioritizedReplayBuffer:
 
         self.input_shape = input_shape
         self.n_actions = n_actions
-    
+
     def store_transition(self, state, action, reward: float, next_state, done: bool):
         # calculate priority
         # priority = np.max(self.sumtree.tree[-self.sumtree.capacity:])
@@ -79,7 +84,7 @@ class PrioritizedReplayBuffer:
         data = (state, action, reward, next_state, done)
         self.sumtree.add(priority, data)
         self.mem_cntr += 1
-    
+
     def sample(self, batch_size: int, beta):
         idxs, experiences, priorities = [], [], []
         segment_length = self.sumtree.total() / batch_size
@@ -95,21 +100,22 @@ class PrioritizedReplayBuffer:
             idxs.append(idx)
             experiences.append(data)
             priorities.append(priority)
-        
+
         max_priority = max(priorities)
         scaling_factor = np.array(priorities) / max_priority
         is_weights = (self.mem_cntr * scaling_factor) ** (-beta)
         is_weights /= is_weights.max()
 
         return idxs, experiences, is_weights
-    
+
     def update_priority(self, idx, td_error):
         priority = td_error + 1e-5  # Small constant to ensure nonzero priority
-        priority = priority ** self.alpha
+        priority = priority**self.alpha
         self.sumtree.update(idx, priority)
 
     def __len__(self):
         return self.mem_cntr if self.mem_cntr < self.mem_size else self.mem_size
+
 
 class Agent:
     def __init__(
@@ -190,7 +196,9 @@ class Agent:
         if PrioritizedReplay_switch:
             self.beta = beta
             self.beta_increment_per_sampling = beta_increment_per_sampling
-            self.buffer = PrioritizedReplayBuffer(max_mem_size, input_dims, n_actions, alpha=alpha)
+            self.buffer = PrioritizedReplayBuffer(
+                max_mem_size, input_dims, n_actions, alpha=alpha
+            )
 
     @property
     def target_net_enabled(self) -> bool:
@@ -264,7 +272,7 @@ class Agent:
 
         if self.PrioritizedReplay_switch == False:
             # when prioritized replay is off
-            # sample a batch of transitions, generates a random batch of indices from the range [0, max_mem - 1] 
+            # sample a batch of transitions, generates a random batch of indices from the range [0, max_mem - 1]
             max_mem = min(self.mem_cntr, self.mem_size)
             batch = np.random.choice(max_mem, self.batch_size, replace=False)
 
@@ -272,19 +280,25 @@ class Agent:
             batch_index = np.arange(self.batch_size, dtype=np.int32)
 
             state_batch = T.tensor(self.state_memory[batch]).to(self.Q_eval.device)
-            new_state_batch = T.tensor(self.new_state_memory[batch]).to(self.Q_eval.device)
+            new_state_batch = T.tensor(self.new_state_memory[batch]).to(
+                self.Q_eval.device
+            )
 
             reward_batch = T.tensor(self.reward_memory[batch]).to(self.Q_eval.device)
-            terminal_batch = T.tensor(self.terminal_memory[batch]).to(self.Q_eval.device)
+            terminal_batch = T.tensor(self.terminal_memory[batch]).to(
+                self.Q_eval.device
+            )
 
             action_batch = self.action_memory[batch]
 
             # q_eval is the Q value of the action taken
             q_eval = self.Q_eval.forward(state_batch)[batch_index, action_batch]
-        
+
         else:
             # when prioritized replay is on
-            idxs, experiences, is_weights = self.buffer.sample(self.batch_size, self.beta)
+            idxs, experiences, is_weights = self.buffer.sample(
+                self.batch_size, self.beta
+            )
             is_weights = T.tensor(is_weights).to(self.Q_eval.device)
 
             states, actions, rewards, next_states, dones = zip(*experiences)

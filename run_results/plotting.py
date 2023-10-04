@@ -72,7 +72,13 @@ if __name__ == "__main__":
     with open("time_cost_600_no_target.txt", "r") as f:
         time_cost_600_no_target = eval(f.read())
 
-    plot_time_cdf(time_cost_300_no_target, time_cost_450_no_target, time_cost_600_no_target, 500, "time_cost_no_target.png")
+    plot_time_cdf(
+        time_cost_300_no_target,
+        time_cost_450_no_target,
+        time_cost_600_no_target,
+        500,
+        "time_cost_no_target.png",
+    )
 
     # with open("time_cost_300_target.txt", "r") as f:
     #     time_cost_300_target = eval(f.read())

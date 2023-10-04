@@ -1,31 +1,29 @@
 import json
 import logging
+
 import numpy as np
 
-from rl.utils import init_env
-from rl.utils import save_the_nth_model
-from rl.utils import load_saved_model
-
+from market_env.constants import DATA_PATH, FIGURE_PATH
 from market_env.utils import generate_price_series
-from market_env.constants import FIGURE_PATH
-from market_env.constants import DATA_PATH
 from rl.config import (
-    TKN_PRICES,
-    USDC_PRICES,
     ATTACK_FUNC,
+    BATCH_SIZE,
     EPS_DEC_FACTOR,
     EPSILON_DECAY,
     EPSILON_END,
-    NUM_STEPS,
-    TEST_NUM_STEPS,
-    TARGET_ON_POINT,
     GAMMA,
     LEARNING_RATE,
-    BATCH_SIZE,
+    NUM_STEPS,
+    TARGET_ON_POINT,
+    TEST_NUM_STEPS,
+    TKN_PRICES,
+    USDC_PRICES,
 )
-from rl.training import training
 from rl.main_gov import inference_with_trained_model
 from rl.rl_env import ProtocolEnv
+from rl.training import training
+from rl.utils import init_env, load_saved_model, save_the_nth_model
+
 
 def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
     series = generate_price_series(
@@ -50,6 +48,7 @@ def usdc_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
 def attack_func(t: int) -> list[int]:
     return np.random.randint(0, t, 3).tolist()
 
+
 if __name__ == "__main__":
     # test the trained model on a real-world environment
     test_steps = TEST_NUM_STEPS
@@ -58,8 +57,7 @@ if __name__ == "__main__":
         # get price data in json from data folder
         with open(DATA_PATH / f"{asset}.json") as f:
             prices[asset] = [
-                w["close"]
-                for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
+                w["close"] for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
             ]
 
     # init the environment
@@ -79,7 +77,7 @@ if __name__ == "__main__":
             test_policies,
             test_rewards,
             test_bench_states,
-        )= inference_with_trained_model(
+        ) = inference_with_trained_model(
             model=trained_model,
             env=test_protocol_env,
             num_test_episodes=1,
@@ -94,7 +92,7 @@ if __name__ == "__main__":
             },
         )
         print(f"model {i}: {test_scores}")
-    
+
     # print(f"test_scores: {test_scores}")
     # print(f"test_rewards: {test_rewards}")
     # print(f"test_policies: {test_policies}")

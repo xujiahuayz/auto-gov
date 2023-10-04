@@ -1,21 +1,19 @@
 import pickle
+
 import numpy as np
 import pandas as pd
 import seaborn as sns
-
 from matplotlib import pyplot as plt
 
 from market_env.constants import DATA_PATH, FIGURE_PATH
 from run_results.plotting import plot_learning, plot_time_cdf
-from market_env.constants import FIGURE_PATH
-from market_env.constants import DATA_PATH
+
 
 def plot_training(
     scores: list[float],
     eps_history: list[float],
     losses: list[float],
 ):
-    
     sns.set_style("darkgrid")
     # find the index of the last positive score
     last_positive_score: int = next(
@@ -99,6 +97,7 @@ def plot_training(
     fig.tight_layout()
     plt.show()
 
+
 def plot_results(results: list[dict]) -> None:
     # plot results from training
 
@@ -169,6 +168,7 @@ def draw_delay():
         times3 = result["time_cost"]
     plot_time_cdf(times1, times2, times3, 200, "time_cdf.pdf")
 
+
 def draw_learning(filename: str):
     with open(filename, "rb") as f:
         results = pickle.load(f)
@@ -184,18 +184,17 @@ def draw_learning(filename: str):
     # 7: trained_models,
     # 8: losses,
     # 9: exogenous_vars,
-    
+
     scores = results[1]
     print(scores)
     eps = results[2]
     loss = results[8]
     step_num = [i + 1 for i in range(len(scores))]
     plot_training(scores, eps, loss)
-        
+
 
 if __name__ == "__main__":
     # draw_delay()
-    
+
     data_path = DATA_PATH / "results-2023-02-18-00-20-02.pkl"
     draw_learning(data_path)
-
