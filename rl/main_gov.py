@@ -244,8 +244,7 @@ def train_env(
         exogenous_states,
     ) = ([], [], [], [], [], [], [], [], [], [])
 
-    previous_model = False
-    current_model = False
+    previous_model = None
 
     for i in range(n_episodes):
         start_time = time.time()
@@ -293,8 +292,19 @@ def train_env(
         states.append(state_this_episode)
         rewards.append(reward_this_episode)
         avg_loss.append(avg_loss_this_episode)
-        # if score is the highest, save the model
-        if score >= max(scores) or (i + 1) % 15 == 0:
+        if i == 0:
+            previous_model = copy.deepcopy(agent.Q_eval.state_dict())
+        # if score is the highest, or it is the 15th episode, save the model
+        if score >= max(scores):
+            if i-1 >= 50 and trained_model[-1]["episode"] != i-1:
+                trained_model.append(
+                    {
+                        "episode": i-1,
+                        # Attention!! deep copy agent.Q_eval.state_dict().
+                        "model": copy.deepcopy(previous_model),
+                    }
+                )
+
             trained_model.append(
                 {
                     "episode": i,
@@ -302,6 +312,16 @@ def train_env(
                     "model": copy.deepcopy(agent.Q_eval.state_dict()),
                 }
             )
+        elif i % 15 == 0:
+            trained_model.append(
+                {
+                    "episode": i,
+                    # Attention!! deep copy agent.Q_eval.state_dict().
+                    "model": copy.deepcopy(agent.Q_eval.state_dict()),
+                }
+            )
+
+        previous_model = copy.deepcopy(agent.Q_eval.state_dict())
 
         chunk_size = 50
 
