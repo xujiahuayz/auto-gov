@@ -294,11 +294,11 @@ def train_env(
         rewards.append(reward_this_episode)
         avg_loss.append(avg_loss_this_episode)
         # if score is the highest, save the model
-        if score >= max(scores) or (i + 1) % 100 == 0:
+        if score >= max(scores) or (i + 1) % 15 == 0:
             trained_model.append(
                 {
                     "episode": i,
-                    # attention. deep copy agent.Q_eval.state_dict().
+                    # Attention!! deep copy agent.Q_eval.state_dict().
                     "model": copy.deepcopy(agent.Q_eval.state_dict()),
                 }
             )
