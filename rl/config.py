@@ -13,6 +13,9 @@ EPS_DEC_FACTOR = 0.3
 GAMMA = 0.5
 LEARNING_RATE = 0.001
 
+# for logging
+LOG_CHUNK_SIZE = 50
+
 
 def TKN_PRICES(time_steps: int, seed: int | None = None) -> np.ndarray:
     series = generate_price_series(

@@ -11,6 +11,8 @@ from rl.dqn_gov import Agent, contain_nan
 from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
 
+from rl.config import LOG_CHUNK_SIZE
+
 
 def run_episode(
     env: ProtocolEnv,
@@ -292,11 +294,14 @@ def train_env(
         states.append(state_this_episode)
         rewards.append(reward_this_episode)
         avg_loss.append(avg_loss_this_episode)
+
         if i == 0:
             previous_model = copy.deepcopy(agent.Q_eval.state_dict())
-        # if score is the highest, or it is the 15th episode, save the model
+
+        # if score is the highest, save the model and its previous model
         if score >= max(scores):
             if i-1 >= 50 and trained_model[-1]["episode"] != i-1:
+                # check if the previous model is already saved
                 trained_model.append(
                     {
                         "episode": i-1,
@@ -304,7 +309,8 @@ def train_env(
                         "model": copy.deepcopy(previous_model),
                     }
                 )
-
+            
+            # save the current model
             trained_model.append(
                 {
                     "episode": i,
@@ -313,6 +319,7 @@ def train_env(
                 }
             )
         elif i % 15 == 0:
+            # save the model every 15 episodes
             trained_model.append(
                 {
                     "episode": i,
@@ -323,8 +330,8 @@ def train_env(
 
         previous_model = copy.deepcopy(agent.Q_eval.state_dict())
 
-        chunk_size = 50
-
+        # logging
+        chunk_size = LOG_CHUNK_SIZE
         avg_score = np.mean(scores[-chunk_size:])
         if i % chunk_size == 0:
             logging.info(
