@@ -40,6 +40,13 @@ def run_episode(
         **add_env_kwargs,
     )
 
+    bench_2_rewards, bench_2_states_this_episode = bench_env(
+        tkn_price_trend_func=lambda t, s: tkn_price_trend_this_episode,
+        usdc_price_trend_func=lambda t, s: usdc_price_trend_this_episode,
+        attack_steps=attack_steps,
+        **add_env_kwargs,
+    )
+
     # extend bench_rewards with 0 to match the length of the game (max_steps)
     bench_rewards.extend([0.0] * (env.defi_env.max_steps + 1 - len(bench_rewards)))
     env.defi_env.plf_pools[
@@ -147,6 +154,7 @@ def bench_env(
             state_this_episode.append(defi_env.state_summary)
             rewards.append(reward)
     else:
+        # change collateral factor according to volatility
         while not done:
             # decide step according to volatility every 7 steps after 0
             num_pools: int = len(defi_env.plf_pools)

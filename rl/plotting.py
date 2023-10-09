@@ -364,10 +364,11 @@ def plot_example_state(
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    batchsize = 512
+    batchsize = 1024
+    print(f"batchsize: {batchsize}")
     for attack_function in [
-        None,
-        # ATTACK_FUNC,
+        # None,
+        ATTACK_FUNC,
     ]:
         training_models = plot_training_results_seaborn(
             number_steps=NUM_STEPS,
