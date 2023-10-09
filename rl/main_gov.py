@@ -30,6 +30,7 @@ def run_episode(
     list[int],
     list[dict[str, Any]],
     list[dict[str, Any]],
+    list[dict[str, Any]],
     float,
 ]:
     bench_rewards, bench_states_this_episode = bench_env(
@@ -49,6 +50,8 @@ def run_episode(
 
     # extend bench_rewards with 0 to match the length of the game (max_steps)
     bench_rewards.extend([0.0] * (env.defi_env.max_steps + 1 - len(bench_rewards)))
+    bench_2_rewards.extend([0.0] * (env.defi_env.max_steps + 1 - len(bench_2_rewards)))
+
     env.defi_env.plf_pools[
         "tkn"
     ].price_trend_func = lambda t, s: tkn_price_trend_this_episode
@@ -129,6 +132,7 @@ def run_episode(
         policy,
         state_this_episode,
         bench_states_this_episode,
+        bench_2_states_this_episode,
         # average loss of this episode
         np.mean(loss_this_episode),
     )
@@ -248,11 +252,12 @@ def train_env(
         states,
         trained_model,
         bench_states,
+        bench_2_states,
         policies,
         rewards,
         avg_loss,
         exogenous_states,
-    ) = ([], [], [], [], [], [], [], [], [], [])
+    ) = ([], [], [], [], [], [], [], [], [], [], [])
 
     previous_model = None
 
@@ -281,6 +286,7 @@ def train_env(
             policy,
             state_this_episode,
             bench_states_this_episode,
+            bench_2_states_this_episode,
             avg_loss_this_episode,
         ) = run_episode(
             env=env,
@@ -295,6 +301,7 @@ def train_env(
         )
 
         bench_states.append(bench_states_this_episode)
+        bench_2_states.append(bench_2_states_this_episode)
         time_cost.append(time.time() - start_time)
         scores.append(score)
         policies.append(policy)
@@ -360,6 +367,7 @@ def train_env(
         rewards,
         time_cost,
         bench_states,
+        bench_2_states,
         trained_model,
         avg_loss,
         exogenous_states,
@@ -378,6 +386,7 @@ def inference_with_trained_model(
     list[list[dict[str, Any]]],
     list[list[int]],
     list[list[float]],
+    list[list[dict[str, Any]]],
     list[list[dict[str, Any]]],
 ]:
     """
@@ -407,9 +416,11 @@ def inference_with_trained_model(
         scores,
         states,
         bench_states,
+        bench_2_states,
         policies,
         rewards,
     ) = (
+        [],
         [],
         [],
         [],
@@ -425,6 +436,7 @@ def inference_with_trained_model(
             policy,
             state_this_episode,
             bench_states_this_episode,
+            bench_2_states_this_episode,
             # loss will be all zeros in inference mode
             avg_loss,
         ) = run_episode(
@@ -453,6 +465,7 @@ def inference_with_trained_model(
         )
 
         bench_states.append(bench_states_this_episode)
+        bench_2_states.append(bench_2_states_this_episode)
         scores.append(score)
         policies.append(policy)
         states.append(state_this_episode)
@@ -464,6 +477,7 @@ def inference_with_trained_model(
         policies,
         rewards,
         bench_states,
+        bench_2_states,
     )
 
 
