@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 
 import numpy as np
 
@@ -50,7 +51,7 @@ def attack_func(t: int) -> list[int]:
     return np.random.randint(0, t, 3).tolist()
 
 
-if __name__ == "__main__":
+def test_model_group():
     # test the trained model on a real-world environment
     test_steps = TEST_NUM_STEPS
     prices = {}
@@ -65,19 +66,22 @@ if __name__ == "__main__":
     all_files = os.listdir(DATA_PATH)
     # get all the file name start with "trained_model_XX_" and end with ".pkl" in the data folder
     model_files = [f for f in all_files if f.startswith('trained_model_256_') and f.endswith('.pkl')]
+    
+    # pattern = re.compile(r'^trained_model_(\d+)\.pkl$')
+    # model_files = [f for f in all_files if pattern.match(f)]
+    
     # Output the filenames
     print(model_files)
 
 
     # init the environment
     test_env = init_env(
-        initial_collateral_factor=0.7,
+        initial_collateral_factor=0.8,
         max_steps=test_steps,
         tkn_price_trend_func=lambda x, y: prices["link"],
         usdc_price_trend_func=lambda x, y: prices["usdc"],
     )
     test_protocol_env = ProtocolEnv(test_env)
-
 
     for i in model_files:
         trained_model = load_saved_model_fullname(DATA_PATH / i)
@@ -109,3 +113,53 @@ if __name__ == "__main__":
     # print(f"test_policies: {test_policies}")
     # print(f"test_states: {test_states}")
     # print(f"test_bench_states: {test_bench_states}")
+
+
+def test_single_model(model_name, initial_cf=0.8):
+    test_steps = TEST_NUM_STEPS
+    prices = {}
+    for asset in ["link", "usdc"]:
+        # get price data in json from data folder
+        with open(DATA_PATH / f"{asset}.json") as f:
+            prices[asset] = [
+                w["close"] for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
+            ]
+    
+    # init the environment
+    test_env = init_env(
+        initial_collateral_factor=initial_cf,
+        max_steps=test_steps,
+        tkn_price_trend_func=lambda x, y: prices["link"],
+        usdc_price_trend_func=lambda x, y: prices["usdc"],
+    )
+    test_protocol_env = ProtocolEnv(test_env)
+
+    trained_model = load_saved_model_fullname(DATA_PATH / model_name)
+    (
+        test_scores,
+        test_states,
+        test_policies,
+        test_rewards,
+        test_bench_states,
+        test_bench_2_states,
+    ) = inference_with_trained_model(
+        model=trained_model,
+        env=test_protocol_env,
+        num_test_episodes=1,
+        agent_args={
+            "eps_dec": EPSILON_DECAY,
+            "eps_end": EPSILON_END,
+            "lr": LEARNING_RATE,
+            "gamma": GAMMA,
+            "epsilon": 1,
+            "batch_size": BATCH_SIZE,
+            "target_on_point": TARGET_ON_POINT,
+        },
+    )
+
+    print(test_bench_states)
+    # print(test_bench_2_states)
+    # print(test_states)
+
+if __name__ == "__main__":
+    test_single_model("trained_model_32_53.pkl", 0.7)
