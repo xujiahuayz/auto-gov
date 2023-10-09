@@ -366,11 +366,11 @@ def plot_example_state(
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    batchsize = 1024
+    batchsize = 128
     print(f"batchsize: {batchsize}")
     for attack_function in [
-        # None,
-        ATTACK_FUNC,
+        None,
+        # ATTACK_FUNC,
     ]:
         training_models = plot_training_results_seaborn(
             number_steps=NUM_STEPS,
@@ -411,9 +411,9 @@ if __name__ == "__main__":
         # save_the_nth_model(-3, "trained_model_", training_models)
         # save_the_nth_model(-1, "trained_model_", training_models)
 
-        # # save all the trained models
-        # for i in range(len(training_models)):
-        #     save_the_nth_model(i, "trained_model_", training_models)
+        # save all the trained models
+        for i in range(len(training_models)):
+            save_the_nth_model(i, "trained_model_" + str(batchsize) + "_", training_models)
 
         # load a trained model
         # trained_model = load_saved_model(31, "trained_model_")

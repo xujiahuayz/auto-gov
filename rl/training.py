@@ -19,18 +19,7 @@ def training(
     attack_func: Callable | None,
     constant_col_factor: bool = True,
     PrioritizedReplay_switch: bool = False,
-) -> tuple[
-    dict[str, Any],
-    list[float],
-    list[float],
-    list[list[dict[str, Any]]],
-    list[list[float]],
-    list[float],
-    list[list[dict[str, Any]]],
-    list[dict[str, Any]],
-    list[float],
-    list[dict[str, Any]],
-]:
+):
     number_episodes = int(
         math.ceil(
             (
@@ -42,7 +31,7 @@ def training(
             * 1.5
         )
     )
-    # number_episodes = 500
+    # number_episodes = 150
 
     logging.info(f"number of episodes: {number_episodes}")
 

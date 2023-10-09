@@ -86,6 +86,13 @@ def load_saved_model(num, prefix_name):
     with open(str(DATA_PATH / prefix_name) + str(num) + ".pkl", "rb") as f:
         return pickle.load(f)
 
+def load_saved_model_fullname(path):
+    """
+    path is the full name of the file to be loaded
+    """
+    with open(path, "rb") as f:
+        return pickle.load(f)
+
 
 def are_state_dicts_the_same(state_dict1, state_dict2):
     """

@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 import numpy as np
 
@@ -22,7 +23,7 @@ from rl.config import (
 from rl.main_gov import inference_with_trained_model
 from rl.rl_env import ProtocolEnv
 from rl.training import training
-from rl.utils import init_env, load_saved_model, save_the_nth_model
+from rl.utils import init_env, load_saved_model, save_the_nth_model, load_saved_model_fullname
 
 
 def tkn_prices(time_steps: int, seed: int | None = None) -> np.ndarray:
@@ -59,24 +60,34 @@ if __name__ == "__main__":
             prices[asset] = [
                 w["close"] for w in json.load(f)["Data"]["Data"][-(test_steps + 2) :]
             ]
+    
+    # Get all filenames in the directory
+    all_files = os.listdir(DATA_PATH)
+    # get all the file name start with "trained_model_XX_" and end with ".pkl" in the data folder
+    model_files = [f for f in all_files if f.startswith('trained_model_256_') and f.endswith('.pkl')]
+    # Output the filenames
+    print(model_files)
+
 
     # init the environment
     test_env = init_env(
-        initial_collateral_factor=0.65,
+        initial_collateral_factor=0.7,
         max_steps=test_steps,
         tkn_price_trend_func=lambda x, y: prices["link"],
         usdc_price_trend_func=lambda x, y: prices["usdc"],
     )
     test_protocol_env = ProtocolEnv(test_env)
 
-    for i in range(91):
-        trained_model = load_saved_model(i, "trained_model_")
+
+    for i in model_files:
+        trained_model = load_saved_model_fullname(DATA_PATH / i)
         (
             test_scores,
             test_states,
             test_policies,
             test_rewards,
             test_bench_states,
+            test_bench_2_states,
         ) = inference_with_trained_model(
             model=trained_model,
             env=test_protocol_env,

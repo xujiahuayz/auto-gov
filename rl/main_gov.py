@@ -42,6 +42,7 @@ def run_episode(
     )
 
     bench_2_rewards, bench_2_states_this_episode = bench_env(
+        constant_col_factor=False,
         tkn_price_trend_func=lambda t, s: tkn_price_trend_this_episode,
         usdc_price_trend_func=lambda t, s: usdc_price_trend_this_episode,
         attack_steps=attack_steps,
@@ -210,17 +211,7 @@ def train_env(
     attack_steps: Callable[[int], list[int]] | None = None,
     constant_col_factor: bool = True,
     **add_env_kwargs,
-) -> tuple[
-    list[float],
-    list[float],
-    list[list[dict[str, Any]]],
-    list[list[float]],
-    list[float],
-    list[list[dict[str, Any]]],
-    list[dict[str, Any]],
-    list[float],
-    list[dict[str, Any]],
-]:
+):
     """
     Return:
         scores,
