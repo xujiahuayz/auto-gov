@@ -410,7 +410,9 @@ def inference_with_trained_model(
         bench_2_states,
         policies,
         rewards,
+        exogenous_vars
     ) = (
+        [],
         [],
         [],
         [],
@@ -421,6 +423,23 @@ def inference_with_trained_model(
 
     # Run the specified number of episodes
     for i in range(num_test_episodes):
+        
+        attack_steps_this_episode = None
+        tkn_price_trend_this_episode=env.defi_env.plf_pools[
+            "tkn"
+        ].asset_price_history
+        usdc_price_trend_this_episode=env.defi_env.plf_pools[
+            "usdc"
+        ].asset_price_history,
+
+        exogenous_vars.append(
+            {
+                "tkn_price_trend": tkn_price_trend_this_episode,
+                "usdc_price_trend": usdc_price_trend_this_episode,
+                "attack_steps": attack_steps_this_episode,
+            }
+        )
+
         (
             score,
             reward_this_episode,
@@ -469,6 +488,7 @@ def inference_with_trained_model(
         rewards,
         bench_states,
         bench_2_states,
+        exogenous_vars,
     )
 
 

@@ -4,6 +4,11 @@ import os
 import re
 
 import numpy as np
+import seaborn as sns
+from matplotlib import pyplot as plt
+
+sns.set_theme(style="darkgrid")
+sns.set(font_scale=1.4)
 
 from market_env.constants import DATA_PATH, FIGURE_PATH
 from market_env.utils import generate_price_series
@@ -117,6 +122,8 @@ def test_model_group():
 
 def test_single_model(model_name, initial_cf=0.8):
     test_steps = TEST_NUM_STEPS
+
+    # init the price data
     prices = {}
     for asset in ["link", "usdc"]:
         # get price data in json from data folder
@@ -142,6 +149,7 @@ def test_single_model(model_name, initial_cf=0.8):
         test_rewards,
         test_bench_states,
         test_bench_2_states,
+        exogenous_vars,
     ) = inference_with_trained_model(
         model=trained_model,
         env=test_protocol_env,
@@ -157,9 +165,10 @@ def test_single_model(model_name, initial_cf=0.8):
         },
     )
 
-    print(test_bench_states)
+    # print(test_bench_states)
     # print(test_bench_2_states)
     # print(test_states)
+
 
 if __name__ == "__main__":
     test_single_model("trained_model_32_53.pkl", 0.7)
