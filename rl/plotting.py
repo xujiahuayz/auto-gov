@@ -234,6 +234,9 @@ def plot_example_state(
             "weth": ("orange", "|"),
         }
 
+        """""
+        Price trajectories and collateral factor adjustments of all tokens 
+        """""
         # create 2 subfigures that share the x axis
         fig, ax_21 = plt.subplots(nrows=2, ncols=1, sharex=True)
         ax1 = ax_21[0]
@@ -276,6 +279,9 @@ def plot_example_state(
         plt.show()
         plt.close()
 
+        """""
+        Lending pool state over time
+        """""
         # create 2 subfigures that share the x axis
         fig, ax_2 = plt.subplots(nrows=2, ncols=1, sharex=True)
         ax_20 = ax_2[0]
@@ -297,7 +303,8 @@ def plot_example_state(
         for asset, style in ASSET_COLORS.items():
             # plot utilization ratio
             ax_20.plot(
-                [state["pools"][asset]["utilization_ratio"] for state in bench_state],
+                ###### [state["pools"][asset]["utilization_ratio"] for state in bench_state],
+                [state["pools"][asset]["utilization_ratio"] for state in example_state],
                 color=style[0],
             )
             ax_20.set_ylabel("utilization ratio")
@@ -329,6 +336,10 @@ def plot_example_state(
         )
         plt.show()
         plt.close()
+
+        """""
+        Protocol's total net position 
+        """""
 
         # calculate the env's total net position over time
         total_net_position = [state["net_position"] for state in example_state]

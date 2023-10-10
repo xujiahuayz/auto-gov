@@ -97,6 +97,7 @@ def test_model_group():
             test_rewards,
             test_bench_states,
             test_bench_2_states,
+            exogenous_vars,
         ) = inference_with_trained_model(
             model=trained_model,
             env=test_protocol_env,
@@ -172,6 +173,7 @@ def test_single_model(model_name, initial_cf=0.8):
     example_state = test_states[-1]
     example_exog_vars = exogenous_vars[-1]
     bench_state = test_bench_states[-1]
+    bench_2_state = test_bench_2_states[-1]
 
     # for i in example_exog_vars:
         # print(i)
@@ -184,6 +186,9 @@ def test_single_model(model_name, initial_cf=0.8):
         "weth": ("orange", "|"),
     }
 
+    """""
+    Price trajectories and collateral factor adjustments of all tokens 
+    """""
     # create 2 subfigures that share the x axis
     fig, ax_21 = plt.subplots(nrows=2, ncols=1, sharex=True)
     ax1 = ax_21[0]
@@ -229,6 +234,109 @@ def test_single_model(model_name, initial_cf=0.8):
     plt.show()
     plt.close()
 
+    """""
+    Lending pool state over time
+    """""
+    # create 2 subfigures that share the x axis
+    fig, ax_2 = plt.subplots(nrows=2, ncols=1, sharex=True)
+    ax_20 = ax_2[0]
+    ax_21 = ax_2[1]
+    # add attack steps from exogenous variables to ax_20 as scatter points
+    attack_steps = example_exog_vars["attack_steps"]
+    if attack_steps:
+        ax_20.scatter(
+            x=attack_steps,
+            y=[1] * len(attack_steps),
+            marker="x",
+            color="r",
+            label="attack",
+        )
+        # set the legend for ax_20 above the plot out of the plot area
+        ax_20.legend(
+            loc="lower left",
+        )
+    for asset, style in ASSET_COLORS.items():
+        # plot utilization ratio
+        ax_20.plot(
+            [state["pools"][asset]["utilization_ratio"] for state in example_state],
+            color=style[0],
+        )
+        # if asset == "usdc":
+        #     print([state["pools"][asset]["utilization_ratio"] for state in example_state])
+        ax_20.set_ylabel("utilization ratio")
+        ax_20.set_ylim(0, 1.1)
+
+        ax_21.fill_between(
+            range(len(example_state)),
+            [state["pools"][asset]["reserve"] for state in example_state],
+            alpha=0.5,
+            label=asset.upper(),
+            color=style[0],
+            # fill pattern
+            hatch=style[1],
+        )
+        # if asset == "usdc":
+        #     print([state["pools"][asset]["reserve"] for state in example_state])
+    
+    # legend on the top left corner of the plot
+    ax_21.legend(loc="upper left")
+
+    # set the labels
+    ax_21.set_xlabel(x_lable)
+    ax_21.set_ylabel("reserve in token units")
+
+    fig.tight_layout()
+    fig.savefig(
+        fname=str(
+            FIGURE_PATH
+            / "test_state.pdf"
+        )
+    )
+    plt.show()
+    plt.close()
+
+    """""
+    Protocol's total net position 
+    """""
+    # calculate the env's total net position over time
+    total_net_position = [state["net_position"] for state in example_state]
+
+    # plot the total net position
+    fig, ax_np = plt.subplots()
+
+    # plot the benchmark case
+    ax_np.plot(
+        [state["net_position"] for state in bench_state],
+        label="benchmark",
+        lw=2,
+    )
+    ax_np.plot(
+        [state["net_position"] for state in bench_2_state],
+        label="benchmark 2",
+        lw=2,
+    )
+
+    ax_np.set_ylabel("total net position in $\\tt ETH$")
+    # legend outside the plot
+    ax_np.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+
+    ax_np.plot(total_net_position, label="RL")
+    ax_np.set_xlabel(x_lable)
+    ax_np.set_ylabel("total net position")
+    # set the legend on the top left corner of the plot
+    ax_np.legend(loc="upper left")
+
+    fig.tight_layout()
+    fig.savefig(
+        fname=str(
+            FIGURE_PATH
+            / "test_netpos.pdf"
+        )
+    )
+    plt.show()
+    plt.close()
+
 
 if __name__ == "__main__":
     test_single_model("trained_model_32_53.pkl", 0.7)
+    # test_model_group()
