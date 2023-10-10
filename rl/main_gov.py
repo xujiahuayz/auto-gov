@@ -423,14 +423,21 @@ def inference_with_trained_model(
 
     # Run the specified number of episodes
     for i in range(num_test_episodes):
-        
+
         attack_steps_this_episode = None
         tkn_price_trend_this_episode=env.defi_env.plf_pools[
             "tkn"
         ].asset_price_history
+        # print('='*10 + "TKN PRICE TREND" + '='*10)
+        # print(type(tkn_price_trend_this_episode))
+        # print(tkn_price_trend_this_episode)
         usdc_price_trend_this_episode=env.defi_env.plf_pools[
             "usdc"
         ].asset_price_history,
+        usdc_price_trend_this_episode = usdc_price_trend_this_episode[0]
+        # print('='*10 + "USDC PRICE TREND" + '='*10)
+        # print(type(usdc_price_trend_this_episode))
+        # print(usdc_price_trend_this_episode)
 
         exogenous_vars.append(
             {

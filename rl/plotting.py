@@ -240,7 +240,7 @@ def plot_example_state(
         ax2 = ax_21[1]
         for asset, style in ASSET_COLORS.items():
             if asset == "weth":
-                log_return = [0] * len(example_exog_vars)
+                log_return = [0] * len(example_exog_vars["tkn_price_trend"])
             else:
                 log_return = np.diff(np.log(example_exog_vars[f"{asset}_price_trend"]))
             ax1.plot(

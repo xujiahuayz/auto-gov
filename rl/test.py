@@ -169,6 +169,66 @@ def test_single_model(model_name, initial_cf=0.8):
     # print(test_bench_2_states)
     # print(test_states)
 
+    example_state = test_states[-1]
+    example_exog_vars = exogenous_vars[-1]
+    bench_state = test_bench_states[-1]
+
+    # for i in example_exog_vars:
+        # print(i)
+        # print(example_exog_vars[i])
+
+    # color scheme for the three assets
+    ASSET_COLORS = {
+        "tkn": ("blue", "/"),
+        "usdc": ("green", "\\"),
+        "weth": ("orange", "|"),
+    }
+
+    # create 2 subfigures that share the x axis
+    fig, ax_21 = plt.subplots(nrows=2, ncols=1, sharex=True)
+    ax1 = ax_21[0]
+    ax2 = ax_21[1]
+    for asset, style in ASSET_COLORS.items():
+        if asset == "weth":
+            log_return = [0] * len(example_exog_vars["tkn_price_trend"])
+            # print(log_return)
+        else:
+            log_return = np.diff(np.log(example_exog_vars[f"{asset}_price_trend"]))
+        # print('='*10 + asset + '='*10)
+        # print(log_return)
+        ax1.plot(
+            # calculate log return of the price
+            log_return,
+            color=style[0],
+            label=asset.upper(),
+        )
+        # plot the collateral factor
+        ax2.plot(
+            [state["pools"][asset]["collateral_factor"] for state in example_state],
+            color=style[0],
+            label=asset.upper(),
+        )
+        ax2.set_ylim(0, 1)
+
+    # set the labels
+
+    x_lable = "step"
+
+    ax1.set_ylabel("Log return of \n price in $\\tt ETH$")
+    ax2.set_ylabel("collateral factor")
+    ax2.set_xlabel(x_lable)
+    # put legend on the top left corner of the plot
+    ax1.legend(loc="lower left", ncol=3)
+    fig.tight_layout()
+    fig.savefig(
+        fname=str(
+            FIGURE_PATH
+            / "test_colfact.pdf"
+        )
+    )
+    plt.show()
+    plt.close()
+
 
 if __name__ == "__main__":
     test_single_model("trained_model_32_53.pkl", 0.7)
