@@ -8,7 +8,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 sns.set_theme(style="darkgrid")
-sns.set(font_scale=1.4)
+sns.set(font_scale=1.55)
 
 from market_env.constants import DATA_PATH, FIGURE_PATH
 from market_env.utils import generate_price_series
@@ -222,8 +222,8 @@ def test_single_model(model_name, initial_cf=0.8):
     ax1.set_ylabel("Log return of \n price in $\\tt ETH$")
     ax2.set_ylabel("collateral factor")
     ax2.set_xlabel(x_lable)
-    # put legend on the top left corner of the plot
-    ax1.legend(loc="lower left", ncol=3)
+    # put legend on the top left corner of the plot, make the font size a little bit smaller
+    ax1.legend(loc="lower center", ncol=3, fontsize=15)
     fig.tight_layout()
     fig.savefig(
         fname=str(
@@ -307,20 +307,22 @@ def test_single_model(model_name, initial_cf=0.8):
     # plot the benchmark case
     ax_np.plot(
         [state["net_position"] for state in bench_state],
-        label="benchmark",
+        label="baseline",
         lw=2,
+        color='#1f77b4',
     )
     ax_np.plot(
         [state["net_position"] for state in bench_2_state],
-        label="benchmark 2",
+        label="benchmark",
         lw=2,
+        color='#2ca02c',
     )
 
     ax_np.set_ylabel("total net position in $\\tt ETH$")
     # legend outside the plot
     ax_np.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
-    ax_np.plot(total_net_position, label="RL")
+    ax_np.plot(total_net_position, label="RL", color='#ff7f0e', lw=2)
     ax_np.set_xlabel(x_lable)
     ax_np.set_ylabel("total net position")
     # set the legend on the top left corner of the plot

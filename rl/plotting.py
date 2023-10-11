@@ -29,7 +29,7 @@ from rl.training import training
 from rl.utils import init_env, load_saved_model, save_the_nth_model
 
 sns.set_theme(style="darkgrid")
-sns.set(font_scale=1.4)
+sns.set(font_scale=1.55)
 
 
 def plot_training_results_seaborn(
@@ -133,7 +133,7 @@ def plot_training_results_seaborn(
     ax2.scatter(
         x=bench_bust,
         y=y_bust * len(bench_bust),
-        label="benchmark",
+        label="baseline",
         marker="|",
         color="g",
         alpha=0.5,
@@ -268,7 +268,7 @@ def plot_example_state(
         ax2.set_ylabel("collateral factor")
         ax2.set_xlabel(x_lable)
         # put legend on the top left corner of the plot
-        ax1.legend(loc="lower left", ncol=3)
+        ax1.legend(loc="lower center", ncol=3, fontsize=15)
         fig.tight_layout()
         fig.savefig(
             fname=str(
@@ -350,7 +350,7 @@ def plot_example_state(
         # plot the benchmark case
         ax_np.plot(
             [state["net_position"] for state in bench_state],
-            label="benchmark",
+            label="baseline",
             lw=2,
         )
 
@@ -377,11 +377,11 @@ def plot_example_state(
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    batchsize = 1024
+    batchsize = 32
     print(f"batchsize: {batchsize}")
     for attack_function in [
-        None,
-        # ATTACK_FUNC,
+        # None,
+        ATTACK_FUNC,
     ]:
         training_models = plot_training_results_seaborn(
             number_steps=NUM_STEPS,
