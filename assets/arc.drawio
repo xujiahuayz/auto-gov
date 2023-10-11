@@ -1,4 +1,4 @@
-<mxfile modified="2023-10-11T19:19:04.485Z" host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36" etag="bxELx5YR38DSien8aeFU" version="22.0.0" type="github" pages="4">
+<mxfile modified="2023-10-11T19:21:40.238Z" host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36" etag="1wzZFHw8MuLVGtsYCMfK" version="22.0.0" type="github" pages="4">
   <diagram id="4272RPaGkaUyrDDjrkst" name="rl-arc">
     <mxGraphModel dx="954" dy="652" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
       <root>
@@ -624,7 +624,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="AKU5mLLjQtxYJBriUJbg" name="protocol">
-    <mxGraphModel dx="2120" dy="1449" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="3180" dy="2173" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1182,7 +1182,7 @@
         <mxCell id="jf5s1wUn-RycJg9qTZxY-6" value="&lt;span style=&quot;font-size: 28px;&quot;&gt;&lt;font style=&quot;font-size: 28px;&quot;&gt;Withdraw&lt;/font&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;glass=0;fontFamily=Helvetica;fontSize=28;fontStyle=0;labelBackgroundColor=none;flipV=1;flipH=0;" parent="1" vertex="1">
           <mxGeometry x="418" y="358" width="196" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="jf5s1wUn-RycJg9qTZxY-32" value="&lt;font style=&quot;font-weight: normal; font-size: 28px;&quot;&gt;&lt;font style=&quot;font-size: 28px;&quot;&gt;Supply token&lt;/font&gt;&lt;br style=&quot;font-size: 28px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=28;fontStyle=1;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="jf5s1wUn-RycJg9qTZxY-32" value="&lt;font style=&quot;font-weight: normal; font-size: 28px;&quot;&gt;&lt;font style=&quot;font-size: 28px;&quot;&gt;Supply tokens&lt;/font&gt;&lt;br style=&quot;font-size: 28px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=28;fontStyle=1;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="736" y="496" width="198" height="60" as="geometry" />
         </mxCell>
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-7" value="&lt;font style=&quot;font-weight: normal; font-size: 28px;&quot;&gt;&lt;font style=&quot;font-size: 28px;&quot;&gt;Collateral factor&lt;/font&gt;&lt;br style=&quot;font-size: 28px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=28;fontStyle=1;labelBackgroundColor=none;strokeWidth=5;" parent="1" vertex="1">
@@ -1203,7 +1203,7 @@
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-12" value="&lt;font style=&quot;font-weight: normal; font-size: 28px;&quot;&gt;&lt;font style=&quot;font-size: 28px;&quot; color=&quot;#808080&quot;&gt;Supply confidence&lt;/font&gt;&lt;br style=&quot;font-size: 28px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=28;fontStyle=1;labelBackgroundColor=none;flipH=0;flipV=0;strokeColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="150" y="710" width="198" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="jf5s1wUn-RycJg9qTZxY-38" value="&lt;font style=&quot;font-weight: normal; font-size: 28px;&quot;&gt;&lt;font style=&quot;font-size: 28px;&quot;&gt;Borrow token&lt;/font&gt;&lt;br style=&quot;font-size: 28px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=28;fontStyle=1;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="jf5s1wUn-RycJg9qTZxY-38" value="&lt;font style=&quot;font-weight: normal; font-size: 28px;&quot;&gt;&lt;font style=&quot;font-size: 28px;&quot;&gt;Borrow tokens&lt;/font&gt;&lt;br style=&quot;font-size: 28px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=28;fontStyle=1;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="736" y="604" width="198" height="60" as="geometry" />
         </mxCell>
         <mxCell id="_m3SmOg4_IBAmYKFI5gp-1" value="&lt;span style=&quot;font-weight: 400; font-size: 28px;&quot;&gt;&lt;font style=&quot;font-size: 28px;&quot;&gt;Bad debts&lt;/font&gt;&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=28;fontStyle=1;labelBackgroundColor=none;strokeWidth=1;" vertex="1" parent="1">
