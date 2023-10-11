@@ -166,9 +166,10 @@ def bench_env(
             action = 0
             if defi_env.step > 0 and defi_env.step % 7 == 0:
                 for i, plf in enumerate(defi_env.plf_pools.values()):
-                    # plf's last 7 days' volatility
-                    theoretical_col_factor = 0.75 - 0.2 * np.std(
-                        plf.asset_price_history[-7:]
+                    # plf's last 7 days' log return standard deviation
+                    theoretical_col_factor = (
+                        0.75
+                        - 0.08 * np.log(plf.asset_price_history[-8:]).diff()[1:].std()
                     )
                     # check whether the collateral factor is below or above the theoretical collateral factor
                     if (
@@ -306,16 +307,16 @@ def train_env(
 
         # if score is the highest, save the model and its previous model
         if score >= max(scores):
-            if i-1 >= 50 and trained_model[-1]["episode"] != i-1:
+            if i - 1 >= 50 and trained_model[-1]["episode"] != i - 1:
                 # check if the previous model is already saved
                 trained_model.append(
                     {
-                        "episode": i-1,
+                        "episode": i - 1,
                         # Attention!! deep copy agent.Q_eval.state_dict().
                         "model": copy.deepcopy(previous_model),
                     }
                 )
-            
+
             # save the current model
             trained_model.append(
                 {
@@ -410,7 +411,7 @@ def inference_with_trained_model(
         bench_2_states,
         policies,
         rewards,
-        exogenous_vars
+        exogenous_vars,
     ) = (
         [],
         [],
@@ -423,17 +424,14 @@ def inference_with_trained_model(
 
     # Run the specified number of episodes
     for i in range(num_test_episodes):
-
         attack_steps_this_episode = None
-        tkn_price_trend_this_episode=env.defi_env.plf_pools[
-            "tkn"
-        ].asset_price_history
+        tkn_price_trend_this_episode = env.defi_env.plf_pools["tkn"].asset_price_history
         # print('='*10 + "TKN PRICE TREND" + '='*10)
         # print(type(tkn_price_trend_this_episode))
         # print(tkn_price_trend_this_episode)
-        usdc_price_trend_this_episode=env.defi_env.plf_pools[
-            "usdc"
-        ].asset_price_history,
+        usdc_price_trend_this_episode = (
+            env.defi_env.plf_pools["usdc"].asset_price_history,
+        )
         usdc_price_trend_this_episode = usdc_price_trend_this_episode[0]
         # print('='*10 + "USDC PRICE TREND" + '='*10)
         # print(type(usdc_price_trend_this_episode))

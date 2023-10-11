@@ -8,10 +8,10 @@ from numpy import eye, log
 from pandas import DataFrame, Series, json_normalize
 from scipy.stats import spearmanr
 from seaborn import diverging_palette, heatmap
+from sklearn.linear_model import LinearRegression
 
 from aavegov.pricegetter import getPriceDF
 from aavegov.utils import EPSILON, datafolder
-
 from market_env.constants import DATA_PATH, FIGURE_PATH
 
 index_field = ["date"]
@@ -169,7 +169,8 @@ def plotConfig(entry, figdim=(7, 5)):
 def getMarketMovement(symbol: str, window: int = WINDOW):
     pricedata_pd = getPriceDF(symbol)
     monthly = DataFrame()
-    monthly["std"] = pricedata_pd["close"].rolling(window).std()
+    # log price return standard deviation
+    monthly["std"] = log(pricedata_pd["close"] + EPSILON).diff().rolling(window).std()
     monthly["vol"] = pricedata_pd["volumeto"].rolling(window).mean()
     return monthly
 
@@ -224,9 +225,16 @@ if __name__ == "__main__":
         {"std": f"{WINDOW}-day volatility", "vol": f"{WINDOW}-day average volume"}
     )
     risk_relation_df = risk_relation_df.rename(colname, axis=1)
+    # run a simple regression to get coefficient of 7-day volatility for collateral factor
+    reg = LinearRegression().fit(
+        risk_relation_df[["collateral factor"]] / 100 - 0.75,
+        risk_relation_df["7-day volatility"],
+    )
+    reg.coef_[0]
+    # 0.08016361406433781
     risk_relation_corr = risk_relation_df.corr(method="spearman")
-    # save risk_relation_corr to csv
-    risk_relation_corr.to_csv(DATA_PATH / "risk_relation_corr.csv")
+    # save risk_relation_corr to excel
+    risk_relation_corr.to_excel(DATA_PATH / "risk_relation_corr.xlsx")
 
     pval = risk_relation_df.corr(method=lambda x, y: spearmanr(x, y)[1]) - eye(
         *risk_relation_corr.shape
