@@ -240,6 +240,7 @@ if __name__ == "__main__":
         *risk_relation_corr.shape
     )
     p = pval.applymap(lambda x: "".join(["*" for t in [0.01, 0.05, 0.1] if x <= t]))
+    p.to_excel(DATA_PATH / "risk_relation_pval.xlsx")
 
     heatmap(
         risk_relation_corr,
