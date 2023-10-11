@@ -12,7 +12,7 @@ from seaborn import diverging_palette, heatmap
 from aavegov.pricegetter import getPriceDF
 from aavegov.utils import EPSILON, datafolder
 
-from market_env.constants import FIGURE_PATH
+from market_env.constants import DATA_PATH, FIGURE_PATH
 
 index_field = ["date"]
 WINDOW = 7
@@ -225,6 +225,9 @@ if __name__ == "__main__":
     )
     risk_relation_df = risk_relation_df.rename(colname, axis=1)
     risk_relation_corr = risk_relation_df.corr(method="spearman")
+    # save risk_relation_corr to csv
+    risk_relation_corr.to_csv(DATA_PATH / "risk_relation_corr.csv")
+
     pval = risk_relation_df.corr(method=lambda x, y: spearmanr(x, y)[1]) - eye(
         *risk_relation_corr.shape
     )
