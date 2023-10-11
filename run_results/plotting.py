@@ -53,8 +53,8 @@ def plot_time_cdf(times1, times2, times3, times4, bin, filename: str):
     curve4 = count / sum(count)
     cdf4 = np.cumsum(curve4)
 
-    size = 13
-    fig, ax = plt.subplots(figsize=(6.5, 2.7))
+    size = 16
+    fig, ax = plt.subplots(figsize=(6, 2.5))
     ax.plot(bins_count1[1:], cdf1, color="r", linewidth=3, label="300 action/eps")
     ax.plot(bins_count2[1:], cdf2, color="g", linewidth=3, label="450 action/eps")
     ax.plot(bins_count3[1:], cdf3, color="b", linewidth=3, label="600 action/eps")
@@ -63,7 +63,7 @@ def plot_time_cdf(times1, times2, times3, times4, bin, filename: str):
     ax.set_xlabel("Training time per episode (ms)", fontsize=size)
     ax.tick_params(axis="both", which="major", labelsize=size)
     # ax.set_xlim(0, 400)
-    ax.legend(loc="lower right", fontsize=size)
+    ax.legend(loc="lower right", fontsize=size-2)
     # ax.grid(True)
     fig.tight_layout()
     # plt.savefig(filename)
@@ -72,13 +72,13 @@ def plot_time_cdf(times1, times2, times3, times4, bin, filename: str):
 
 
 if __name__ == "__main__":
-    with open("time_cost_300_0.5.txt", "r") as f:
+    with open("time_cost_300_1.txt", "r") as f:
         time_cost_300_no_target = eval(f.read())
-    with open("time_cost_450_0.5.txt", "r") as f:
+    with open("time_cost_450_1.txt", "r") as f:
         time_cost_450_no_target = eval(f.read())
-    with open("time_cost_600_0.5.txt", "r") as f:
+    with open("time_cost_600_1.txt", "r") as f:
         time_cost_600_no_target = eval(f.read())
-    with open("time_cost_750_0.5.txt", "r") as f:
+    with open("time_cost_750_1.txt", "r") as f:
         time_cost_750_no_target = eval(f.read())
 
     plot_time_cdf(

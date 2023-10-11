@@ -8,7 +8,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 
 sns.set_theme(style="darkgrid")
-sns.set(font_scale=1.55)
+sns.set(font_scale=1.7)
 
 from market_env.constants import DATA_PATH, FIGURE_PATH
 from market_env.utils import generate_price_series
@@ -205,22 +205,22 @@ def test_single_model(model_name, initial_cf=0.8):
             # calculate log return of the price
             log_return,
             color=style[0],
-            label=asset.upper(),
+            label=asset.upper() if asset != "weth" else "ETH",
         )
         # plot the collateral factor
         ax2.plot(
             [state["pools"][asset]["collateral_factor"] for state in example_state],
             color=style[0],
-            label=asset.upper(),
+            label=asset.upper() if asset != "weth" else "ETH",
         )
         ax2.set_ylim(0, 1)
 
     # set the labels
 
-    x_lable = "step"
+    x_lable = "step ($t$)"
 
-    ax1.set_ylabel("Log return of \n price in $\\tt ETH$")
-    ax2.set_ylabel("collateral factor")
+    ax1.set_ylabel("$\ln\\frac{P_{t}}{P_{t-1}}$")
+    ax2.set_ylabel("$C$")
     ax2.set_xlabel(x_lable)
     # put legend on the top left corner of the plot, make the font size a little bit smaller
     ax1.legend(loc="lower center", ncol=3, fontsize=15)
@@ -263,14 +263,14 @@ def test_single_model(model_name, initial_cf=0.8):
         )
         # if asset == "usdc":
         #     print([state["pools"][asset]["utilization_ratio"] for state in example_state])
-        ax_20.set_ylabel("utilization ratio")
+        ax_20.set_ylabel("$U$")
         ax_20.set_ylim(0, 1.1)
 
         ax_21.fill_between(
             range(len(example_state)),
             [state["pools"][asset]["reserve"] for state in example_state],
             alpha=0.5,
-            label=asset.upper(),
+            label=asset.upper() if asset != "weth" else "ETH",
             color=style[0],
             # fill pattern
             hatch=style[1],
@@ -279,11 +279,12 @@ def test_single_model(model_name, initial_cf=0.8):
         #     print([state["pools"][asset]["reserve"] for state in example_state])
     
     # legend on the top left corner of the plot
-    ax_21.legend(loc="upper left")
+    ax_21.legend(loc="upper left", fontsize=16)
+    ax_21.set_ylim(0, 3500)
 
     # set the labels
     ax_21.set_xlabel(x_lable)
-    ax_21.set_ylabel("reserve in token units")
+    ax_21.set_ylabel("$W$")
 
     fig.tight_layout()
     fig.savefig(
@@ -318,13 +319,12 @@ def test_single_model(model_name, initial_cf=0.8):
         color='#2ca02c',
     )
 
-    ax_np.set_ylabel("total net position in $\\tt ETH$")
     # legend outside the plot
     ax_np.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
     ax_np.plot(total_net_position, label="RL", color='#ff7f0e', lw=2)
     ax_np.set_xlabel(x_lable)
-    ax_np.set_ylabel("total net position")
+    ax_np.set_ylabel("$N$")
     # set the legend on the top left corner of the plot
     ax_np.legend(loc="upper left")
 

@@ -29,7 +29,7 @@ from rl.training import training
 from rl.utils import init_env, load_saved_model, save_the_nth_model
 
 sns.set_theme(style="darkgrid")
-sns.set(font_scale=1.55)
+sns.set(font_scale=1.9)
 
 
 def plot_training_results_seaborn(
@@ -85,7 +85,8 @@ def plot_training_results_seaborn(
 
     # create two subplots that share the x axis
     # the two subplots are created on a grid with 1 column and 2 rows
-    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True)
+    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(8, 4.5))
+
 
     x_range = range(len(scores))
 
@@ -134,12 +135,17 @@ def plot_training_results_seaborn(
         x=bench_bust,
         y=y_bust * len(bench_bust),
         label="baseline",
-        marker="|",
-        color="g",
+        marker=2,
+        color='#1f77b4',
         alpha=0.5,
     )
     ax2.scatter(
-        x=RL_bust, y=y_bust * len(RL_bust), label="RL", marker=".", color="r", alpha=0.5
+        x=RL_bust,
+        y=y_bust * len(RL_bust),
+        label="RL",
+        marker=3,
+        color='#ff7f0e',
+        alpha=0.5
     )
 
     # surpress x-axis numbers but keep the ticks
@@ -156,9 +162,8 @@ def plot_training_results_seaborn(
     if attack_func is not None:
         # put legend on the top right of the bottom plot inside of the bottom plot area
         ax2.legend(
-            title="bankrupt before episode end",
-            loc="upper right",
-            ncol=2,
+            title="bankruptcy",
+            loc="upper left",
         )
 
     # ax2.set_ylim(0, 1)
@@ -215,9 +220,12 @@ def plot_example_state(
         stable_scores.index(example_score)
     ]
 
+    percentile = 8
+    print(f"percentile: {percentile}")
+
     start_scores = scores[:stable_start]
     bad_example_scores = sorted(start_scores, reverse=True)
-    bad_example_score = bad_example_scores[len(bad_example_scores) // 2]
+    bad_example_score = bad_example_scores[len(bad_example_scores) // percentile]
     bad_example_score_index = range(len(states))[:stable_start][
         start_scores.index(bad_example_score)
     ]
@@ -250,25 +258,29 @@ def plot_example_state(
                 # calculate log return of the price
                 log_return,
                 color=style[0],
-                label=asset.upper(),
+                # if asset == "weth", label="ETH"
+                label=asset.upper() if asset != "weth" else "ETH",
             )
             # plot the collateral factor
+            ax1.legend(loc="lower center", ncol=3, fontsize=16)
             ax2.plot(
                 [state["pools"][asset]["collateral_factor"] for state in example_state],
                 color=style[0],
-                label=asset.upper(),
+                # if asset == "weth", label="ETH"
+                label=asset.upper() if asset != "weth" else "ETH",
             )
             ax2.set_ylim(0, 1)
 
         # set the labels
 
-        x_lable = "step"
+        x_lable = "step ($t$)"
 
-        ax1.set_ylabel("Log return of \n price in $\\tt ETH$")
-        ax2.set_ylabel("collateral factor")
+        # ax1.set_ylabel("$\ln\frac{P_{t}}{P_{t-1}}$")
+        ax1.set_ylabel("$\ln\\frac{P_{t}}{P_{t-1}}$")
+        ax2.set_ylabel("$C$")
         ax2.set_xlabel(x_lable)
-        # put legend on the top left corner of the plot
-        ax1.legend(loc="lower center", ncol=3, fontsize=15)
+
+        ax1.legend(loc="lower center", ncol=3, fontsize=16)
         fig.tight_layout()
         fig.savefig(
             fname=str(
@@ -298,7 +310,7 @@ def plot_example_state(
             )
             # set the legend for ax_20 above the plot out of the plot area
             ax_20.legend(
-                loc="lower left",
+                loc="lower right",
             )
         for asset, style in ASSET_COLORS.items():
             # plot utilization ratio
@@ -307,25 +319,25 @@ def plot_example_state(
                 [state["pools"][asset]["utilization_ratio"] for state in example_state],
                 color=style[0],
             )
-            ax_20.set_ylabel("utilization ratio")
+            ax_20.set_ylabel("$U$")
             ax_20.set_ylim(0, 1.1)
 
             ax_21.fill_between(
                 range(len(example_state)),
                 [state["pools"][asset]["reserve"] for state in example_state],
                 alpha=0.5,
-                label=asset.upper(),
+                label=asset.upper() if asset != "weth" else "ETH",
                 color=style[0],
                 # fill pattern
                 hatch=style[1],
             )
-            # legend on the top left corner of the plot
 
-        ax_21.legend(loc="upper left")
+        ax_21.legend(loc="upper left", fontsize=16)
+        ax_21.set_ylim(0, 3001)
 
         # set the labels
         ax_21.set_xlabel(x_lable)
-        ax_21.set_ylabel("reserve in token units")
+        ax_21.set_ylabel("$W$")
 
         fig.tight_layout()
         fig.savefig(
@@ -354,13 +366,13 @@ def plot_example_state(
             lw=2,
         )
 
-        ax_np.set_ylabel("total net position in $\\tt ETH$")
-        # legend outside the plot
-        ax_np.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
+        # ax_np.set_ylabel("$N$")
+        # # legend outside the plot
+        # ax_np.legend(loc="upper center", bbox_to_anchor=(0.5, 1.15), ncol=3)
 
         ax_np.plot(total_net_position, label="RL")
         ax_np.set_xlabel(x_lable)
-        ax_np.set_ylabel("total net position")
+        ax_np.set_ylabel("$N$")
         # set the legend on the top left corner of the plot
         ax_np.legend(loc="upper left")
 
@@ -427,19 +439,19 @@ if __name__ == "__main__":
         # None,
         ATTACK_FUNC,
     ]:
-        training_models = plot_training_results_seaborn(
-            number_steps=NUM_STEPS,
-            epsilon_end=EPSILON_END,
-            epsilon_decay=EPSILON_DECAY,
-            batch_size=batchsize,
-            epsilon_start=1,
-            target_on_point=TARGET_ON_POINT,
-            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
-            tkn_prices=TKN_PRICES,
-            usdc_prices=USDC_PRICES,
-            attack_func=attack_function,
-            PrioritizedReplay_switch=False,
-        )
+        # training_models = plot_training_results_seaborn(
+        #     number_steps=NUM_STEPS,
+        #     epsilon_end=EPSILON_END,
+        #     epsilon_decay=EPSILON_DECAY,
+        #     batch_size=batchsize,
+        #     epsilon_start=1,
+        #     target_on_point=TARGET_ON_POINT,
+        #     eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+        #     tkn_prices=TKN_PRICES,
+        #     usdc_prices=USDC_PRICES,
+        #     attack_func=attack_function,
+        #     PrioritizedReplay_switch=False,
+        # )
 
         # chosse a well-trained model and a bad-trained model to plot example state
         plot_example_state(
@@ -466,9 +478,9 @@ if __name__ == "__main__":
         # save_the_nth_model(-3, "trained_model_", training_models)
         # save_the_nth_model(-1, "trained_model_", training_models)
 
-        # save all the trained models
-        for i in range(len(training_models)):
-            save_the_nth_model(i, "trained_model_" + str(batchsize) + "_", training_models)
+        # # save all the trained models
+        # for i in range(len(training_models)):
+        #     save_the_nth_model(i, "trained_model_" + str(batchsize) + "_", training_models)
 
         # load a trained model
         # trained_model = load_saved_model(31, "trained_model_")

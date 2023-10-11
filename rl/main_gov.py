@@ -12,6 +12,7 @@ from rl.rl_env import ProtocolEnv
 from rl.utils import init_env
 
 from rl.config import LOG_CHUNK_SIZE
+import pandas as pd
 
 
 def run_episode(
@@ -169,7 +170,7 @@ def bench_env(
                     # plf's last 7 days' log return standard deviation
                     theoretical_col_factor = (
                         0.75
-                        - 0.08 * np.log(plf.asset_price_history[-8:]).diff()[1:].std()
+                        - 0.08 * pd.Series(np.log(plf.asset_price_history[-8:])).diff()[1:].std()
                     )
                     # check whether the collateral factor is below or above the theoretical collateral factor
                     if (
