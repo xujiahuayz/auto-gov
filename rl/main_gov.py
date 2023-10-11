@@ -253,7 +253,6 @@ def train_env(
     previous_model = None
 
     for i in range(n_episodes):
-        start_time = time.time()
         attack_steps_this_episode = (
             attack_steps(defi_env.max_steps) if attack_steps else None
         )
@@ -271,6 +270,7 @@ def train_env(
                 "attack_steps": attack_steps_this_episode,
             }
         )
+        start_time = time.time()
         (
             score,
             reward_this_episode,

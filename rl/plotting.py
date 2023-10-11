@@ -374,6 +374,50 @@ def plot_example_state(
         plt.show()
         plt.close()
 
+def save_time():
+    logging.basicConfig(level=logging.INFO)
+    for step_number in [300, 450, 600, 750]:
+        batchsize = 120
+        print(f"batchsize: {batchsize}")
+        attack_func = None
+        target_on_point = 1
+        constant_col_factor = 0.75
+
+        (
+            agent_vars,
+            scores,
+            eps_history,
+            states,
+            rewards,
+            time_cost,
+            bench_states,
+            bench_2_states,
+            trained_model,
+            losses,
+            exogenous_vars,
+        ) = training(
+            number_steps=step_number,
+            epsilon_end=EPSILON_END,
+            epsilon_decay=EPSILON_DECAY,
+            epsilon_start=1,
+            batch_size=batchsize,
+            target_on_point=target_on_point,
+            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+            attack_func=attack_func,
+            constant_col_factor=constant_col_factor,
+            tkn_prices=TKN_PRICES,
+            usdc_prices=USDC_PRICES,
+            PrioritizedReplay_switch=False,
+        )
+
+        # last 300 items
+        # time_cost = time_cost[-300:]
+        # save time_to_save to a file, one line for one number
+        with open(f"time_cost_{step_number}_{target_on_point}.txt", "w") as f:
+            f.write(str(time_cost))
+
+# if __name__ == "__main__":
+#     save_time()
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

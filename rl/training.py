@@ -31,7 +31,7 @@ def training(
             * 1.5
         )
     )
-    # number_episodes = 150
+    # number_episodes = 650
 
     logging.info(f"number of episodes: {number_episodes}")
 

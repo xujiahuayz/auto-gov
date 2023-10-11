@@ -25,7 +25,7 @@ def plot_learning(scores, filename: str, x=int | None, window: int = 5):
     plt.savefig(filename)
 
 
-def plot_time_cdf(times1, times2, times3, bin, filename: str):
+def plot_time_cdf(times1, times2, times3, times4, bin, filename: str):
     # plot cdf of time cost
 
     sns.set()
@@ -47,11 +47,18 @@ def plot_time_cdf(times1, times2, times3, bin, filename: str):
     curve3 = count / sum(count)
     cdf3 = np.cumsum(curve3)
 
+    curve4 = [t * 1000 for t in times4]
+    curve4 = np.asarray(curve4)
+    count, bins_count4 = np.histogram(curve4, bins=bin)
+    curve4 = count / sum(count)
+    cdf4 = np.cumsum(curve4)
+
     size = 13
-    fig, ax = plt.subplots(figsize=(3.8, 3.8))
+    fig, ax = plt.subplots(figsize=(6.5, 2.7))
     ax.plot(bins_count1[1:], cdf1, color="r", linewidth=3, label="300 action/eps")
     ax.plot(bins_count2[1:], cdf2, color="g", linewidth=3, label="450 action/eps")
     ax.plot(bins_count3[1:], cdf3, color="b", linewidth=3, label="600 action/eps")
+    ax.plot(bins_count4[1:], cdf4, color="#8c564b", linewidth=3, label="750 action/eps")
     ax.set_ylabel("CDF", fontsize=size)
     ax.set_xlabel("Training time per episode (ms)", fontsize=size)
     ax.tick_params(axis="both", which="major", labelsize=size)
@@ -65,18 +72,21 @@ def plot_time_cdf(times1, times2, times3, bin, filename: str):
 
 
 if __name__ == "__main__":
-    with open("time_cost_300_no_target.txt", "r") as f:
+    with open("time_cost_300_0.5.txt", "r") as f:
         time_cost_300_no_target = eval(f.read())
-    with open("time_cost_450_no_target.txt", "r") as f:
+    with open("time_cost_450_0.5.txt", "r") as f:
         time_cost_450_no_target = eval(f.read())
-    with open("time_cost_600_no_target.txt", "r") as f:
+    with open("time_cost_600_0.5.txt", "r") as f:
         time_cost_600_no_target = eval(f.read())
+    with open("time_cost_750_0.5.txt", "r") as f:
+        time_cost_750_no_target = eval(f.read())
 
     plot_time_cdf(
         time_cost_300_no_target,
         time_cost_450_no_target,
         time_cost_600_no_target,
-        500,
+        time_cost_750_no_target,
+        600,
         "time_cost_no_target.png",
     )
 
