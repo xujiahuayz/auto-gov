@@ -74,9 +74,9 @@ pip install toml
 pip install -e ".[dev]"
 ```
 
-## Running the simulation
+<!-- ## Running the simulation
 
-<!-- TODO -->
+TODO -->
 
 ## Git Large File Storage (Git LFS)
 
@@ -86,8 +86,8 @@ All files in [`data/`](data/) are stored with `lfs`:
 git lfs track data/**/*
 ```
 
-## Test the code
+<!-- ## Test the code
 
 ```zsh
 pytest
-```
+``` -->
