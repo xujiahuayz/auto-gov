@@ -54,16 +54,16 @@ def plot_time_cdf(times1, times2, times3, times4, bin, filename: str):
     cdf4 = np.cumsum(curve4)
 
     size = 16
-    fig, ax = plt.subplots(figsize=(6, 2.5))
-    ax.plot(bins_count1[1:], cdf1, color="r", linewidth=3, label="300 action/eps")
-    ax.plot(bins_count2[1:], cdf2, color="g", linewidth=3, label="450 action/eps")
-    ax.plot(bins_count3[1:], cdf3, color="b", linewidth=3, label="600 action/eps")
-    ax.plot(bins_count4[1:], cdf4, color="#8c564b", linewidth=3, label="750 action/eps")
+    fig, ax = plt.subplots(figsize=(4, 4))
+    ax.plot(bins_count1[1:], cdf1, color="r", linewidth=3, label="300 act/eps")
+    ax.plot(bins_count2[1:], cdf2, color="g", linewidth=3, label="450 act/eps")
+    ax.plot(bins_count3[1:], cdf3, color="b", linewidth=3, label="600 act/eps")
+    ax.plot(bins_count4[1:], cdf4, color="#8c564b", linewidth=3, label="750 act/eps")
     ax.set_ylabel("CDF", fontsize=size)
     ax.set_xlabel("Training time per episode (ms)", fontsize=size)
     ax.tick_params(axis="both", which="major", labelsize=size)
     # ax.set_xlim(0, 400)
-    ax.legend(loc="lower right", fontsize=size-2)
+    ax.legend(loc="lower right", fontsize=size-3)
     # ax.grid(True)
     fig.tight_layout()
     # plt.savefig(filename)
@@ -72,29 +72,31 @@ def plot_time_cdf(times1, times2, times3, times4, bin, filename: str):
 
 
 if __name__ == "__main__":
-    with open("time_cost_300_1.txt", "r") as f:
-        time_cost_300_no_target = eval(f.read())
-    with open("time_cost_450_1.txt", "r") as f:
-        time_cost_450_no_target = eval(f.read())
-    with open("time_cost_600_1.txt", "r") as f:
-        time_cost_600_no_target = eval(f.read())
-    with open("time_cost_750_1.txt", "r") as f:
-        time_cost_750_no_target = eval(f.read())
+    # with open("time_cost_300_1.txt", "r") as f:
+    #     time_cost_300_no_target = eval(f.read())
+    # with open("time_cost_450_1.txt", "r") as f:
+    #     time_cost_450_no_target = eval(f.read())
+    # with open("time_cost_600_1.txt", "r") as f:
+    #     time_cost_600_no_target = eval(f.read())
+    # with open("time_cost_750_1.txt", "r") as f:
+    #     time_cost_750_no_target = eval(f.read())
 
-    plot_time_cdf(
-        time_cost_300_no_target,
-        time_cost_450_no_target,
-        time_cost_600_no_target,
-        time_cost_750_no_target,
-        600,
-        "time_cost_no_target.png",
-    )
+    # plot_time_cdf(
+    #     time_cost_300_no_target,
+    #     time_cost_450_no_target,
+    #     time_cost_600_no_target,
+    #     time_cost_750_no_target,
+    #     600,
+    #     "time_cost_no_target.png",
+    # )
 
-    # with open("time_cost_300_target.txt", "r") as f:
-    #     time_cost_300_target = eval(f.read())
-    # with open("time_cost_450_target.txt", "r") as f:
-    #     time_cost_450_target = eval(f.read())
-    # with open("time_cost_600_target.txt", "r") as f:
-    #     time_cost_600_target = eval(f.read())
+    with open("time_cost_300_0.5.txt", "r") as f:
+        time_cost_300_target = eval(f.read())
+    with open("time_cost_450_0.5.txt", "r") as f:
+        time_cost_450_target = eval(f.read())
+    with open("time_cost_600_0.5.txt", "r") as f:
+        time_cost_600_target = eval(f.read())
+    with open("time_cost_750_0.5.txt", "r") as f:
+        time_cost_750_target = eval(f.read())
 
-    # plot_time_cdf(time_cost_300_target, time_cost_450_target, time_cost_600_target, 500, "time_cost_target.png")
+    plot_time_cdf(time_cost_300_target, time_cost_450_target, time_cost_600_target, time_cost_750_target, 500, "time_cost_target.png")
