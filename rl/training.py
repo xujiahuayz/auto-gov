@@ -1,6 +1,6 @@
 import logging
 import math
-from typing import Any, Callable
+from typing import Callable
 
 from rl.config import ATTACK_FUNC, GAMMA, LEARNING_RATE, TKN_PRICES, USDC_PRICES
 from rl.main_gov import train_env
