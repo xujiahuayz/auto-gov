@@ -1,4 +1,4 @@
-<mxfile modified="2024-11-23T21:57:23.779Z" host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" etag="KuzjCpK9eFWDTlYrxXDT" version="24.6.5" type="github" pages="4">
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="24.8.9" pages="4">
   <diagram id="4272RPaGkaUyrDDjrkst" name="rl-arc">
     <mxGraphModel dx="1026" dy="743" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
       <root>
@@ -624,7 +624,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="AKU5mLLjQtxYJBriUJbg" name="protocol">
-    <mxGraphModel dx="2280" dy="1536" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
+    <mxGraphModel dx="662" dy="446" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -784,10 +784,10 @@
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-13" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;&lt;font color=&quot;#808080&quot; style=&quot;font-size: 21px;&quot;&gt;Borrow confidence&lt;/font&gt;&lt;br style=&quot;font-size: 21px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;flipH=0;flipV=0;strokeColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="150" y="870" width="198" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="-QXtYBZmHGCKLa9BCGiK-17" value="&lt;font style=&quot;font-weight: normal; font-size: 17px;&quot;&gt;Competing supply interest rate&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-weight: normal; font-size: 17px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=17;fontStyle=1;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="-QXtYBZmHGCKLa9BCGiK-17" value="&lt;font style=&quot;font-weight: normal;&quot;&gt;Competing supply interest rate&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;align=left;" parent="1" vertex="1">
           <mxGeometry x="380" y="1305" width="234" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="-QXtYBZmHGCKLa9BCGiK-18" value="&lt;font style=&quot;font-weight: normal; font-size: 17px;&quot;&gt;Competing borrow interest rate&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-weight: normal; font-size: 17px;&quot;&gt;&lt;br&gt;&lt;/font&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=17;fontStyle=1;labelBackgroundColor=none;" parent="1" vertex="1">
+        <mxCell id="-QXtYBZmHGCKLa9BCGiK-18" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;Competing borrow interest rate&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=17;fontStyle=1;labelBackgroundColor=none;align=left;verticalAlign=middle;" parent="1" vertex="1">
           <mxGeometry x="133" y="1305" width="244" height="60" as="geometry" />
         </mxCell>
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-23" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot; color=&quot;#808080&quot;&gt;Attractiveness for supply&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;strokeColor=#333333;" parent="1" vertex="1">
@@ -1188,7 +1188,7 @@
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-7" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;&lt;font style=&quot;font-size: 21px;&quot;&gt;Collateral factor&lt;/font&gt;&lt;br style=&quot;font-size: 21px;&quot;&gt;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;&lt;font style=&quot;font-size: 21px;&quot;&gt;&lt;i&gt;C&lt;sub&gt;i&lt;/sub&gt;&lt;/i&gt;&lt;/font&gt;&lt;/font&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;strokeWidth=5;" parent="1" vertex="1">
           <mxGeometry x="846" y="930" width="198" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="9AhFM80apXNU4McOsU0k-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="jf5s1wUn-RycJg9qTZxY-13" target="-QXtYBZmHGCKLa9BCGiK-23">
+        <mxCell id="9AhFM80apXNU4McOsU0k-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="jf5s1wUn-RycJg9qTZxY-13" target="-QXtYBZmHGCKLa9BCGiK-23" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="jf5s1wUn-RycJg9qTZxY-13" value="Supply interest rate&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=0;labelBackgroundColor=none;" parent="1" vertex="1">
@@ -1206,7 +1206,7 @@
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-12" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;&lt;font color=&quot;#808080&quot; style=&quot;font-size: 21px;&quot;&gt;Supply confidence&lt;/font&gt;&lt;br style=&quot;font-size: 21px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;flipH=0;flipV=0;strokeColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="150" y="710" width="198" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="9AhFM80apXNU4McOsU0k-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="jf5s1wUn-RycJg9qTZxY-38" target="jf5s1wUn-RycJg9qTZxY-13">
+        <mxCell id="9AhFM80apXNU4McOsU0k-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="jf5s1wUn-RycJg9qTZxY-38" target="jf5s1wUn-RycJg9qTZxY-13" edge="1">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="jf5s1wUn-RycJg9qTZxY-38" value="&lt;p style=&quot;line-height: 0%;&quot;&gt;&lt;font style=&quot;font-weight: normal;&quot;&gt;Borrow tokens&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 0%;&quot;&gt;&lt;i style=&quot;font-weight: normal; background-color: initial;&quot;&gt;&lt;sub&gt;&lt;span style=&quot;font-size: 21px;&quot;&gt;B&lt;/span&gt;i&lt;/sub&gt;&lt;/i&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;spacingTop=5;spacingBottom=0;spacing=0;" parent="1" vertex="1">
@@ -1222,17 +1222,17 @@
             <Array as="points" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="9AhFM80apXNU4McOsU0k-3" value="&lt;span style=&quot;font-size: 21px;&quot;&gt;$$R_i^S$$&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=21;" vertex="1" parent="1">
+        <mxCell id="9AhFM80apXNU4McOsU0k-3" value="&lt;span style=&quot;font-size: 21px;&quot;&gt;$$R_i^S$$&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=21;" parent="1" vertex="1">
           <mxGeometry x="770" y="735" width="130" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="9AhFM80apXNU4McOsU0k-4" value="&lt;span style=&quot;font-size: 21px;&quot;&gt;$$R_i^B$$&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=21;" vertex="1" parent="1">
+        <mxCell id="9AhFM80apXNU4McOsU0k-4" value="&lt;span style=&quot;font-size: 21px;&quot;&gt;$$R_i^B$$&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=21;" parent="1" vertex="1">
           <mxGeometry x="1034" y="735" width="130" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="9AhFM80apXNU4McOsU0k-5" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 21px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;$$R_i^{B,c}$$&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;fontSize=21;" vertex="1" parent="1">
-          <mxGeometry x="240" y="1305" width="60" height="45.5" as="geometry" />
+        <mxCell id="9AhFM80apXNU4McOsU0k-5" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 21px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;$$R_i^{B,c}$$&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;fontSize=21;" parent="1" vertex="1">
+          <mxGeometry x="317" y="1298.5" width="60" height="45.5" as="geometry" />
         </mxCell>
-        <mxCell id="9AhFM80apXNU4McOsU0k-9" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 21px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;$$R_i^{S,c}$$&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;fontSize=21;" vertex="1" parent="1">
-          <mxGeometry x="467" y="1305" width="60" height="45.5" as="geometry" />
+        <mxCell id="9AhFM80apXNU4McOsU0k-9" value="&lt;span style=&quot;color: rgb(0, 0, 0); font-family: Helvetica; font-size: 21px; font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: center; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; white-space: nowrap; background-color: rgb(251, 251, 251); text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; float: none; display: inline !important;&quot;&gt;$$R_i^{S,c}$$&lt;/span&gt;" style="text;whiteSpace=wrap;html=1;fontSize=21;" parent="1" vertex="1">
+          <mxGeometry x="548" y="1298.5" width="60" height="45.5" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
