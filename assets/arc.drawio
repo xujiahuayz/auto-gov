@@ -624,7 +624,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="AKU5mLLjQtxYJBriUJbg" name="protocol">
-    <mxGraphModel dx="1865" dy="1256" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
+    <mxGraphModel dx="1710" dy="1152" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -784,10 +784,10 @@
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-13" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;&lt;font color=&quot;#808080&quot; style=&quot;font-size: 21px;&quot;&gt;Borrow confidence&lt;/font&gt;&lt;br style=&quot;font-size: 21px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;flipH=0;flipV=0;strokeColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="150" y="870" width="198" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="-QXtYBZmHGCKLa9BCGiK-17" value="&lt;font style=&quot;font-weight: normal;&quot;&gt;Competing supply interest rate&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;align=left;" parent="1" vertex="1">
+        <mxCell id="-QXtYBZmHGCKLa9BCGiK-17" value="&lt;font style=&quot;font-weight: normal;&quot;&gt;Competing supply interest rate&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;align=left;spacingLeft=5;" parent="1" vertex="1">
           <mxGeometry x="380" y="1305" width="234" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="-QXtYBZmHGCKLa9BCGiK-18" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;Competing borrow interest rate&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=17;fontStyle=1;labelBackgroundColor=none;align=left;verticalAlign=middle;" parent="1" vertex="1">
+        <mxCell id="-QXtYBZmHGCKLa9BCGiK-18" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;Competing borrow interest rate&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=17;fontStyle=1;labelBackgroundColor=none;align=left;verticalAlign=middle;spacingLeft=5;" parent="1" vertex="1">
           <mxGeometry x="133" y="1305" width="244" height="60" as="geometry" />
         </mxCell>
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-23" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot; color=&quot;#808080&quot;&gt;Attractiveness for supply&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;strokeColor=#333333;" parent="1" vertex="1">
