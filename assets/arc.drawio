@@ -624,7 +624,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="AKU5mLLjQtxYJBriUJbg" name="protocol">
-    <mxGraphModel dx="662" dy="446" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
+    <mxGraphModel dx="1368" dy="921" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -1188,9 +1188,6 @@
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-7" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;&lt;font style=&quot;font-size: 21px;&quot;&gt;Collateral factor&lt;/font&gt;&lt;br style=&quot;font-size: 21px;&quot;&gt;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;&lt;font style=&quot;font-size: 21px;&quot;&gt;&lt;i&gt;C&lt;sub&gt;i&lt;/sub&gt;&lt;/i&gt;&lt;/font&gt;&lt;/font&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;strokeWidth=5;" parent="1" vertex="1">
           <mxGeometry x="846" y="930" width="198" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="9AhFM80apXNU4McOsU0k-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="jf5s1wUn-RycJg9qTZxY-13" target="-QXtYBZmHGCKLa9BCGiK-23" edge="1">
-          <mxGeometry relative="1" as="geometry" />
-        </mxCell>
         <mxCell id="jf5s1wUn-RycJg9qTZxY-13" value="Supply interest rate&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=0;labelBackgroundColor=none;" parent="1" vertex="1">
           <mxGeometry x="736" y="712" width="198" height="60" as="geometry" />
         </mxCell>
@@ -1205,9 +1202,6 @@
         </mxCell>
         <mxCell id="-QXtYBZmHGCKLa9BCGiK-12" value="&lt;font style=&quot;font-weight: normal; font-size: 21px;&quot;&gt;&lt;font color=&quot;#808080&quot; style=&quot;font-size: 21px;&quot;&gt;Supply confidence&lt;/font&gt;&lt;br style=&quot;font-size: 21px;&quot;&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;flipH=0;flipV=0;strokeColor=#333333;" parent="1" vertex="1">
           <mxGeometry x="150" y="710" width="198" height="60" as="geometry" />
-        </mxCell>
-        <mxCell id="9AhFM80apXNU4McOsU0k-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="jf5s1wUn-RycJg9qTZxY-38" target="jf5s1wUn-RycJg9qTZxY-13" edge="1">
-          <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="jf5s1wUn-RycJg9qTZxY-38" value="&lt;p style=&quot;line-height: 0%;&quot;&gt;&lt;font style=&quot;font-weight: normal;&quot;&gt;Borrow tokens&lt;/font&gt;&lt;/p&gt;&lt;p style=&quot;line-height: 0%;&quot;&gt;&lt;i style=&quot;font-weight: normal; background-color: initial;&quot;&gt;&lt;sub&gt;&lt;span style=&quot;font-size: 21px;&quot;&gt;B&lt;/span&gt;i&lt;/sub&gt;&lt;/i&gt;&lt;/p&gt;" style="rounded=0;whiteSpace=wrap;html=1;glass=0;fontFamily=Georgia;fontSize=21;fontStyle=1;labelBackgroundColor=none;spacingTop=5;spacingBottom=0;spacing=0;" parent="1" vertex="1">
           <mxGeometry x="736" y="604" width="194" height="56" as="geometry" />
