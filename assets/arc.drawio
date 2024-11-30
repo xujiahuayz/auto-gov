@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36" version="24.9.2" pages="4">
   <diagram id="4272RPaGkaUyrDDjrkst" name="rl-arc">
-    <mxGraphModel dx="740" dy="453" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
+    <mxGraphModel dx="833" dy="509" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="1" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -595,10 +595,14 @@
         <mxCell id="ho-afcCtaLFZiFDd-naJ-255" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Markets&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;fillColor=#e1d5e7;strokeColor=#9673a6;dashed=1;" parent="1" vertex="1">
           <mxGeometry x="497" y="222" width="147" height="29.5" as="geometry" />
         </mxCell>
-        <mxCell id="A4d3PfwYv9dxXup02M1r-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" parent="1" source="ho-afcCtaLFZiFDd-naJ-255" target="ho-afcCtaLFZiFDd-naJ-257" edge="1">
+        <mxCell id="A4d3PfwYv9dxXup02M1r-1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" parent="1" source="ho-afcCtaLFZiFDd-naJ-256" target="ho-afcCtaLFZiFDd-naJ-257" edge="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="675.58" y="237.5" as="sourcePoint" />
             <mxPoint x="675.58" y="325.5" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="660" y="201" />
+              <mxPoint x="660" y="282" />
+            </Array>
           </mxGeometry>
         </mxCell>
         <mxCell id="ho-afcCtaLFZiFDd-naJ-256" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;Lending Pools&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontSize=14;fillColor=#d5e8d4;strokeColor=#82b366;dashed=1;" parent="1" vertex="1">
