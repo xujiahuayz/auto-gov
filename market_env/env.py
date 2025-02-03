@@ -106,7 +106,7 @@ class DefiEnv:
         if self.net_position < -1e-9:
             self.step = self.max_steps - 1  # end the episode
             print("BANKRUPTCY! GAME OVER!")
-            return PENALTY_REWARD * len(self.plf_pools)
+            return PENALTY_REWARD * len(self.plf_pools) * 10
         return sum(
             pool.reward
             if pool.reward == PENALTY_REWARD

@@ -87,7 +87,6 @@ def plot_training_results_seaborn(
     # the two subplots are created on a grid with 1 column and 2 rows
     fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(8, 4.5))
 
-
     x_range = range(len(scores))
 
     ax1 = ax[0]
@@ -136,7 +135,7 @@ def plot_training_results_seaborn(
         y=y_bust * len(bench_bust),
         label="baseline",
         marker=2,
-        color='#1f77b4',
+        color="#1f77b4",
         alpha=0.5,
     )
     ax2.scatter(
@@ -144,8 +143,8 @@ def plot_training_results_seaborn(
         y=y_bust * len(RL_bust),
         label="RL",
         marker=3,
-        color='#ff7f0e',
-        alpha=0.5
+        color="#ff7f0e",
+        alpha=0.5,
     )
 
     # surpress x-axis numbers but keep the ticks
@@ -244,7 +243,7 @@ def plot_example_state(
 
         """""
         Price trajectories and collateral factor adjustments of all tokens 
-        """""
+        """ ""
         # create 2 subfigures that share the x axis
         fig, ax_21 = plt.subplots(nrows=2, ncols=1, sharex=True)
         ax1 = ax_21[0]
@@ -293,7 +292,7 @@ def plot_example_state(
 
         """""
         Lending pool state over time
-        """""
+        """ ""
         # create 2 subfigures that share the x axis
         fig, ax_2 = plt.subplots(nrows=2, ncols=1, sharex=True)
         ax_20 = ax_2[0]
@@ -351,7 +350,7 @@ def plot_example_state(
 
         """""
         Protocol's total net position 
-        """""
+        """ ""
 
         # calculate the env's total net position over time
         total_net_position = [state["net_position"] for state in example_state]
@@ -385,6 +384,7 @@ def plot_example_state(
         )
         plt.show()
         plt.close()
+
 
 def save_time():
     logging.basicConfig(level=logging.INFO)
@@ -428,6 +428,7 @@ def save_time():
         with open(f"time_cost_{step_number}_{target_on_point}.txt", "w") as f:
             f.write(str(time_cost))
 
+
 # if __name__ == "__main__":
 #     save_time()
 
@@ -439,19 +440,19 @@ if __name__ == "__main__":
         # None,
         ATTACK_FUNC,
     ]:
-        # training_models = plot_training_results_seaborn(
-        #     number_steps=NUM_STEPS,
-        #     epsilon_end=EPSILON_END,
-        #     epsilon_decay=EPSILON_DECAY,
-        #     batch_size=batchsize,
-        #     epsilon_start=1,
-        #     target_on_point=TARGET_ON_POINT,
-        #     eps_dec_decrease_with_target=EPS_DEC_FACTOR,
-        #     tkn_prices=TKN_PRICES,
-        #     usdc_prices=USDC_PRICES,
-        #     attack_func=attack_function,
-        #     PrioritizedReplay_switch=False,
-        # )
+        training_models = plot_training_results_seaborn(
+            number_steps=NUM_STEPS,
+            epsilon_end=EPSILON_END,
+            epsilon_decay=EPSILON_DECAY,
+            batch_size=batchsize,
+            epsilon_start=1,
+            target_on_point=TARGET_ON_POINT,
+            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+            tkn_prices=TKN_PRICES,
+            usdc_prices=USDC_PRICES,
+            attack_func=attack_function,
+            PrioritizedReplay_switch=False,
+        )
 
         # chosse a well-trained model and a bad-trained model to plot example state
         plot_example_state(

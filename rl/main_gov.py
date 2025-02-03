@@ -51,15 +51,15 @@ def run_episode(
     )
 
     # extend bench_rewards with 0 to match the length of the game (max_steps)
-    bench_rewards.extend([0.0] * (env.defi_env.max_steps + 1 - len(bench_rewards)))
-    bench_2_rewards.extend([0.0] * (env.defi_env.max_steps + 1 - len(bench_2_rewards)))
+    bench_rewards.extend([0.0] * (env.defi_env.max_steps - len(bench_rewards)))
+    bench_2_rewards.extend([0.0] * (env.defi_env.max_steps - len(bench_2_rewards)))
 
-    env.defi_env.plf_pools[
-        "tkn"
-    ].price_trend_func = lambda t, s: tkn_price_trend_this_episode
-    env.defi_env.plf_pools[
-        "usdc"
-    ].price_trend_func = lambda t, s: usdc_price_trend_this_episode
+    env.defi_env.plf_pools["tkn"].price_trend_func = (
+        lambda t, s: tkn_price_trend_this_episode
+    )
+    env.defi_env.plf_pools["usdc"].price_trend_func = (
+        lambda t, s: usdc_price_trend_this_episode
+    )
     env.defi_env.attack_steps = attack_steps
 
     score = 0
@@ -111,7 +111,11 @@ def run_episode(
         # reward is the reward of the current state
         # done is whether the game is over
         observation_, reward, done, _ = env.step(action)
-        reward -= bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
+        # reward -= bench_rewards[env.defi_env.step] if compared_to_benchmark else 0
+
+        reward -= (
+            bench_rewards[len(reward_this_episode)] if compared_to_benchmark else 0
+        )
 
         if training:
             agent.store_transition(observation, action, reward, observation_, done)
@@ -148,7 +152,7 @@ def bench_env(
     state_this_episode = [defi_env.state_summary]
     score = 0
     done = False
-    rewards = [0.0]
+    rewards = []
     defi_env.reset()
 
     if constant_col_factor:
@@ -170,7 +174,10 @@ def bench_env(
                     # plf's last 7 days' log return standard deviation
                     theoretical_col_factor = (
                         0.75
-                        - 0.08 * pd.Series(np.log(plf.asset_price_history[-8:])).diff()[1:].std()
+                        - 0.08
+                        * pd.Series(np.log(plf.asset_price_history[-8:]))
+                        .diff()[1:]
+                        .std()
                     )
                     # check whether the collateral factor is below or above the theoretical collateral factor
                     if (
