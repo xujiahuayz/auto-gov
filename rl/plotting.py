@@ -29,7 +29,8 @@ from rl.training import training
 from rl.utils import init_env, load_saved_model, save_the_nth_model
 
 sns.set_theme(style="darkgrid")
-sns.set(font_scale=1.9)
+# set font size
+plt.rcParams.update({"font.size": 40})
 
 
 def plot_training_results_seaborn(
@@ -85,7 +86,11 @@ def plot_training_results_seaborn(
 
     # create two subplots that share the x axis
     # the two subplots are created on a grid with 1 column and 2 rows
-    fig, ax = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(8, 4.5))
+    fig, ax = (
+        plt.subplots(nrows=3, ncols=1, sharex=True, figsize=(8, 6.75))
+        if attack_on
+        else plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(8, 4.5))
+    )
 
     x_range = range(len(scores))
 
@@ -125,47 +130,59 @@ def plot_training_results_seaborn(
     ax2.set_ylabel("loss")
     ax2.set_yscale("log")
 
-    y_bust = [min(losses)]
-    bench_bust = [
-        x for x in range(len(bench_states)) if len(bench_states[x]) < number_steps
-    ]
-    RL_bust = [x for x in range(len(states)) if len(states[x]) < number_steps]
-    ax2.scatter(
-        x=bench_bust,
-        y=y_bust * len(bench_bust),
-        label="baseline",
-        marker=2,
-        color="#1f77b4",
-        alpha=0.5,
-    )
-    ax2.scatter(
-        x=RL_bust,
-        y=y_bust * len(RL_bust),
-        label="RL",
-        marker=3,
-        color="#ff7f0e",
-        alpha=0.5,
-    )
-
     # surpress x-axis numbers but keep the ticks
     plt.setp(ax2.get_xticklabels(), visible=False)
 
-    # # put legend on the bottom of the plot outside of the plot area
-    # ax2.legend(
-    #     title="bankrupt before episode end",
-    #     bbox_to_anchor=(0, 0),
-    #     loc=2,
-    #     ncol=2,
-    # )
+    if attack_on:
+        ax_bankrupt = ax[2]
 
-    if attack_func is not None:
-        # put legend on the top right of the bottom plot inside of the bottom plot area
-        ax2.legend(
-            title="bankruptcy",
-            loc="upper left",
+        # plot attack density
+        bench_bust = [
+            x for x in range(len(bench_states)) if len(bench_states[x]) < number_steps
+        ]
+        RL_bust = [x for x in range(len(states)) if len(states[x]) < number_steps]
+        sns.kdeplot(
+            bench_bust,
+            label="baseline",
+            color="#1f77b4",
+            alpha=0.5,
+            ax=ax_bankrupt,
+            clip=(0, len(bench_states)),
+        )
+        sns.kdeplot(
+            RL_bust,
+            label="RL",
+            color="#ff7f0e",
+            alpha=0.5,
+            ax=ax_bankrupt,
+            clip=(0, len(states)),
         )
 
-    # ax2.set_ylim(0, 1)
+        ax_bankrupt.scatter(
+            x=bench_bust,
+            y=[0.0002] * len(bench_bust),
+            marker=3,
+            color="#1f77b4",
+            alpha=0.5,
+        )
+        ax_bankrupt.scatter(
+            x=RL_bust,
+            y=[0.00004] * len(RL_bust),
+            marker=2,
+            color="#ff7f0e",
+            alpha=0.5,
+        )
+
+        ax_bankrupt.legend(
+            # title="bankruptcy",
+            loc="center left",
+        )
+        # set y axis label
+
+        ax_bankrupt.set_ylabel("bankruptcy density")
+
+        plt.setp(ax_bankrupt.get_xticklabels(), visible=False)
+
     fig.tight_layout()
     fig.savefig(
         fname=str(FIGURE_PATH / f"{number_steps}_{target_on_point}_{attack_on}.pdf")
@@ -454,20 +471,20 @@ if __name__ == "__main__":
             PrioritizedReplay_switch=False,
         )
 
-        # chosse a well-trained model and a bad-trained model to plot example state
-        plot_example_state(
-            number_steps=NUM_STEPS,
-            epsilon_end=EPSILON_END,
-            epsilon_decay=EPSILON_DECAY,
-            bench_score=0,
-            batch_size=batchsize,
-            epsilon_start=1,
-            target_on_point=TARGET_ON_POINT,
-            eps_dec_decrease_with_target=EPS_DEC_FACTOR,
-            tkn_prices=TKN_PRICES,
-            usdc_prices=USDC_PRICES,
-            attack_func=attack_function,
-        )
+        # # chosse a well-trained model and a bad-trained model to plot example state
+        # plot_example_state(
+        #     number_steps=NUM_STEPS,
+        #     epsilon_end=EPSILON_END,
+        #     epsilon_decay=EPSILON_DECAY,
+        #     bench_score=0,
+        #     batch_size=batchsize,
+        #     epsilon_start=1,
+        #     target_on_point=TARGET_ON_POINT,
+        #     eps_dec_decrease_with_target=EPS_DEC_FACTOR,
+        #     tkn_prices=TKN_PRICES,
+        #     usdc_prices=USDC_PRICES,
+        #     attack_func=attack_function,
+        # )
 
         # # save a trained model
         # save_the_nth_model(1, "trained_model_", training_models)
