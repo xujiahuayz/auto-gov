@@ -30,7 +30,7 @@ from rl.utils import init_env, load_saved_model, save_the_nth_model
 
 sns.set_theme(style="darkgrid")
 # set font size
-plt.rcParams.update({"font.size": 40})
+plt.rcParams.update({"font.size": 50})
 
 
 def plot_training_results_seaborn(
@@ -87,10 +87,12 @@ def plot_training_results_seaborn(
     # create two subplots that share the x axis
     # the two subplots are created on a grid with 1 column and 2 rows
     fig, ax = (
-        plt.subplots(nrows=3, ncols=1, sharex=True, figsize=(8, 6.75))
+        plt.subplots(nrows=3, ncols=1, sharex=True, figsize=(8, 8))
         if attack_on
         else plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(8, 4.5))
     )
+
+    fig.subplots_adjust(hspace=0.01)
 
     x_range = range(len(scores))
 
@@ -105,6 +107,9 @@ def plot_training_results_seaborn(
     ax4 = ax3.twiny()
     ax3.set_ylabel(r"$\tanh (\mathrm{score})$", color=score_color)
     ax3.set_ylim(-1.05, 1.05)
+
+    ax3.set_position(ax1.get_position())
+    ax4.set_position(ax3.get_position())
 
     # Add a new parameter for the window size of the rolling mean
     window_size = 50
