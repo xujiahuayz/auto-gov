@@ -2,6 +2,10 @@
 
 [![python](https://img.shields.io/badge/Python-v3.11.3-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 
+> Xu, J., Feng, Y., Perez, D., & Livshits, B. (2025). Auto.gov: Learning-based Governance for Decentralized Finance (DeFi). IEEE Transactions on Services Computing, 1–14. https://doi.org/10.1109/TSC.2025.3553700
+
+Pre-print freely accessible at https://arxiv.org/abs/2302.09551
+
 ## Preperation
 
 Install Rust for sumtree if you do not have this in your local machine.
